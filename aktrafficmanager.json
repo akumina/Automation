@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "TrafficManagerProfilesName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the TrafficManagerProfilesName"
+      }
+    },
+    "HostName": {
+      "type": "string",
+      "metadata": {
+        "description": "Url of the Host"
+      }
+    }
+  },
+  "variables": {
+    "publicIPAddressName": "[concat(parameters('TrafficManagerProfilesName'),'-appgw-ip')]",
+    "publicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/trafficManagerProfiles",
+      "name": "[parameters('TrafficManagerProfilesName')]",
+      "apiVersion": "2017-05-01",
+      "location": "global",
+      "tags": {},
+      "scale": null,
+      "properties": {
+        "profileStatus": "Enabled",
+        "trafficRoutingMethod": "Performance",
+        "dnsConfig": {
+          "relativeName": "[parameters('TrafficManagerProfilesName')]",
+          "fqdn": "[concat(parameters('TrafficManagerProfilesName'),'.trafficmanager.net')]",
+          "ttl": 60
+        },
+        "monitorConfig": {
+          "protocol": "HTTPS",
+          "port": 443,
+          "path": "/api/health/check",
+          "intervalInSeconds": 30,
+          "toleratedNumberOfFailures": 3,
+          "timeoutInSeconds": 10
+        },
+        "endpoints": [
+          {
+            "name": "[concat(parameters('HostName'),'')]",
+            "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+            "properties": {
+              "endpointStatus": "Enabled",
+              "targetResourceId": "[variables('publicIPRef')]",
+              "weight": 1,
+              "priority": 1,
+              "endpointLocation": "[resourceGroup().location]"
+            }
+          }
+        ]
+      },
+      "dependsOn": []
+    }
+  ]
+}
