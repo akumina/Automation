@@ -14,7 +14,7 @@ class FtpData {
     [string]$Password
 }
 
-Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location,[string]$AadAppName = "", [string]$ResourceGroupName = "",[string]$StorageAccountName = "",[string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "",[bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "") {
+Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location,[string]$AadAppName = "", [string]$ResourceGroupName = "",[string]$StorageAccountName = "",[string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "",[bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "",[bool]$CreateDistributionApp = $false, [string]$AkQueryKey = "", [string]$AkAppManagerUrl = "",[string]$DistributionAppDirectory,[string]$FunctionAppName, [string]$vnetAddressPrefix ,[string]$subnetPrefix) {
     $HomePage = "https://$BaseName.azurewebsites.net"
     $backendIpAddress1 = "$BaseName.azurewebsites.net"
     if (($ReplyUrls.Length -eq 0) -or ($ReplyUrls[0] -eq "")) {
@@ -37,6 +37,9 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
     if ($AadAppName -eq "") {
         $AadAppName = "ad-$appName"
     }
+	if ($FunctionAppName -eq "") {
+        $FunctionAppName = "fn-$appName"
+    }
     if ($RedisCacheName -eq "") {
         $RedisCacheName = $appName
     }
@@ -44,7 +47,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
         $SecurePassword = Read-Host -Prompt "Enter Pfx password" -AsSecureString
     }
     
-    Login-AzureRmAccount -TenantId $TenantId 
+    #Login-AzureRmAccount -TenantId $TenantId 
     $credentials = Connect-AzureAD -TenantId $TenantId
     $user = Get-AzureRmADUser -UserPrincipalName $credentials.Account.Id
     $appData=Get-AzureRmADApplication -DisplayNameStartWith $AadAppName -ErrorVariable aadAppNotExists -ErrorAction SilentlyContinue
@@ -120,7 +123,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
         }
     }
 	
-    if ($CreateAppGw) {
+    if ($CreateAppGw) {		
         #AppGateway
         $appGw = "$appName-appgw"
         Get-AzureRmApplicationGateway -Name $appGw -ResourceGroupName $ResourceGroupName  -ErrorVariable agNotExists -ErrorAction SilentlyContinue
@@ -129,15 +132,16 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
             $sslCertificate = [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($PfxFile))
             #$cerFile= $PfxFile -replace '.pfx','.cer'
             #$SslPublicCertificate=[System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($cerFile))
-            New-AzureRmResourceGroupDeployment -TemplateFile akappgateway.json -ResourceGroupName $ResourceGroupName -AppGatewayPrefix $appName -SslCertificate $sslCertificate -CertPassword $SecurePassword -HostName $BackendHostName -BackendIpAddress1 $backendIpAddress1 
+            New-AzureRmResourceGroupDeployment -TemplateFile akappgateway.json -ResourceGroupName $ResourceGroupName -appGatewayPrefix $appName -sslCertificate $sslCertificate -CertPassword $securePassword -HostName $backendHostName -BackendIpAddress1 $backendIpAddress1 -vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix
             Write-Host "Provisioning App Gateway ended..." -ForegroundColor Cyan
         }
         else {
             Write-Host "Provisioning App Gateway skipped..." -ForegroundColor Cyan
-        }
+        }		
     }
 	
     if ($CreateTrafficManager -and $CreateAppGw) {
+
         #Create Traffic Manager
         Get-AzureRmTrafficManagerEndpoint -ProfileName $appname -Name $BackendHostName -ResourceGroupName $ResourceGroupName -Type ExternalEndpoints -ErrorVariable tmpNotExists -ErrorAction SilentlyContinue
         if ($tmpNotExists) {
@@ -152,11 +156,35 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
             Write-Host "Provisioning Traffic manager profile skipped..." -ForegroundColor Cyan
         }
     }
+    $backgroundGuid = [guid]::NewGuid().ToString()
+	if ($CreateDistributionApp) {
+		$wp = Get-AzureRmWebApp -Name $FunctionAppName
+		if ($null -eq $wp) {
+			Write-Host "Provisioning content distribution app started..." -ForegroundColor Cyan
+			if($AkAppManagerUrl -eq "")
+			{
+				$AkAppManagerUrl="$appName.azurewebsites.net"	
+			}
+			if($AkQueryKey -eq "")
+			{
+				$AkQueryKey=$backgroundGuid	
+			}
+			$appInsightLocation = $Location -replace "[^a-zA-Z]" , ''
+			New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $FunctionAppName -appName $FunctionAppName -TemplateFile akfunapp.json -location $appInsightLocation
+			Write-Host "Provisioning content distribution app ended..." -ForegroundColor Cyan
+		
+			if($DistributionAppDirectory -ne "")
+			{
+				$DistributionAppFtp = UpdateFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -AkQueryKey $AkQueryKey -AkAppManagerUrl $AkAppManagerUrl -FunctionAppName $FunctionAppName			
+			}
+		}
+		else{
+			Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
+		}
+    }
 
-    $backgroundGuid = ""
     if ($localAppDirectory -ne "") {
         ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:RemoteStorageConnection" -newValue $secretIdUri.Id
-        $backgroundGuid = [guid]::NewGuid().ToString()
         ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:BackgroundProcessorKey" -newValue $backgroundGuid
         ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:LogListener" -newValue "AzureTable"
         if ($CreateRedisCache) {
@@ -404,6 +432,49 @@ Function UpdateWebApp {
     Set-AzureRmResource -ResourceId $ResourceId -PropertyObject $WebAppProperties -Force
 	    
     AddWebAppAlert -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroupName -WebAppName $appName -Location $location -CustomEmails $CustomEmails
+	
+    # Upload files recursively 
+    if ($appdirectory -ne "") {
+        UploadFilesUsingFtp -appdirectory $appdirectory -username $username -password $password
+    }
+    $result = New-Object FtpData
+    $result.Host = $url 
+    $result.UserName = $username
+    $result.Password = $password
+    return $result
+}
+
+Function UpdateFunctionApp {
+    [OutputType([FtpData])]
+    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "",[string]$AkQueryKey,[string]$AkAppManagerUrl,[string]$FunctionAppName)
+
+    # Get publishing profile for the web app
+    [xml] $xml = (Get-AzureRmWebAppPublishingProfile -Name $WebAppName -ResourceGroupName $ResourceGroupName -OutputFile null)
+
+    # Extract connection information from publishing profile
+    $username = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value
+    $password = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
+    $url = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
+
+    #AppSettings and 32Bit Processor
+    $webApp = Get-AzureRMWebApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppName 
+    $appSettings = $webApp.SiteConfig.AppSettings
+    $hash = @{}
+    $hash['AkQueryKey'] = $AkQueryKey
+	$hash['AkAppManagerUrl'] = $AkAppManagerUrl
+    $hash['SCM_COMMAND_IDLE_TIMEOUT'] = "3600"
+    
+    Set-AzureRmWebApp -Name $FunctionAppName -ResourceGroupName $resourceGroupName -Use32BitWorkerProcess $false -AppSettings $hash
+
+    #AlwaysOn
+    $WebAppResourceType = 'microsoft.web/sites'
+    
+    #$WebAppProperties = @{"siteConfig" = @{"AlwaysOn" = $true}}
+    
+    $ResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$FunctionAppName"
+    Set-AzureRmResource -ResourceId $ResourceId -PropertyObject $WebAppProperties -Force
+	    
+    #AddWebAppAlert -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroupName -WebAppName $appName -Location $location -CustomEmails $CustomEmails
 	
     # Upload files recursively 
     if ($appdirectory -ne "") {

@@ -41,8 +41,16 @@
       "properties": {},
       "dependsOn": [],
       "sku": {
-        "name": "[if(lessOrEquals(length(parameters('environments')), variables('standardPlanMaxAdditionalSlots')), 'S3', 'P1')]"
+        "name": "P1v2",
+        "tier": "PremiumV2",
+        "size": "P1v2",
+        "family": "Pv2",
+        "capacity": 1
       }
+      //,
+      //"sku": {
+      //  "name": "[if(lessOrEquals(length(parameters('environments')), variables('standardPlanMaxAdditionalSlots')), 'P1v2', 'P1')]"
+      //}
     },
     {
       "apiVersion": "2016-08-01",

@@ -2,31 +2,31 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "AppGatewayPrefix": {
+    "appGatewayPrefix": {
       "type": "string",
       "metadata": {
         "description": "AppGateway Prefix"
       }
     },
-    "HostName": {
+    "hostName": {
       "type": "string",
       "metadata": {
         "description": "HostName for listener 1"
       }
     },
-    "SslCertificate": {
+    "sslCertificate": {
       "type": "string",
       "metadata": {
         "description": "Base-64 encoded form of the .pfx file"
       }
     },
-    "CertPassword": {
+    "certPassword": {
       "type": "securestring",
       "metadata": {
         "description": "Password for .pfx certificate"
       }
     },
-    "BackendIpAddress1": {
+    "backendIpAddress1": {
       "type": "string",
       "metadata": {
         "description": "IP Address for Backend Server 1"
@@ -43,7 +43,7 @@
       "type": "string",
       "defaultValue": "10.100.0.0/28",
       "metadata": {
-        "description": "Subnet prefix"
+        "description": "Subnet prefix CIDR"
       }
     },
     "applicationGatewaySize": {
@@ -112,15 +112,15 @@
     }
   },
   "variables": {
-    "applicationGatewayName": "[concat(parameters('AppGatewayPrefix'),'-appgw')]",
-    "azureWebsiteName": "[concat(parameters('AppGatewayPrefix'),'.azurewebsites.net')]",
-    "publicIPAddressName": "[concat(parameters('AppGatewayPrefix'),'-appgw-ip')]",
-    "virtualNetworkName": "[concat(parameters('AppGatewayPrefix'),'-vnet')]",
-    "subnetName": "[concat(parameters('AppGatewayPrefix'),'-vnet-appgw-subnet')]",
+    "applicationGatewayName": "[concat(parameters('appGatewayPrefix'),'-appgw')]",
+    "azureWebsiteName": "[concat(parameters('appGatewayPrefix'),'.azurewebsites.net')]",
+    "publicIPAddressName": "[concat(parameters('appGatewayPrefix'),'-appgw-ip')]",
+    "virtualNetworkName": "[concat(parameters('appGatewayPrefix'),'-vnet')]",
+    "subnetName": "[concat(parameters('appGatewayPrefix'),'-vnet-appgw-subnet')]",
     "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
     "publicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
     "applicationGatewayID": "[resourceId('Microsoft.Network/applicationGateways',variables('applicationGatewayName'))]",
-    "authenticationCertificates": "[concat('/authenticationCertificates/',parameters('HostName'))]"
+    "authenticationCertificates": "[concat('/authenticationCertificates/',parameters('hostName'))]"
   },
   "resources": [
     {
@@ -172,8 +172,8 @@
           {
             "name": "appGatewaySslCert1",
             "properties": {
-              "data": "[parameters('SslCertificate')]",
-              "password": "[parameters('CertPassword')]"
+              "data": "[parameters('sslCertificate')]",
+              "password": "[parameters('certPassword')]"
             }
           }
         ],
@@ -232,7 +232,7 @@
             "properties": {
               "BackendAddresses": [
                 {
-                  "IpAddress": "[parameters('BackendIpAddress1')]"
+                  "IpAddress": "[parameters('backendIpAddress1')]"
                 }
               ]
             }

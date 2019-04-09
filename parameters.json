@@ -1,0 +1,98 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+  "parameters": {
+    "tenantId": {
+      "value": "",
+      "inputMessage": "Enter TenantId (DirectoryId)"
+    },
+    "subscriptionId": {
+      "value": "",
+      "inputMessage": "Enter subscriptionId"
+    },
+    "baseName": {
+      "value": "",
+      "inputMessage": "Enter App name (ex.,aksvchub01)"
+    },
+    "location": {
+      "value": "",
+      "inputMessage": "Enter location (ex.,eastus2), if you leave empty location will be default to eastus2"
+    },
+    "resourceGroupName": {
+      "value": "",
+      "inputMessage": "Enter resource group name, leave empty if you want to create a resource group as App name"
+    },
+    "storageAccountName": {
+      "value": "",
+      "inputMessage": "Enter StorageAccount name, leave empty if you want to create a Storage Account as App name"
+    },
+    "keyVaultName": {
+      "value": "",
+      "inputMessage": "Enter KeyVault name, leave empty if you want to create a key vault as App name"
+    },
+    "aadAppName": {
+      "value": "",
+      "inputMessage": "Enter AAD App name, leave empty if you want to create a aadApp as App name"
+    },
+    "localAppDirectory": {
+      "value": "",
+      "inputMessage": "Enter Local App Directory, leave empty if you want to upload the files later"
+    },
+    "customEmails": {
+      "value": "",
+      "inputMessage": "Enter email address to set alert notification, leave empty if you do not want to set alert notification"
+    },
+    "createAppGw": {
+      "value": "",
+      "inputMessage": "Provision App Gateway (True/False)"
+    },
+    "pfxFile": {
+      "value": "",
+      "inputMessage": "Enter full path to pfx file to configure app gateway secure frontend"
+    },
+    "backendHostName": {
+      "value": "",
+      "inputMessage": "Enter fqdn for the web app backend pool(ex., prod.onakumina.com)"
+    },
+    "vnetAddressPrefix": {
+      "value": "",
+      "inputMessage": "Address prefix for the Virtual Network(ex., 10.100.0.0/16)"
+    },
+    "subnetPrefix": {
+      "value": "",
+      "inputMessage": "Subnet prefix CIDR(ex., 10.100.0.0/28)"
+    },
+    "createRedisCache": {
+      "value": "",
+      "inputMessage": "Provision Redis Cache (True/False)"
+    },
+    "redisCacheName": {
+      "value": "",
+      "inputMessage": "Enter Redis Service name, leave empty if you want to create a Redis Service as App name"
+    },
+    "createTrafficManager": {
+      "value": "",
+      "inputMessage": "Provision Traffic Manager (True/False)"
+    },
+    "createDistributionApp": {
+      "value": "",
+      "inputMessage": "Provision Content Distribution App  (True/False)"
+    },
+    "functionAppName": {
+      "value": "",
+      "inputMessage": "Enter Function App name"
+    },
+    "akQueryKey": {
+      "value": "",
+      "inputMessage": "Enter App QueryKey to create Content Distribution app"
+    },
+    "akAppManagerUrl": {
+      "value": "",
+      "inputMessage": "Enter App ManagerUrl to create Content Distribution app"
+    },
+    "distributionAppDirectory": {
+      "value": "",
+      "inputMessage": "Enter Local Content Distribution App Directory, leave empty if you want to upload the files later"
+    }
+  }
+}

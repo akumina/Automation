@@ -14,9 +14,6 @@
 # 5.	To get a list of Azure server locations, log into your Azure portal, open a PowerShell and run the command Get-AzureRmLocation
 
 
-#Edit the following to point to your working directory that contains the ps files
-cd C:\Work\AkDev\AzureAutomation
-
 $ErrorActionPreference = 'Stop'
 
 $version=$PSVersionTable.PSVersion.Major
@@ -29,30 +26,243 @@ import-module .\Common.psm1
 
 #get-help  ProvisionAkWebApp
 
-$tenantId=read-host "Enter TenantId (DirectoryId)"
-$subscriptionId=read-host "Enter SubscriptionId"
-$baseName=read-host "Enter App name (ex.,aksvchub01)"
-$location=read-host "Enter location (ex.,eastus2), if you leave empty location will be default to eastus2"
-$resourceGroupName=read-host "Enter resource group name, leave empty if you want to create a resource group as App name"
-$storageAccountName=read-host "Enter StorageAccount name, leave empty if you want to create a Storage Account as App name"
-$keyVaultName=read-host "Enter KeyVault name, leave empty if you want to create a key vault as App name"
-$aadAppName=read-host "Enter AAD App name, leave empty if you want to create a aadApp as App name"
-$localAppDirectory=read-host "Enter Local App Directory, leave empty if you want to upload the files later"
-$customEmails=read-host "Enter email address to set alert notification, leave empty if you do not want to set alert notification"
-$createAppGw=read-host "Provision App Gateway (True/False)"
-$createAppGw = ($createAppGw -eq [bool]::TrueString)
-if($createAppGw -eq $true)
-{
-	$PfxFile=read-host "Enter full path to pfx file to configure app gateway secure frontend(ex.,c:\cert\prod_onakumina_com.pfx)"
-	$BackendHostName=read-host "Enter fqdn for the web app backend pool(ex., prod.onakumina.com)"
-}
-$createRedisCache=read-host "Provision Redis Cache (True/False)"
-$createRedisCache = ($createRedisCache -eq [bool]::TrueString)
-if($createRedisCache -eq $true)
-{
-	$RedisCacheName=read-host "Enter Redis Service name, leave empty if you want to create a Redis Service as App name"
-}
-$createTrafficManager=read-host "Provision Traffic Manager (True/False)"
-$createTrafficManager = ($createTrafficManager -eq [bool]::TrueString)
+$parametersFile = "parameters.json"
 
-ProvisionAkWebApp  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $RedisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $PfxFile -BackendHostName $BackendHostName
+#Getting information from the json file
+#The we pass the output from Get-Content to ConvertFrom-Json Cmdlet
+if(Test-Path $parametersFile) 
+{
+	Write-Host "Reading parameters value"
+    $JsonObject = Get-Content $parametersFile | ConvertFrom-Json
+    $tenantId= $JsonObject.parameters.tenantId.value
+	if($tenantId -eq "")
+	{
+		$tenantId=read-host $JsonObject.parameters.tenantId.inputMessage
+	}
+	else { Write-Host "tenantId = " $tenantId }
+	$subscriptionId=$JsonObject.parameters.subscriptionId.value
+	if($subscriptionId -eq "")
+	{
+		$subscriptionId=read-host $JsonObject.parameters.subscriptionId.inputMessage
+	}
+	else { Write-Host "subscriptionId = " $subscriptionId }
+	$baseName=$JsonObject.parameters.baseName.value
+	if($baseName -eq "")
+	{
+		$baseName=read-host $JsonObject.parameters.baseName.inputMessage
+	}
+	else { Write-Host "App Name = " $baseName }
+	$location=$JsonObject.parameters.location.value
+	if($location -eq "")
+	{
+		$location=read-host $JsonObject.parameters.location.inputMessage
+	}
+	else { Write-Host "location = " $location }
+	$resourceGroupName=$JsonObject.parameters.resourceGroupName.value
+	if($resourceGroupName -eq "")
+	{
+		$resourceGroupName=read-host $JsonObject.parameters.resourceGroupName.inputMessage
+	}
+	else { Write-Host "ResourceGroupName = " $resourceGroupName }
+	$storageAccountName=$JsonObject.parameters.storageAccountName.value
+	if($storageAccountName -eq "")
+	{
+		$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+	}
+	else { Write-Host "StorageAccountName = " $storageAccountName }
+	$keyVaultName=$JsonObject.parameters.keyVaultName.value
+	if($keyVaultName -eq "")
+	{
+		$keyVaultName=read-host $JsonObject.parameters.keyVaultName.inputMessage
+	}
+	else { Write-Host "keyVaultName = " $keyVaultName }
+	$aadAppName=$JsonObject.parameters.aadAppName.value
+	if($aadAppName -eq "")
+	{
+		$aadAppName=read-host $JsonObject.parameters.aadAppName.inputMessage
+	}
+	else { Write-Host "aadAppName = " $keyVaultName }
+	$localAppDirectory=$JsonObject.parameters.localAppDirectory.value
+	if($localAppDirectory -eq "")
+	{
+		$localAppDirectory=read-host $JsonObject.parameters.localAppDirectory.inputMessage
+	}
+	else { Write-Host "localAppDirectory = " $localAppDirectory }
+	$customEmails=$JsonObject.parameters.customEmails.value
+	if($customEmails -eq "")
+	{
+		$customEmails=read-host $JsonObject.parameters.customEmails.inputMessage
+	}
+	else { Write-Host "customEmails = " $customEmails }
+	$createAppGw=$JsonObject.parameters.createAppGw.value
+	if($createAppGw -eq "")
+	{
+		$createAppGw=read-host $JsonObject.parameters.createAppGw.inputMessage
+		$createAppGw = ($createAppGw -eq [bool]::TrueString)
+		if($createAppGw -eq $true)
+		{
+			$pfxFile= $JsonObject.parameters.pfxFile.value
+			if($pfxFile -eq "")
+			{
+				$pfxFile=read-host $JsonObject.parameters.pfxFile.inputMessage '(ex.,c:\cert\prod_onakumina_com.pfx)'
+			}
+			else { Write-Host "PfxFile = " $pfxFile }
+			$backendHostName= $JsonObject.parameters.backendHostName.value
+			if($backendHostName -eq "")
+			{
+				$backendHostName=read-host $JsonObject.parameters.backendHostName.inputMessage 
+			}
+			else { Write-Host "BackendHostName = " $backendHostName }
+			$vnetAddressPrefix= $JsonObject.parameters.vnetAddressPrefix.value
+			if($vnetAddressPrefix -eq "")
+			{
+				$vnetAddressPrefix=read-host $JsonObject.parameters.vnetAddressPrefix.inputMessage
+			}
+			else { Write-Host "PfxFile = " $vnetAddressPrefix }
+			$subnetPrefix= $JsonObject.parameters.subnetPrefix.value
+			if($subnetPrefix -eq "")
+			{
+				$subnetPrefix=read-host $JsonObject.parameters.subnetPrefix.inputMessage
+			}
+			else { Write-Host "PfxFile = " $subnetPrefix }
+		}		
+	}
+	else
+	{
+		Write-Host "createAppGw = " $createAppGw
+		$createAppGw = ($createAppGw -eq [bool]::TrueString)
+		if($createAppGw -eq $true)
+		{
+			$pfxFile= $JsonObject.parameters.pfxFile.value
+			if($pfxFile -eq "")
+			{
+				$pfxFile=read-host $JsonObject.parameters.pfxFile.inputMessage '(ex.,c:\cert\prod_onakumina_com.pfx)'
+			}
+			else { Write-Host "PfxFile = " $pfxFile }
+			$backendHostName= $JsonObject.parameters.backendHostName.value
+			if($backendHostName -eq "")
+			{
+				$backendHostName=read-host $JsonObject.parameters.backendHostName.inputMessage 
+			}
+			else { Write-Host "BackendHostName = " $backendHostName }
+			$vnetAddressPrefix= $JsonObject.parameters.vnetAddressPrefix.value
+			if($vnetAddressPrefix -eq "")
+			{
+				$vnetAddressPrefix=read-host $JsonObject.parameters.vnetAddressPrefix.inputMessage
+			}
+			else { Write-Host "PfxFile = " $vnetAddressPrefix }
+			$subnetPrefix= $JsonObject.parameters.subnetPrefix.value
+			if($subnetPrefix -eq "")
+			{
+				$subnetPrefix=read-host $JsonObject.parameters.subnetPrefix.inputMessage
+			}
+			else { Write-Host "PfxFile = " $subnetPrefix }
+		}
+	}
+	$createRedisCache=$JsonObject.parameters.createRedisCache.value
+	if($createRedisCache -eq "")
+	{
+		$createRedisCache=read-host $JsonObject.parameters.createRedisCache.inputMessage
+		$createRedisCache = ($createRedisCache -eq [bool]::TrueString)
+		if($createRedisCache -eq $true)
+		{
+			$RedisCacheName=$JsonObject.parameters.RedisCacheName.value
+			if($RedisCacheName -eq "")
+			{
+				$RedisCacheName=read-host $JsonObject.parameters.RedisCacheName.inputMessage
+			}
+			else { Write-Host "RedisCacheName = " $RedisCacheName }
+		}
+	}
+	else{
+		Write-Host "createRedisCache = " $createRedisCache
+		$createRedisCache = ($createRedisCache -eq [bool]::TrueString)
+		if($createRedisCache -eq $true)
+		{
+			$redisCacheName=$JsonObject.parameters.redisCacheName.value
+			if($redisCacheName -eq "")
+			{
+				$redisCacheName=read-host $JsonObject.parameters.redisCacheName.inputMessage
+			}
+			else { Write-Host "RedisCacheName = " $redisCacheName }
+		}
+	}	
+	$createTrafficManager=$JsonObject.parameters.createTrafficManager.value
+	if($createTrafficManager -eq "")
+	{
+		$createTrafficManager=read-host $JsonObject.parameters.createTrafficManager.inputMessage
+		$createTrafficManager = ($createTrafficManager -eq [bool]::TrueString)
+	}	
+	else { Write-Host "createTrafficManager = " $createTrafficManager }
+	$createDistributionApp=$JsonObject.parameters.createDistributionApp.value
+	if($createDistributionApp -eq "")
+	{
+		$createDistributionApp=read-host $JsonObject.parameters.createDistributionApp.inputMessage
+		$createDistributionApp = ($createDistributionApp -eq [bool]::TrueString)
+		if($createDistributionApp -eq $true)
+		{
+			$functionAppName=$JsonObject.parameters.functionAppName.value
+			if($functionAppName -eq "")
+			{
+				$functionAppName=read-host $JsonObject.parameters.functionAppName.inputMessage
+			}
+			else { Write-Host "FunctionAppName = " $functionAppName }
+			$akQueryKey= $JsonObject.parameters.akQueryKey.value
+			if($akQueryKey -eq "")
+			{
+				$akQueryKey=read-host $JsonObject.parameters.akQueryKey.inputMessage
+			}
+			else { Write-Host "AkQueryKey = " $akQueryKey }
+			$akAppManagerUrl= $JsonObject.parameters.akAppManagerUrl.value
+			if($akAppManagerUrl -eq "")
+			{
+				$akAppManagerUrl=read-host $JsonObject.parameters.akAppManagerUrl.inputMessage
+			}
+			else { Write-Host "AkAppManagerUrl = " $akAppManagerUrl }
+			$distributionAppDirectory=$JsonObject.parameters.distributionAppDirectory.value
+			if($distributionAppDirectory -eq "")
+			{
+				$distributionAppDirectory=read-host $JsonObject.parameters.distributionAppDirectory.inputMessage
+			}
+			else { Write-Host "DistributionAppDirectory = " $distributionAppDirectory }
+		}
+	}
+	else 
+	{ 
+		Write-Host "createDistributionApp = " $createDistributionApp 
+		$createDistributionApp = ($createDistributionApp -eq [bool]::TrueString)
+		if($createDistributionApp -eq $true)
+		{
+			$functionAppName=$JsonObject.parameters.functionAppName.value
+			if($functionAppName -eq "")
+			{
+				$FunctionAppName=read-host $JsonObject.parameters.functionAppName.inputMessage
+			}
+			else { Write-Host "FunctionAppName = " $functionAppName }
+			$akQueryKey= $JsonObject.parameters.akQueryKey.value
+			if($AkQueryKey -eq "")
+			{
+				$akQueryKey=read-host $JsonObject.parameters.akQueryKey.inputMessage
+			}
+			else { Write-Host "AkQueryKey = " $akQueryKey }
+			$akAppManagerUrl= $JsonObject.parameters.akAppManagerUrl.value
+			if($AkAppManagerUrl -eq "")
+			{
+				$akAppManagerUrl=read-host $JsonObject.parameters.akAppManagerUrl.inputMessage
+			}
+			else { Write-Host "AkAppManagerUrl = " $akAppManagerUrl }
+			$distributionAppDirectory=$JsonObject.parameters.distributionAppDirectory.value
+			if($distributionAppDirectory -eq "")
+			{
+				$distributionAppDirectory=read-host $JsonObject.parameters.distributionAppDirectory.inputMessage
+			}
+			else { Write-Host "DistributionAppDirectory = " $distributionAppDirectory }
+		}
+	}
+	ProvisionAkWebApp  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -CreateDistributionApp $createDistributionApp -AkQueryKey $akQueryKey -AkAppManagerUrl $akAppManagerUrl -DistributionAppDirectory $distributionAppDirectory -FunctionAppName $functionAppName	-vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix
+}
+else
+{
+    Write-Host "Parameters file missing, Place the parameters.json file in app installation location"
+}
+
