@@ -10,22 +10,40 @@
       "value": "",
       "inputMessage": "Enter subscriptionId"
     },
-    "baseName": {
+    "resourceGroupName": {
       "value": "",
-      "inputMessage": "Enter App name (ex.,aksvchub01)"
+      "inputMessage": "Enter Resource group name, if the name not exists then new resource group with this name will be created"
     },
     "location": {
       "value": "",
       "inputMessage": "Enter location (ex.,eastus2), if you leave empty location will be default to eastus2"
     },
-    "resourceGroupName": {
+    "baseName": {
       "value": "",
-      "inputMessage": "Enter resource group name, leave empty if you want to create a resource group as App name"
+      "inputMessage": "Enter App name (ex.,aksvchub01), leave empty if you want to create a App name as resource group name"
     },
+
     "storageAccountName": {
       "value": "",
       "inputMessage": "Enter StorageAccount name, leave empty if you want to create a Storage Account as App name"
     },
+    "createAzureADApp": {
+      "value": "",
+      "inputMessage": "Do you want to create Azure AD app (True/False)"
+    },
+    "createWebApp": {
+      "value": "",
+      "inputMessage": "Do you want to create WebApp (True/False)"
+    },
+    "createStrorage": {
+      "value": "",
+      "inputMessage": "Do you want to create strorage (True/False)"
+    },
+    "createAKeyVault": {
+      "value": "",
+      "inputMessage": "Do you wanto create KeyVault (True/False)"
+    },
+
     "keyVaultName": {
       "value": "",
       "inputMessage": "Enter KeyVault name, leave empty if you want to create a key vault as App name"
@@ -56,11 +74,11 @@
     },
     "vnetAddressPrefix": {
       "value": "",
-      "inputMessage": "Address prefix for the Virtual Network(ex., 10.100.0.0/16)"
+      "inputMessage": "Address prefix for the Virtual Network(ex., 10.10.0.0/16)"
     },
     "subnetPrefix": {
       "value": "",
-      "inputMessage": "Subnet prefix CIDR(ex., 10.100.0.0/28)"
+      "inputMessage": "Subnet prefix CIDR(ex., 10.10.0.0/24)"
     },
     "createRedisCache": {
       "value": "",
@@ -89,6 +107,10 @@
     "akAppManagerUrl": {
       "value": "",
       "inputMessage": "Enter App ManagerUrl to create Content Distribution app"
+    },
+    "akDistributionKeyVaultUri": {
+      "value": "",
+      "inputMessage": "Enter AkDistributionKeyVaultUri to create Content Distribution app"
     },
     "distributionAppDirectory": {
       "value": "",

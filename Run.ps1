@@ -12,8 +12,6 @@
 # 4.	If you get a certificate error, then you may need to change the execution policy
 #		Example commands: Set-ExecutionPolicy RemoteSigned  OR Set-ExecutionPolicy Unrestricted
 # 5.	To get a list of Azure server locations, log into your Azure portal, open a PowerShell and run the command Get-AzureRmLocation
-
-
 $ErrorActionPreference = 'Stop'
 
 $version=$PSVersionTable.PSVersion.Major
@@ -45,61 +43,163 @@ if(Test-Path $parametersFile)
 	{
 		$subscriptionId=read-host $JsonObject.parameters.subscriptionId.inputMessage
 	}
-	else { Write-Host "subscriptionId = " $subscriptionId }
-	$baseName=$JsonObject.parameters.baseName.value
-	if($baseName -eq "")
-	{
-		$baseName=read-host $JsonObject.parameters.baseName.inputMessage
-	}
-	else { Write-Host "App Name = " $baseName }
-	$location=$JsonObject.parameters.location.value
-	if($location -eq "")
-	{
-		$location=read-host $JsonObject.parameters.location.inputMessage
-	}
-	else { Write-Host "location = " $location }
+	else { Write-Host "subscriptionId = " $subscriptionId }	
 	$resourceGroupName=$JsonObject.parameters.resourceGroupName.value
 	if($resourceGroupName -eq "")
 	{
 		$resourceGroupName=read-host $JsonObject.parameters.resourceGroupName.inputMessage
 	}
 	else { Write-Host "ResourceGroupName = " $resourceGroupName }
-	$storageAccountName=$JsonObject.parameters.storageAccountName.value
-	if($storageAccountName -eq "")
+	$location=$JsonObject.parameters.location.value
+	if($location -eq "")
 	{
-		$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+		$location=read-host $JsonObject.parameters.location.inputMessage
 	}
-	else { Write-Host "StorageAccountName = " $storageAccountName }
-	$keyVaultName=$JsonObject.parameters.keyVaultName.value
-	if($keyVaultName -eq "")
+	else { Write-Host "location = " $location }
+
+	$createWebApp=$JsonObject.parameters.createWebApp.value
+	if($createWebApp -eq "")
 	{
-		$keyVaultName=read-host $JsonObject.parameters.keyVaultName.inputMessage
+		$createWebApp=read-host $JsonObject.parameters.createWebApp.inputMessage		
+		$createWebApp = ($createWebApp -eq [bool]::TrueString)
+		if($createWebApp -eq $true -Or $createWebApp -eq $True)
+		{			
+			$baseName=$JsonObject.parameters.baseName.value
+			if($baseName -eq "")
+			{
+				$baseName=read-host $JsonObject.parameters.baseName.inputMessage
+			}
+			else { Write-Host "App Name = " $baseName }
+
+			$localAppDirectory=$JsonObject.parameters.localAppDirectory.value
+			if($localAppDirectory -eq "")
+			{
+				$localAppDirectory=read-host $JsonObject.parameters.localAppDirectory.inputMessage
+			}
+			else { Write-Host "localAppDirectory = " $localAppDirectory }
+			$customEmails=$JsonObject.parameters.customEmails.value
+			if($customEmails -eq "")
+			{
+				$customEmails=read-host $JsonObject.parameters.customEmails.inputMessage
+			}
+			else { Write-Host "customEmails = " $customEmails }
+		}
 	}
-	else { Write-Host "keyVaultName = " $keyVaultName }
-	$aadAppName=$JsonObject.parameters.aadAppName.value
-	if($aadAppName -eq "")
+	else { 
+		Write-Host "Create WebApp = " $createWebApp 
+		$createWebApp=$JsonObject.parameters.createWebApp.value		
+		$createWebApp = ($createWebApp -eq [bool]::TrueString)
+		if($createWebApp -eq $true -Or $createWebApp -eq $True)
+		{
+			$baseName=$JsonObject.parameters.baseName.value
+			if($baseName -eq "")
+			{
+				$baseName=read-host $JsonObject.parameters.baseName.inputMessage
+			}
+			else { Write-Host "App Name = " $baseName }
+			$localAppDirectory=$JsonObject.parameters.localAppDirectory.value
+			if($localAppDirectory -eq "")
+			{
+				$localAppDirectory=read-host $JsonObject.parameters.localAppDirectory.inputMessage
+			}
+			else { Write-Host "localAppDirectory = " $localAppDirectory }
+			$customEmails=$JsonObject.parameters.customEmails.value
+			if($customEmails -eq "")
+			{
+				$customEmails=read-host $JsonObject.parameters.customEmails.inputMessage
+			}
+			else { Write-Host "customEmails = " $customEmails }
+		}
+	}
+	$createStrorage=$JsonObject.parameters.createStrorage.value
+	if($createStrorage -eq "")
 	{
-		$aadAppName=read-host $JsonObject.parameters.aadAppName.inputMessage
+		$createStrorage=read-host $JsonObject.parameters.createStrorage.inputMessage		
+		$createStrorage = ($createStrorage -eq [bool]::TrueString)
+		if($createStrorage -eq $true -Or $createStrorage -eq $True)
+		{
+			$storageAccountName=$JsonObject.parameters.storageAccountName.value
+			if($storageAccountName -eq "")
+			{
+				$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+			}
+			else { Write-Host "StorageAccountName = " $storageAccountName }
+		}
+	}else {
+		Write-Host "create strorage = " $createStrorage
+		$createStrorage=$JsonObject.parameters.createStrorage.value		
+		$createStrorage = ($createStrorage -eq [bool]::TrueString)
+		if($createStrorage -eq $true -Or $createStrorage -eq $True)
+		{
+			$storageAccountName=$JsonObject.parameters.storageAccountName.value
+			if($storageAccountName -eq "")
+			{
+				$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+			}
+			else { Write-Host "StorageAccountName = " $storageAccountName }
+		}
 	}
-	else { Write-Host "aadAppName = " $keyVaultName }
-	$localAppDirectory=$JsonObject.parameters.localAppDirectory.value
-	if($localAppDirectory -eq "")
+
+	$createAKeyVault=$JsonObject.parameters.createAKeyVault.value
+	if($createAKeyVault -eq "")
 	{
-		$localAppDirectory=read-host $JsonObject.parameters.localAppDirectory.inputMessage
+		$createAKeyVault=read-host $JsonObject.parameters.createAKeyVault.inputMessage		
+		$createAKeyVault = ($createAKeyVault -eq [bool]::TrueString)
+		if($createAKeyVault -eq $true -Or $createAKeyVault -eq $True)
+		{
+			$keyVaultName=$JsonObject.parameters.keyVaultName.value
+			if($keyVaultName -eq "")
+			{
+				$keyVaultName=read-host $JsonObject.parameters.keyVaultName.inputMessage
+			}
+		}
+	}	
+	else {
+		Write-Host "keyVaultName = " $keyVaultName
+		$createAKeyVault=$JsonObject.parameters.createAKeyVault.value		
+		$createAKeyVault = ($createAKeyVault -eq [bool]::TrueString)
+		if($createAKeyVault -eq $true -Or $createAKeyVault -eq $True)
+		{
+			$keyVaultName=$JsonObject.parameters.keyVaultName.value
+			if($keyVaultName -eq "")
+			{
+				$keyVaultName=read-host $JsonObject.parameters.keyVaultName.inputMessage
+			}
+		}
 	}
-	else { Write-Host "localAppDirectory = " $localAppDirectory }
-	$customEmails=$JsonObject.parameters.customEmails.value
-	if($customEmails -eq "")
+	$createAzureADApp=$JsonObject.parameters.createAzureADApp.value
+	if($createAzureADApp -eq "")
 	{
-		$customEmails=read-host $JsonObject.parameters.customEmails.inputMessage
-	}
-	else { Write-Host "customEmails = " $customEmails }
+		$createAzureADApp=read-host $JsonObject.parameters.createAzureADApp.inputMessage		
+		$createAzureADApp = ($createAzureADApp -eq [bool]::TrueString)
+		if($createAzureADApp -eq $true -Or $createAzureADApp -eq $True)
+		{
+			$aadAppName=$JsonObject.parameters.aadAppName.value
+			if($aadAppName -eq "")
+			{
+				$aadAppName=read-host $JsonObject.parameters.aadAppName.inputMessage
+			}
+		}
+	}	
+	else { 
+		Write-Host "create aadApp = " $createAzureADApp 
+		$createAzureADApp=$JsonObject.parameters.createAzureADApp.value		
+		$createAzureADApp = ($createAzureADApp -eq [bool]::TrueString)
+		if($createAzureADApp -eq $true -Or $createAzureADApp -eq $True)
+		{
+			$aadAppName=$JsonObject.parameters.aadAppName.value
+			if($aadAppName -eq "")
+			{
+				$aadAppName=read-host $JsonObject.parameters.aadAppName.inputMessage
+			}
+		}
+	}	
 	$createAppGw=$JsonObject.parameters.createAppGw.value
 	if($createAppGw -eq "")
 	{
 		$createAppGw=read-host $JsonObject.parameters.createAppGw.inputMessage
 		$createAppGw = ($createAppGw -eq [bool]::TrueString)
-		if($createAppGw -eq $true)
+		if($createAppGw -eq $true -Or $createAppGw -eq $True)
 		{
 			$pfxFile= $JsonObject.parameters.pfxFile.value
 			if($pfxFile -eq "")
@@ -131,7 +231,7 @@ if(Test-Path $parametersFile)
 	{
 		Write-Host "createAppGw = " $createAppGw
 		$createAppGw = ($createAppGw -eq [bool]::TrueString)
-		if($createAppGw -eq $true)
+		if($createAppGw -eq $true -Or $createAppGw -eq $True)
 		{
 			$pfxFile= $JsonObject.parameters.pfxFile.value
 			if($pfxFile -eq "")
@@ -164,7 +264,7 @@ if(Test-Path $parametersFile)
 	{
 		$createRedisCache=read-host $JsonObject.parameters.createRedisCache.inputMessage
 		$createRedisCache = ($createRedisCache -eq [bool]::TrueString)
-		if($createRedisCache -eq $true)
+		if($createRedisCache -eq $true -Or $createRedisCache -eq $True)
 		{
 			$RedisCacheName=$JsonObject.parameters.RedisCacheName.value
 			if($RedisCacheName -eq "")
@@ -177,7 +277,7 @@ if(Test-Path $parametersFile)
 	else{
 		Write-Host "createRedisCache = " $createRedisCache
 		$createRedisCache = ($createRedisCache -eq [bool]::TrueString)
-		if($createRedisCache -eq $true)
+		if($createRedisCache -eq $true -Or $createRedisCache -eq $True)
 		{
 			$redisCacheName=$JsonObject.parameters.redisCacheName.value
 			if($redisCacheName -eq "")
@@ -199,7 +299,7 @@ if(Test-Path $parametersFile)
 	{
 		$createDistributionApp=read-host $JsonObject.parameters.createDistributionApp.inputMessage
 		$createDistributionApp = ($createDistributionApp -eq [bool]::TrueString)
-		if($createDistributionApp -eq $true)
+		if($createDistributionApp -eq $true -Or $createDistributionApp -eq $True)
 		{
 			$functionAppName=$JsonObject.parameters.functionAppName.value
 			if($functionAppName -eq "")
@@ -225,13 +325,19 @@ if(Test-Path $parametersFile)
 				$distributionAppDirectory=read-host $JsonObject.parameters.distributionAppDirectory.inputMessage
 			}
 			else { Write-Host "DistributionAppDirectory = " $distributionAppDirectory }
+			$akDistributionKeyVaultUri=$JsonObject.parameters.akDistributionKeyVaultUri.value
+			if($akDistributionKeyVaultUri -eq "")
+			{
+				$akDistributionKeyVaultUri=read-host $JsonObject.parameters.akDistributionKeyVaultUri.inputMessage
+			}
+			else { Write-Host "DistributionAppDirectory = " $akDistributionKeyVaultUri }
 		}
 	}
 	else 
 	{ 
 		Write-Host "createDistributionApp = " $createDistributionApp 
 		$createDistributionApp = ($createDistributionApp -eq [bool]::TrueString)
-		if($createDistributionApp -eq $true)
+		if($createDistributionApp -eq $true -Or $createDistributionApp -eq $True)
 		{
 			$functionAppName=$JsonObject.parameters.functionAppName.value
 			if($functionAppName -eq "")
@@ -257,9 +363,20 @@ if(Test-Path $parametersFile)
 				$distributionAppDirectory=read-host $JsonObject.parameters.distributionAppDirectory.inputMessage
 			}
 			else { Write-Host "DistributionAppDirectory = " $distributionAppDirectory }
+			$akDistributionKeyVaultUri=$JsonObject.parameters.akDistributionKeyVaultUri.value
+			if($akDistributionKeyVaultUri -eq "")
+			{
+				$akDistributionKeyVaultUri=read-host $JsonObject.parameters.akDistributionKeyVaultUri.inputMessage
+			}
+			else { Write-Host "DistributionAppDirectory = " $akDistributionKeyVaultUri }
 		}
 	}
-	ProvisionAkWebApp  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -CreateDistributionApp $createDistributionApp -AkQueryKey $akQueryKey -AkAppManagerUrl $akAppManagerUrl -DistributionAppDirectory $distributionAppDirectory -FunctionAppName $functionAppName	-vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix
+	if ($baseName -eq "")
+	{
+		$baseName = $resourceGroupName
+	}
+	#if ($resourceGroupName -eq "")
+	ProvisionAkWebApp  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -CreateDistributionApp $createDistributionApp -AkQueryKey $akQueryKey -AkAppManagerUrl $akAppManagerUrl -DistributionAppDirectory $distributionAppDirectory -FunctionAppName $functionAppName	-vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStrorage $createStrorage -createAKeyVault $createAKeyVault -akDistributionKeyVaultUri $akDistributionKeyVaultUri
 }
 else
 {

@@ -25,6 +25,10 @@
       "apiVersion": "2015-05-01",
       "name": "[parameters('appName')]",
       "location": "[parameters('location')]",
+      "tags": {
+        "applicationType": "web",
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('appName'))]": "Resource"
+      },
       "kind": "web",
       "properties": {
         "Application_Type": "web",
@@ -53,7 +57,6 @@
         "targetWorkerSizeId": 0
       }
     },
-
     {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2016-08-01",
@@ -118,6 +121,7 @@
         "linuxFxVersion": "",
         "requestTracingEnabled": false,
         "remoteDebuggingEnabled": false,
+        "remoteDebuggingVersion": "VS2017",
         "httpLoggingEnabled": false,
         "logsDirectorySizeLimit": 35,
         "detailedErrorLoggingEnabled": false,
