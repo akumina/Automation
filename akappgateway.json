@@ -174,8 +174,8 @@
                 "port": 443,
                 "protocol": "Https",
                 "cookieBasedAffinity": "Disabled",
-                "pickHostNameFromBackendAddress": false,
-                "requestTimeout": 300
+                "pickHostNameFromBackendAddress": true,
+                "requestTimeout": 300                
               },
               "type": "Microsoft.Network/applicationGateways/backendHttpSettingsCollection"
             }

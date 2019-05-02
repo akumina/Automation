@@ -252,7 +252,12 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
             UpdateUnityCachingToRedis -configFilePath "$localAppDirectory\unity.config" 
         }
     }
-	
+		if($createWebApp)
+		{
+			$ftp = UpdateWebApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $appName -Location $Location -AppDirectory $localAppDirectory -CustomEmails $CustomEmails
+			
+		}
+		
 		Write-Host "AD App Name: $AadAppName" -ForegroundColor Cyan
 		Write-Host "AD App ID: "($appData.AppId) -ForegroundColor Cyan
 		Write-Host "AD App Secret: "($appData.AppSecret) -ForegroundColor Cyan
@@ -262,8 +267,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
 		Write-Host "AzureWebSite Url: $HomePage" -ForegroundColor Cyan		
 		Write-Host "BackgroundProcessorKey: $backgroundGuid" -ForegroundColor Cyan
 		if($createWebApp)
-		{
-			$ftp = UpdateWebApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $appName -Location $Location -AppDirectory $localAppDirectory -CustomEmails $CustomEmails
+		{			
 			Write-Host "FTP Host: "($ftp.Host) -ForegroundColor Cyan
 			Write-Host "FTP User: "($ftp.UserName) -ForegroundColor Cyan
 			Write-Host "FTP Password: "($ftp.Password) -ForegroundColor Cyan
@@ -274,6 +278,8 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
 			Write-Host "FTP User: "($DistributionAppFtp.UserName) -ForegroundColor Cyan
 			Write-Host "FTP Password: "($DistributionAppFtp.Password) -ForegroundColor Cyan
 		}
+
+
 		Write-Host "DONE!" -ForegroundColor Green
 	
 }
@@ -626,4 +632,16 @@ Function AddVmAlert ([string]$SubscriptionId, [string]$ResourceGroupName, [strin
         Remove-AzureRmAlertRule -ResourceGroup $ResourceGroupName -Name "CpuOver80For5Min"
         Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "CpuOver80For5Min" -MetricName "Percentage CPU" -Operator GreaterThan -Threshold 80 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "Cpu over 80% for 5 minutes"
     }
+}
+
+
+Function validateInput([string]$Readhost)
+{
+    Switch ($ReadHost) 
+     { 
+       Y {$result = $true} 
+       N {$result =  $false} 
+       Default {$result = $false} 
+     } 
+    return $result
 }

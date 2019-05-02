@@ -29,19 +29,19 @@
     },
     "createAzureADApp": {
       "value": "",
-      "inputMessage": "Do you want to create Azure AD app (True/False)"
+      "inputMessage": "Do you want to create Azure AD app (y/n)"
     },
     "createWebApp": {
       "value": "",
-      "inputMessage": "Do you want to create WebApp (True/False)"
+      "inputMessage": "Do you want to create WebApp (y/n)"
     },
     "createStrorage": {
       "value": "",
-      "inputMessage": "Do you want to create strorage (True/False)"
+      "inputMessage": "Do you want to create strorage (y/n)"
     },
     "createAKeyVault": {
       "value": "",
-      "inputMessage": "Do you wanto create KeyVault (True/False)"
+      "inputMessage": "Do you wanto create KeyVault (y/n)"
     },
 
     "keyVaultName": {
@@ -62,7 +62,7 @@
     },
     "createAppGw": {
       "value": "",
-      "inputMessage": "Provision App Gateway (True/False)"
+      "inputMessage": "Provision App Gateway (y/n)"
     },
     "pfxFile": {
       "value": "",
@@ -82,7 +82,7 @@
     },
     "createRedisCache": {
       "value": "",
-      "inputMessage": "Provision Redis Cache (True/False)"
+      "inputMessage": "Provision Redis Cache (y/n)"
     },
     "redisCacheName": {
       "value": "",
@@ -90,11 +90,11 @@
     },
     "createTrafficManager": {
       "value": "",
-      "inputMessage": "Provision Traffic Manager (True/False)"
+      "inputMessage": "Provision Traffic Manager (y/n)"
     },
     "createDistributionApp": {
       "value": "",
-      "inputMessage": "Provision Content Distribution App  (True/False)"
+      "inputMessage": "Provision Content Distribution App  (y/n)"
     },
     "functionAppName": {
       "value": "",
