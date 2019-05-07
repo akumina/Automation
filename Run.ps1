@@ -58,12 +58,60 @@ if(Test-Path $parametersFile)
 	}
 	else { Write-Host "location = " $location }
 
+	$createStrorage=$JsonObject.parameters.createStrorage.value
+	if($createStrorage -eq "")
+	{
+		$createStrorage=read-host $JsonObject.parameters.createStrorage.inputMessage		
+		#$createStrorage = ($createStrorage -eq [bool]::TrueString)
+		#if($createStrorage -eq $true -Or $createStrorage -eq $True)
+		if(validateInput($createStrorage))		
+		{
+			$createStrorage = $true
+			$storageAccountName=$JsonObject.parameters.storageAccountName.value
+			if($storageAccountName -eq "")
+			{
+				$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+			}
+			else { Write-Host "StorageAccountName = " $storageAccountName }
+		}
+		else{$createStrorage = $false}
+	}else {
+		Write-Host "create strorage = " $createStrorage
+		$createStrorage=$JsonObject.parameters.createStrorage.value		
+		#$createStrorage = ($createStrorage -eq [bool]::TrueString)
+		#if($createStrorage -eq $true -Or $createStrorage -eq $True)
+		if(validateInput($createStrorage))
+		{
+			$createStrorage = $true
+			$storageAccountName=$JsonObject.parameters.storageAccountName.value
+			if($storageAccountName -eq "")
+			{
+				$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+			}
+			else { Write-Host "StorageAccountName = " $storageAccountName }
+		}
+		else{$createStrorage = $false}
+	}
+
 	$createWebApp=$JsonObject.parameters.createWebApp.value
 	if($createWebApp -eq "")
 	{
 		$createWebApp=read-host $JsonObject.parameters.createWebApp.inputMessage		
+		#$createWebApp = ($createWebApp -eq [bool]::TrueString)
+		#if($createWebApp -eq $true -Or $createWebApp -eq $True)
 		if(validateInput($createWebApp))
 		{
+			
+			if ($createStrorage -eq $false)
+			{
+				Write-Host "Storage account must needed for webapp creation" -ForegroundColor Cyan
+				$createStrorage = $true
+				$storageAccountName=$JsonObject.parameters.storageAccountName.value
+				if($storageAccountName -eq "")
+				{
+					$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+				}
+			}
 			$createWebApp = $true
 			$baseName=$JsonObject.parameters.baseName.value
 			if($baseName -eq "")
@@ -89,10 +137,22 @@ if(Test-Path $parametersFile)
 	}
 	else { 
 		Write-Host "Create WebApp = " $createWebApp 
-		$createWebApp=$JsonObject.parameters.createWebApp.value
+		$createWebApp=$JsonObject.parameters.createWebApp.value		
+		#$createWebApp = ($createWebApp -eq [bool]::TrueString)
+		#if($createWebApp -eq $true -Or $createWebApp -eq $True)
 		if(validateInput($createWebApp))
 		{
 			$createWebApp = $true
+			if ($createStrorage -eq $false)
+			{
+				Write-Host "Storage account needed for webapp creation" -ForegroundColor Cyan
+				$createStrorage = $true
+				$storageAccountName=$JsonObject.parameters.storageAccountName.value
+				if($storageAccountName -eq "")
+				{
+					$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+				}
+			}
 			$baseName=$JsonObject.parameters.baseName.value
 			if($baseName -eq "")
 			{
@@ -114,41 +174,14 @@ if(Test-Path $parametersFile)
 		}
 		else{$createWebApp = $false}
 	}
-	$createStrorage=$JsonObject.parameters.createStrorage.value
-	if($createStrorage -eq "")
-	{
-		$createStrorage=read-host $JsonObject.parameters.createStrorage.inputMessage		
-		if(validateInput($createStrorage))		
-		{
-			$createStrorage = $true
-			$storageAccountName=$JsonObject.parameters.storageAccountName.value
-			if($storageAccountName -eq "")
-			{
-				$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
-			}
-			else { Write-Host "StorageAccountName = " $storageAccountName }
-		}
-		else{$createStrorage = $false}
-	}else {
-		Write-Host "create strorage = " $createStrorage
-		$createStrorage=$JsonObject.parameters.createStrorage.value		
-		if(validateInput($createStrorage))
-		{
-			$createStrorage = $true
-			$storageAccountName=$JsonObject.parameters.storageAccountName.value
-			if($storageAccountName -eq "")
-			{
-				$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
-			}
-			else { Write-Host "StorageAccountName = " $storageAccountName }
-		}
-		else{$createStrorage = $false}
-	}
+	
 
 	$createAKeyVault=$JsonObject.parameters.createAKeyVault.value
 	if($createAKeyVault -eq "")
 	{
 		$createAKeyVault=read-host $JsonObject.parameters.createAKeyVault.inputMessage		
+		#$createAKeyVault = ($createAKeyVault -eq [bool]::TrueString)
+		#if($createAKeyVault -eq $true -Or $createAKeyVault -eq $True)
 		if(validateInput($createAKeyVault))
 		{
 			$createAKeyVault = $true
@@ -163,6 +196,8 @@ if(Test-Path $parametersFile)
 	else {
 		Write-Host "keyVaultName = " $keyVaultName
 		$createAKeyVault=$JsonObject.parameters.createAKeyVault.value		
+		#$createAKeyVault = ($createAKeyVault -eq [bool]::TrueString)
+		#if($createAKeyVault -eq $true -Or $createAKeyVault -eq $True)
 		if(validateInput($createAKeyVault))
 		{
 			$createAKeyVault = $true
@@ -178,6 +213,8 @@ if(Test-Path $parametersFile)
 	if($createAzureADApp -eq "")
 	{
 		$createAzureADApp=read-host $JsonObject.parameters.createAzureADApp.inputMessage		
+		#$createAzureADApp = ($createAzureADApp -eq [bool]::TrueString)
+		#if($createAzureADApp -eq $true -Or $createAzureADApp -eq $True)
 		if(validateInput($createAzureADApp))
 		{
 			$createAzureADApp = $true
@@ -192,6 +229,8 @@ if(Test-Path $parametersFile)
 	else { 
 		Write-Host "create aadApp = " $createAzureADApp 
 		$createAzureADApp=$JsonObject.parameters.createAzureADApp.value		
+		#$createAzureADApp = ($createAzureADApp -eq [bool]::TrueString)
+		#if($createAzureADApp -eq $true -Or $createAzureADApp -eq $True)
 		if(validateInput($createAzureADApp))
 		{
 			$createAzureADApp = $true
@@ -207,6 +246,8 @@ if(Test-Path $parametersFile)
 	if($createAppGw -eq "")
 	{
 		$createAppGw=read-host $JsonObject.parameters.createAppGw.inputMessage
+		#$createAppGw = ($createAppGw -eq [bool]::TrueString)
+		#if($createAppGw -eq $true -Or $createAppGw -eq $True)
 		if(validateInput($createAppGw))
 		{
 			$createAppGw = $true
@@ -240,6 +281,8 @@ if(Test-Path $parametersFile)
 	else
 	{
 		Write-Host "createAppGw = " $createAppGw
+		#$createAppGw = ($createAppGw -eq [bool]::TrueString)
+		#if($createAppGw -eq $true -Or $createAppGw -eq $True)
 		if(validateInput($createAppGw))
 		{
 			$createAppGw = $true
@@ -277,6 +320,8 @@ if(Test-Path $parametersFile)
 	if($createRedisCache -eq "")
 	{
 		$createRedisCache=read-host $JsonObject.parameters.createRedisCache.inputMessage
+		#$createRedisCache = ($createRedisCache -eq [bool]::TrueString)
+		#if($createRedisCache -eq $true -Or $createRedisCache -eq $True)
 		if(validateInput($createRedisCache))
 		{
 			$createRedisCache = $true
@@ -291,6 +336,8 @@ if(Test-Path $parametersFile)
 	}
 	else{
 		Write-Host "createRedisCache = " $createRedisCache
+		#$createRedisCache = ($createRedisCache -eq [bool]::TrueString)
+		#if($createRedisCache -eq $true -Or $createRedisCache -eq $True)
 		if(validateInput($createRedisCache))
 		{
 			$createRedisCache = $true
@@ -307,6 +354,7 @@ if(Test-Path $parametersFile)
 	if($createTrafficManager -eq "")
 	{
 		$createTrafficManager=read-host $JsonObject.parameters.createTrafficManager.inputMessage
+		#$createTrafficManager = ($createTrafficManager -eq [bool]::TrueString)
 		$createTrafficManager = validateInput($createTrafficManager)
 	}	
 	else { Write-Host "createTrafficManager = " $createTrafficManager }
@@ -314,6 +362,8 @@ if(Test-Path $parametersFile)
 	if($createDistributionApp -eq "")
 	{
 		$createDistributionApp=read-host $JsonObject.parameters.createDistributionApp.inputMessage
+		#$createDistributionApp = ($createDistributionApp -eq [bool]::TrueString)
+		#if($createDistributionApp -eq $true -Or $createDistributionApp -eq $True)
 		if(validateInput($createDistributionApp))
 		{
 			$createDistributionApp = $true
@@ -353,6 +403,8 @@ if(Test-Path $parametersFile)
 	else 
 	{ 
 		Write-Host "createDistributionApp = " $createDistributionApp 
+		#$createDistributionApp = ($createDistributionApp -eq [bool]::TrueString)
+		#if($createDistributionApp -eq $true -Or $createDistributionApp -eq $True)
 		if(validateInput($createDistributionApp))
 		{
 			$createDistributionApp = $true
@@ -393,6 +445,7 @@ if(Test-Path $parametersFile)
 	{
 		$baseName = $resourceGroupName
 	}
+	#if ($resourceGroupName -eq "")
 	ProvisionAkWebApp  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -CreateDistributionApp $createDistributionApp -AkQueryKey $akQueryKey -AkAppManagerUrl $akAppManagerUrl -DistributionAppDirectory $distributionAppDirectory -FunctionAppName $functionAppName	-vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStrorage $createStrorage -createAKeyVault $createAKeyVault -akDistributionKeyVaultUri $akDistributionKeyVaultUri
 }
 else

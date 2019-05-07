@@ -225,15 +225,16 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
 			New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $FunctionAppName -appName $FunctionAppName -TemplateFile akfunapp.json -location $appInsightLocation
 			Write-Host "Provisioning content distribution app ended..." -ForegroundColor Cyan
 		
-			if($DistributionAppDirectory -ne "")
+			#if($DistributionAppDirectory -ne "")
+			#{
+			if($StorageAccountName -eq "")
 			{
-				if($StorageAccountName -eq "")
-				{
-					$StorageAccountName = $FunctionAppName
-				}
-
-				$DistributionAppFtp = UpdateFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -AkQueryKey $AkQueryKey -AkAppManagerUrl $AkAppManagerUrl -FunctionAppName $FunctionAppName -AkDistributionKeyVaultUri $akDistributionKeyVaultUri -StorageAccountName $StorageAccountName
+				$StorageAccountName = $FunctionAppName
 			}
+
+			$DistributionAppFtp = UpdateFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -AkQueryKey $AkQueryKey -AkAppManagerUrl $AkAppManagerUrl -FunctionAppName $FunctionAppName -AkDistributionKeyVaultUri $akDistributionKeyVaultUri -StorageAccountName $StorageAccountName
+			#}
+			
 		}
 		else{
 			Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
