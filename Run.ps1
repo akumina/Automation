@@ -366,7 +366,17 @@ if(Test-Path $parametersFile)
 		#if($createDistributionApp -eq $true -Or $createDistributionApp -eq $True)
 		if(validateInput($createDistributionApp))
 		{
-			$createDistributionApp = $true
+			$createDistributionApp = $true			
+			if ($createStrorage -eq $false)
+			{
+				Write-Host "Storage account needed for Content Distribution App creation" -ForegroundColor Cyan
+				$createStrorage = $true
+				$storageAccountName=$JsonObject.parameters.storageAccountName.value
+				if($storageAccountName -eq "")
+				{
+					$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+				}
+			}
 			$functionAppName=$JsonObject.parameters.functionAppName.value
 			if($functionAppName -eq "")
 			{
@@ -408,6 +418,16 @@ if(Test-Path $parametersFile)
 		if(validateInput($createDistributionApp))
 		{
 			$createDistributionApp = $true
+			if ($createStrorage -eq $false)
+			{
+				Write-Host "Storage account needed for Content Distribution App creation" -ForegroundColor Cyan
+				$createStrorage = $true
+				$storageAccountName=$JsonObject.parameters.storageAccountName.value
+				if($storageAccountName -eq "")
+				{
+					$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+				}
+			}
 			$functionAppName=$JsonObject.parameters.functionAppName.value
 			if($functionAppName -eq "")
 			{
