@@ -224,16 +224,17 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
 			$appInsightLocation = $Location
 			New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $FunctionAppName -appName $FunctionAppName -TemplateFile akfunapp.json -location $appInsightLocation
 			Write-Host "Provisioning content distribution app ended..." -ForegroundColor Cyan
-		
-			#if($DistributionAppDirectory -ne "")
-			#{
+			
 			if($StorageAccountName -eq "")
 			{
 				$StorageAccountName = $FunctionAppName
 			}
-
-			$DistributionAppFtp = UpdateFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -AkQueryKey $AkQueryKey -AkAppManagerUrl $AkAppManagerUrl -FunctionAppName $FunctionAppName -AkDistributionKeyVaultUri $akDistributionKeyVaultUri -StorageAccountName $StorageAccountName
-			#}
+			$DownloadToFolder = "C:\\Akumina"
+			$cdFile = "contentdistribution.0.1.zip"
+			$downloadurl ="https://akumina.azureedge.net/interchange/contentdistribution/contentdistribution.0.1.zip"			
+			$fileFolder = DownloadCDFiles -DownloadToFolder $DownloadToFolder -downloadurl $downloadurl -cdFile $cdFile
+			$DistributionAppDirectory = $DownloadToFolder + "\contentdistribution"
+			$DistributionAppFtp = UpdateFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -AkQueryKey $AkQueryKey -AkAppManagerUrl $AkAppManagerUrl -FunctionAppName $FunctionAppName -AkDistributionKeyVaultUri $akDistributionKeyVaultUri -StorageAccountName $StorageAccountName			
 			
 		}
 		else{
@@ -646,3 +647,34 @@ Function validateInput([string]$Readhost)
      } 
     return $result
 }
+
+Function DownloadCDFiles([string]$DownloadToFolder,[string]$downloadurl,[string]$cdFile)
+{
+try {
+        if (!(Test-Path -Path $DownloadToFolder)) {
+            New-Item -Path $DownloadToFolder -Type Directory -Force -ErrorAction Stop | Out-Null
+        }
+        else{
+			$url = $DownloadToFolder+ "\" + $cdFile
+			$wc = New-Object System.Net.WebClient
+			$wc.DownloadFile($downloadurl, $url)
+			$extractLocation = $DownloadToFolder +"\" + "contentdistribution\"
+			#$fileFolder = $DownloadToFolder +"\" + "contentdistribution\"
+			if((Test-Path -Path $extractLocation))
+			{
+				Remove-Item –path $extractLocation –recurse
+			}			
+			if (!(Test-Path -Path $extractLocation)) {
+				New-Item -Path $extractLocation -Type Directory -Force
+			}
+			if (Test-Path $extractLocation) {
+				Expand-Archive -LiteralPath $url -DestinationPath $extractLocation
+			}		
+		} 
+		return $DownloadToFolder
+    }
+    catch{
+          Write-Error -Message $_.Exception
+          throw $_.Exception
+    }
+ }

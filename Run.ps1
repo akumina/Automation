@@ -355,9 +355,12 @@ if(Test-Path $parametersFile)
 	{
 		$createTrafficManager=read-host $JsonObject.parameters.createTrafficManager.inputMessage
 		#$createTrafficManager = ($createTrafficManager -eq [bool]::TrueString)
-		$createTrafficManager = validateInput($createTrafficManager)
+		if(validateInput($createTrafficManager))
+		{
+			$createTrafficManager = $true
+		}
 	}	
-	else { Write-Host "createTrafficManager = " $createTrafficManager }
+	else {$createTrafficManager = $false}
 	$createDistributionApp=$JsonObject.parameters.createDistributionApp.value
 	if($createDistributionApp -eq "")
 	{
@@ -395,12 +398,13 @@ if(Test-Path $parametersFile)
 				$akAppManagerUrl=read-host $JsonObject.parameters.akAppManagerUrl.inputMessage
 			}
 			else { Write-Host "AkAppManagerUrl = " $akAppManagerUrl }
-			$distributionAppDirectory=$JsonObject.parameters.distributionAppDirectory.value
-			if($distributionAppDirectory -eq "")
-			{
-				$distributionAppDirectory=read-host $JsonObject.parameters.distributionAppDirectory.inputMessage
-			}
-			else { Write-Host "DistributionAppDirectory = " $distributionAppDirectory }
+			$distributionAppDirectory=''
+			#$distributionAppDirectory=$JsonObject.parameters.distributionAppDirectory.value
+			#if($distributionAppDirectory -eq "")
+			#{
+			#	$distributionAppDirectory=read-host $JsonObject.parameters.distributionAppDirectory.inputMessage
+			#}
+			#else { Write-Host "DistributionAppDirectory = " $distributionAppDirectory }
 			$akDistributionKeyVaultUri=$JsonObject.parameters.akDistributionKeyVaultUri.value
 			if($akDistributionKeyVaultUri -eq "")
 			{
@@ -446,18 +450,19 @@ if(Test-Path $parametersFile)
 				$akAppManagerUrl=read-host $JsonObject.parameters.akAppManagerUrl.inputMessage
 			}
 			else { Write-Host "AkAppManagerUrl = " $akAppManagerUrl }
-			$distributionAppDirectory=$JsonObject.parameters.distributionAppDirectory.value
-			if($distributionAppDirectory -eq "")
-			{
-				$distributionAppDirectory=read-host $JsonObject.parameters.distributionAppDirectory.inputMessage
-			}
-			else { Write-Host "DistributionAppDirectory = " $distributionAppDirectory }
+			$distributionAppDirectory=''
+			#$distributionAppDirectory=$JsonObject.parameters.distributionAppDirectory.value
+			#if($distributionAppDirectory -eq "")
+			#{
+			#	$distributionAppDirectory=read-host $JsonObject.parameters.distributionAppDirectory.inputMessage
+			#}
+			#else { Write-Host "DistributionAppDirectory = " $distributionAppDirectory }
 			$akDistributionKeyVaultUri=$JsonObject.parameters.akDistributionKeyVaultUri.value
 			if($akDistributionKeyVaultUri -eq "")
 			{
 				$akDistributionKeyVaultUri=read-host $JsonObject.parameters.akDistributionKeyVaultUri.inputMessage
 			}
-			else { Write-Host "DistributionAppDirectory = " $akDistributionKeyVaultUri }
+			else { Write-Host "akDistributionKeyVaultUri = " $akDistributionKeyVaultUri }
 		}
 		else{$createDistributionApp = $false}
 	}
