@@ -13,6 +13,7 @@
 #		Example commands: Set-ExecutionPolicy RemoteSigned  OR Set-ExecutionPolicy Unrestricted
 # 5.	To get a list of Azure server locations, log into your Azure portal, open a PowerShell and run the command Get-AzureRmLocation
 
+
 $ErrorActionPreference = 'Stop'
 
 $version=$PSVersionTable.PSVersion.Major
