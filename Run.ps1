@@ -13,7 +13,7 @@
 #		Example commands: Set-ExecutionPolicy RemoteSigned  OR Set-ExecutionPolicy Unrestricted
 # 5.	To get a list of Azure server locations, log into your Azure portal, open a PowerShell and run the command Get-AzureRmLocation
 
-
+cd C:\Users\srinivasa\source\repos\Markets\AzureInstall
 $ErrorActionPreference = 'Stop'
 
 $version=$PSVersionTable.PSVersion.Major
@@ -351,17 +351,42 @@ if(Test-Path $parametersFile)
 		}
 		else{$createRedisCache = $false}
 	}	
+
 	$createTrafficManager=$JsonObject.parameters.createTrafficManager.value
 	if($createTrafficManager -eq "")
 	{
 		$createTrafficManager=read-host $JsonObject.parameters.createTrafficManager.inputMessage
-		#$createTrafficManager = ($createTrafficManager -eq [bool]::TrueString)
+		#$createRedisCache = ($createRedisCache -eq [bool]::TrueString)
+		#if($createRedisCache -eq $true -Or $createRedisCache -eq $True)
 		if(validateInput($createTrafficManager))
 		{
 			$createTrafficManager = $true
+			$createTrafficManager=$JsonObject.parameters.createTrafficManager.value
+			if($createTrafficManager -eq "")
+			{
+				$createTrafficManager=read-host $JsonObject.parameters.createTrafficManager.inputMessage
+			}
+			else { Write-Host "$createTrafficManager = " $createTrafficManager }
 		}
+		else{$createTrafficManager = $false}
+	}
+	else{
+		Write-Host "createTrafficManager = " $createTrafficManager
+		#$createRedisCache = ($createRedisCache -eq [bool]::TrueString)
+		#if($createRedisCache -eq $true -Or $createRedisCache -eq $True)
+		if(validateInput($createTrafficManager))
+		{
+			$createTrafficManager = $true
+			$createTrafficManager=$JsonObject.parameters.createTrafficManager.value
+			if($createTrafficManager -eq "")
+			{
+				$createTrafficManager=read-host $JsonObject.parameters.createTrafficManager.inputMessage
+			}
+			else { Write-Host "createTrafficManager = " $createTrafficManager }
+		}
+		else{$createTrafficManager = $false}
 	}	
-	else {$createTrafficManager = $false}
+	
 	$createDistributionApp=$JsonObject.parameters.createDistributionApp.value
 	if($createDistributionApp -eq "")
 	{
@@ -370,23 +395,37 @@ if(Test-Path $parametersFile)
 		#if($createDistributionApp -eq $true -Or $createDistributionApp -eq $True)
 		if(validateInput($createDistributionApp))
 		{
-			$createDistributionApp = $true			
-			if ($createStrorage -eq $false)
-			{
-				Write-Host "Storage account needed for Content Distribution App creation" -ForegroundColor Cyan
-				$createStrorage = $true
-				$storageAccountName=$JsonObject.parameters.storageAccountName.value
-				if($storageAccountName -eq "")
-				{
-					$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
-				}
-			}
+			$createDistributionApp = $true	
 			$functionAppName=$JsonObject.parameters.functionAppName.value
 			if($functionAppName -eq "")
 			{
 				$functionAppName=read-host $JsonObject.parameters.functionAppName.inputMessage
 			}
 			else { Write-Host "FunctionAppName = " $functionAppName }
+
+			$akDistributionConnectionName=$JsonObject.parameters.akDistributionConnectionName.value
+			if($akDistributionConnectionName -eq "")
+			{
+				$akDistributionConnectionName=read-host $JsonObject.parameters.akDistributionConnectionName.inputMessage
+			}
+			else { Write-Host "$akDistributionConnectionName = " $akDistributionConnectionName }
+			$akDistributionQueneName=$JsonObject.parameters.akDistributionQueneName.value
+			if($akDistributionQueneName -eq "")
+			{
+				$akDistributionQueneName=read-host $JsonObject.parameters.akDistributionQueneName.inputMessage
+			}
+			else { Write-Host "akDistributionQueneName = " $akDistributionQueneName }
+			if($createStrorage -eq $false)
+			{
+				Write-Host "Storage account needed for Content Distribution App creation" -ForegroundColor Cyan
+				$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+			}
+			if($createAKeyVault -eq $false)
+			{
+				Write-Host "keyVault Name needed for Content Distribution App creation" -ForegroundColor Cyan
+				$keyVaultName=read-host $JsonObject.parameters.keyVaultName.inputMessage					
+			}
+			
 			$akQueryKey= $JsonObject.parameters.akQueryKey.value
 			if($akQueryKey -eq "")
 			{
@@ -410,8 +449,9 @@ if(Test-Path $parametersFile)
 			if($akDistributionKeyVaultUri -eq "")
 			{
 				$akDistributionKeyVaultUri=read-host $JsonObject.parameters.akDistributionKeyVaultUri.inputMessage
+				#$createStrorage = $true
 			}
-			else { Write-Host "DistributionAppDirectory = " $akDistributionKeyVaultUri }
+			else { Write-Host "akDistributionKeyVaultUri = " $akDistributionKeyVaultUri }
 		}
 		else{$createDistributionApp = $false}
 	}
@@ -423,22 +463,35 @@ if(Test-Path $parametersFile)
 		if(validateInput($createDistributionApp))
 		{
 			$createDistributionApp = $true
-			if ($createStrorage -eq $false)
-			{
-				Write-Host "Storage account needed for Content Distribution App creation" -ForegroundColor Cyan
-				$createStrorage = $true
-				$storageAccountName=$JsonObject.parameters.storageAccountName.value
-				if($storageAccountName -eq "")
-				{
-					$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
-				}
-			}
 			$functionAppName=$JsonObject.parameters.functionAppName.value
 			if($functionAppName -eq "")
 			{
 				$FunctionAppName=read-host $JsonObject.parameters.functionAppName.inputMessage
 			}
 			else { Write-Host "FunctionAppName = " $functionAppName }
+			$akDistributionConnectionName=$JsonObject.parameters.akDistributionConnectionName.value
+			if($akDistributionConnectionName -eq "")
+			{
+				$akDistributionConnectionName=read-host $JsonObject.parameters.akDistributionConnectionName.inputMessage
+			}
+			else { Write-Host "$akDistributionConnectionName = " $akDistributionConnectionName }
+			$akDistributionQueneName=$JsonObject.parameters.akDistributionQueneName.value
+			if($akDistributionQueneName -eq "")
+			{
+				$akDistributionQueneName=read-host $JsonObject.parameters.akDistributionQueneName.inputMessage
+			}
+			else { Write-Host "akDistributionQueneName = " $akDistributionQueneName }
+			if($createStrorage -eq $false)
+			{
+				Write-Host "Storage account needed for Content Distribution App creation" -ForegroundColor Cyan
+				$storageAccountName=read-host $JsonObject.parameters.storageAccountName.inputMessage
+			}
+			if($createAKeyVault -eq $false)
+			{
+				Write-Host "keyVault Name needed for Content Distribution App creation" -ForegroundColor Cyan
+				$keyVaultName=read-host $JsonObject.parameters.keyVaultName.inputMessage					
+			}
+			
 			$akQueryKey= $JsonObject.parameters.akQueryKey.value
 			if($AkQueryKey -eq "")
 			{
@@ -472,7 +525,7 @@ if(Test-Path $parametersFile)
 		$baseName = $resourceGroupName
 	}
 	#if ($resourceGroupName -eq "")
-	ProvisionAkWebApp  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -CreateDistributionApp $createDistributionApp -AkQueryKey $akQueryKey -AkAppManagerUrl $akAppManagerUrl -DistributionAppDirectory $distributionAppDirectory -FunctionAppName $functionAppName	-vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStrorage $createStrorage -createAKeyVault $createAKeyVault -akDistributionKeyVaultUri $akDistributionKeyVaultUri
+	ProvisionAkWebApp  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -CreateDistributionApp $createDistributionApp -AkQueryKey $akQueryKey -AkAppManagerUrl $akAppManagerUrl -DistributionAppDirectory $distributionAppDirectory -FunctionAppName $functionAppName	-vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStrorage $createStrorage -createAKeyVault $createAKeyVault -akDistributionKeyVaultUri $akDistributionKeyVaultUri -akDistributionConnectionName $akDistributionConnectionName
 }
 else
 {

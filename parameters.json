@@ -3,11 +3,11 @@
 	"contentVersion": "1.0.0.0",
   "parameters": {
     "tenantId": {
-      "value": "",
+      "value": "8ffa3296-0d85-4510-87da-9512e74e624f",
       "inputMessage": "Enter TenantId (DirectoryId)"
     },
     "subscriptionId": {
-      "value": "",
+      "value": "b77aa1d2-4467-4fd1-8956-9160180cc878",
       "inputMessage": "Enter subscriptionId"
     },
     "resourceGroupName": {
@@ -100,17 +100,25 @@
       "value": "",
       "inputMessage": "Enter Function App name"
     },
-    "akQueryKey": {
+    "akDistributionConnectionName": {
       "value": "",
-      "inputMessage": "Enter App QueryKey to create Content Distribution app"
+      "inputMessage": "Enter Content Distribution Queue binding ConnectionName"
+    },
+    "akDistributionQueneName": {
+      "value": "",
+      "inputMessage": "Enter Distribution Queue Name"
     },
     "akAppManagerUrl": {
       "value": "",
-      "inputMessage": "Enter App ManagerUrl to create Content Distribution app"
+      "inputMessage": "Enter AppManager content distribution Url"
+    },
+    "akQueryKey": {
+      "value": "",
+      "inputMessage": "Enter AppManager Query Key"
     },
     "akDistributionKeyVaultUri": {
       "value": "",
-      "inputMessage": "Enter AkDistributionKeyVaultUri to create Content Distribution app"
+      "inputMessage": "Enter Distribution Storage Connection KeyVaultUri to bind QueueEvent of Content Distribution"
     },
     "distributionAppDirectory": {
       "value": "",
