@@ -54,7 +54,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
 	#	$createStrorage = $true	
 	#}
     
-    #Login-AzureRmAccount -TenantId $TenantId 
+    Login-AzureRmAccount -TenantId $TenantId 
     $credentials = Connect-AzureAD -TenantId $TenantId
     $user = Get-AzureRmADUser -UserPrincipalName $credentials.Account.Id
     $appData=Get-AzureRmADApplication -DisplayNameStartWith $AadAppName -ErrorVariable aadAppNotExists -ErrorAction SilentlyContinue
@@ -84,7 +84,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
     }
 	if($createStrorage)
 	{
-		$storage = CreateStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location
+		$storage = CreateStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location -contentdistribution $false
 		$ctx = $storage.Context
 	}
 	else {
@@ -236,7 +236,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
 
 			if($StorageAccountName  -eq $ResourceGroupName)
 			{
-				$storage = CreateStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location
+				$storage = CreateStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location -contentdistribution $true
 				$ctx = $storage.Context
 			}
 			else
@@ -248,7 +248,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
 			{					
 				if($StorageAccountName -eq $ResourceGroupName)
 				{
-					$storage = CreateStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location
+					$storage = CreateStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location -contentdistribution $true
 					$ctx = $storage.Context
 				}
 				else
@@ -306,6 +306,11 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
 			if((Test-Path -Path $extractLocation))
 			{
 				Remove-Item  -Recurse -Force -Path $extractLocation
+				New-Item -Path $extractLocation -ItemType directory
+				$extractLocation = "$extractLocation\$newGuid"
+				New-Item -Path $extractLocation\ -ItemType directory
+			}
+			else{
 				New-Item -Path $extractLocation -ItemType directory
 				$extractLocation = "$extractLocation\$newGuid"
 				New-Item -Path $extractLocation\ -ItemType directory
@@ -544,7 +549,7 @@ Function CreateResourceGroup([string]$ResourceGroupName, [string]$Location) {
 
 Function CreateStorageAccount {
     [OutputType([StorageData])]
-    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$StorageAccountName, [string]$Location, $SkuName = "Standard_LRS")
+    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$StorageAccountName, [string]$Location, $SkuName = "Standard_LRS",[bool]$contentdistribution)
     $st = Get-AzureRmStorageAccountNameAvailability -Name $StorageAccountName
     if ($st.NameAvailable) {
         Write-Host "Provisioning storage account started..." -ForegroundColor Cyan
@@ -552,7 +557,10 @@ Function CreateStorageAccount {
         Write-Host "Provisioning storage account ended..." -ForegroundColor Cyan
     }
     else {
-        Write-Host "Provisioning storage account skipped..." -ForegroundColor Cyan
+		if($contentdistribution -eq $false)
+		{
+			Write-Host "Provisioning storage account skipped..." -ForegroundColor Cyan
+		}
     }
     # Retrieve the context. 
     #$ctx = $storageAccount.Context

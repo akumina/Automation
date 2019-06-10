@@ -13,7 +13,7 @@
 #		Example commands: Set-ExecutionPolicy RemoteSigned  OR Set-ExecutionPolicy Unrestricted
 # 5.	To get a list of Azure server locations, log into your Azure portal, open a PowerShell and run the command Get-AzureRmLocation
 
-cd C:\Users\srinivasa\source\repos\Markets\AzureInstall
+
 $ErrorActionPreference = 'Stop'
 
 $version=$PSVersionTable.PSVersion.Major
@@ -423,7 +423,18 @@ if(Test-Path $parametersFile)
 			if($createAKeyVault -eq $false)
 			{
 				Write-Host "keyVault Name needed for Content Distribution App creation" -ForegroundColor Cyan
-				$keyVaultName=read-host $JsonObject.parameters.keyVaultName.inputMessage					
+				$keyVaultName=read-host $JsonObject.parameters.keyVaultName.inputMessage	
+				
+				if($keyVaultName -eq "")
+				{
+					$akDistributionKeyVaultUri=$JsonObject.parameters.akDistributionKeyVaultUri.value
+					if($akDistributionKeyVaultUri -eq "")
+					{
+						$akDistributionKeyVaultUri=read-host $JsonObject.parameters.akDistributionKeyVaultUri.inputMessage
+						#$createStrorage = $true
+					}
+					else { Write-Host "akDistributionKeyVaultUri = " $akDistributionKeyVaultUri }
+				}
 			}
 			
 			$akQueryKey= $JsonObject.parameters.akQueryKey.value
@@ -445,13 +456,7 @@ if(Test-Path $parametersFile)
 			#	$distributionAppDirectory=read-host $JsonObject.parameters.distributionAppDirectory.inputMessage
 			#}
 			#else { Write-Host "DistributionAppDirectory = " $distributionAppDirectory }
-			$akDistributionKeyVaultUri=$JsonObject.parameters.akDistributionKeyVaultUri.value
-			if($akDistributionKeyVaultUri -eq "")
-			{
-				$akDistributionKeyVaultUri=read-host $JsonObject.parameters.akDistributionKeyVaultUri.inputMessage
-				#$createStrorage = $true
-			}
-			else { Write-Host "akDistributionKeyVaultUri = " $akDistributionKeyVaultUri }
+			
 		}
 		else{$createDistributionApp = $false}
 	}
@@ -489,7 +494,17 @@ if(Test-Path $parametersFile)
 			if($createAKeyVault -eq $false)
 			{
 				Write-Host "keyVault Name needed for Content Distribution App creation" -ForegroundColor Cyan
-				$keyVaultName=read-host $JsonObject.parameters.keyVaultName.inputMessage					
+				$keyVaultName=read-host $JsonObject.parameters.keyVaultName.inputMessage
+				if($keyVaultName -eq "")
+				{
+					$akDistributionKeyVaultUri=$JsonObject.parameters.akDistributionKeyVaultUri.value
+					if($akDistributionKeyVaultUri -eq "")
+					{
+						$akDistributionKeyVaultUri=read-host $JsonObject.parameters.akDistributionKeyVaultUri.inputMessage
+						#$createStrorage = $true
+					}
+					else { Write-Host "akDistributionKeyVaultUri = " $akDistributionKeyVaultUri }
+				}
 			}
 			
 			$akQueryKey= $JsonObject.parameters.akQueryKey.value
@@ -510,13 +525,7 @@ if(Test-Path $parametersFile)
 			#{
 			#	$distributionAppDirectory=read-host $JsonObject.parameters.distributionAppDirectory.inputMessage
 			#}
-			#else { Write-Host "DistributionAppDirectory = " $distributionAppDirectory }
-			$akDistributionKeyVaultUri=$JsonObject.parameters.akDistributionKeyVaultUri.value
-			if($akDistributionKeyVaultUri -eq "")
-			{
-				$akDistributionKeyVaultUri=read-host $JsonObject.parameters.akDistributionKeyVaultUri.inputMessage
-			}
-			else { Write-Host "akDistributionKeyVaultUri = " $akDistributionKeyVaultUri }
+			#else { Write-Host "DistributionAppDirectory = " $distributionAppDirectory }			
 		}
 		else{$createDistributionApp = $false}
 	}
