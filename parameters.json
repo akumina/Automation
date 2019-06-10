@@ -3,11 +3,11 @@
 	"contentVersion": "1.0.0.0",
   "parameters": {
     "tenantId": {
-      "value": "8ffa3296-0d85-4510-87da-9512e74e624f",
+      "value": "",
       "inputMessage": "Enter TenantId (DirectoryId)"
     },
     "subscriptionId": {
-      "value": "b77aa1d2-4467-4fd1-8956-9160180cc878",
+      "value": "",
       "inputMessage": "Enter subscriptionId"
     },
     "resourceGroupName": {
