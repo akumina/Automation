@@ -22,7 +22,6 @@
       "value": "",
       "inputMessage": "Enter App name (ex.,aksvchub01), leave empty if you want to create a App name as resource group name"
     },
-
     "storageAccountName": {
       "value": "",
       "inputMessage": "Enter StorageAccount name, leave empty if you want to create a Storage Account as App name"
@@ -43,7 +42,6 @@
       "value": "",
       "inputMessage": "Do you wanto create KeyVault (y/n)"
     },
-
     "keyVaultName": {
       "value": "",
       "inputMessage": "Enter KeyVault name, leave empty if you want to create a key vault as App name"
@@ -119,10 +117,6 @@
     "akDistributionKeyVaultUri": {
       "value": "",
       "inputMessage": "Enter Distribution Storage Connection KeyVaultUri to bind QueueEvent of Content Distribution"
-    },
-    "distributionAppDirectory": {
-      "value": "",
-      "inputMessage": "Enter Local Content Distribution App Directory, leave empty if you want to upload the files later"
     }
   }
 }

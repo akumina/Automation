@@ -14,11 +14,11 @@ class FtpData {
     [string]$Password
 }
 
-Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location,[string]$AadAppName = "", [string]$ResourceGroupName = "",[string]$StorageAccountName = "",[string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "",[bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "",[bool]$CreateDistributionApp = $false, [string]$AkQueryKey = "", [string]$AkAppManagerUrl = "",[string]$DistributionAppDirectory,[string]$FunctionAppName, [string]$vnetAddressPrefix ,[string]$subnetPrefix , [bool]$createWebApp =$false,[bool]$createAzureADApp=$false,[bool]$createStrorage=$false,[bool]$createAKeyVault=$false, [string]$akDistributionKeyVaultUri="",[string]$akDistributionConnectionName="") {
+Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = "", [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "", [bool]$CreateDistributionApp = $false, [string]$AkQueryKey = "", [string]$AkAppManagerUrl = "", [string]$DistributionAppDirectory, [string]$FunctionAppName, [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false, [bool]$createAzureADApp = $false, [bool]$createStrorage = $false, [bool]$createAKeyVault = $false, [string]$akDistributionConnectionName = "",[string]$akDistributionQueneName) {
     if ($BaseName -eq "") {
         $BaseName = $ResourceGroupName
     }
-	$HomePage = "https://$BaseName.azurewebsites.net"
+    $HomePage = "https://$BaseName.azurewebsites.net"
     $backendIpAddress1 = "$BaseName.azurewebsites.net"
     if (($ReplyUrls.Length -eq 0) -or ($ReplyUrls[0] -eq "")) {
         $ReplyUrls = "$HomePage/oauth2/acs"
@@ -40,7 +40,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
     if ($AadAppName -eq "") {
         $AadAppName = "ad-$appName"
     }
-	if ($FunctionAppName -eq "") {
+    if ($FunctionAppName -eq "") {
         $FunctionAppName = "fn-$appName"
     }
     if ($RedisCacheName -eq "") {
@@ -49,29 +49,24 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
     if ($PfxFile -and $CreateAppGw) {
         $SecurePassword = Read-Host -Prompt "Enter Pfx password" -AsSecureString
     }
-	#if($akDistributionKeyVaultUri -eq "")
-	#{
-	#	$createStrorage = $true	
-	#}
     
     Login-AzureRmAccount -TenantId $TenantId 
     $credentials = Connect-AzureAD -TenantId $TenantId
     $user = Get-AzureRmADUser -UserPrincipalName $credentials.Account.Id
-    $appData=Get-AzureRmADApplication -DisplayNameStartWith $AadAppName -ErrorVariable aadAppNotExists -ErrorAction SilentlyContinue
-	if($createAzureADApp)
-	{
-		if ($null -eq $appData) {
-			Write-Host "Provisioning Aad App started..." -ForegroundColor Cyan
-			$appData = RegisterADApp -AppName $AadAppName -Uri $HomePage -ReplyUrls $ReplyUrls
-			Write-Host "Provisioning Aad App ended..." -ForegroundColor Cyan
-		}
-		else {
-			Write-Host "Provisioning Aad App skipped..." -ForegroundColor Cyan
-		}
-	}
-	else {
-			Write-Host "Provisioning Aad App skipped..." -ForegroundColor Cyan
-	}
+    $appData = Get-AzureRmADApplication -DisplayNameStartWith $AadAppName -ErrorVariable aadAppNotExists -ErrorAction SilentlyContinue
+    if ($createAzureADApp) {
+        if ($null -eq $appData) {
+            Write-Host "Provisioning Aad App started..." -ForegroundColor Cyan
+            $appData = RegisterADApp -AppName $AadAppName -Uri $HomePage -ReplyUrls $ReplyUrls
+            Write-Host "Provisioning Aad App ended..." -ForegroundColor Cyan
+        }
+        else {
+            Write-Host "Provisioning Aad App skipped..." -ForegroundColor Cyan
+        }
+    }
+    else {
+        Write-Host "Provisioning Aad App skipped..." -ForegroundColor Cyan
+    }
     Set-AzureRmContext -SubscriptionId $SubscriptionId 
     Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorVariable rgNotExists -ErrorAction SilentlyContinue
     if ($rgNotExists) {
@@ -82,63 +77,37 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
     else {
         Write-Host "Provisioning Resource Group skipped..." -ForegroundColor Cyan
     }
-	if($createStrorage)
-	{
-		$storage = CreateStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location -contentdistribution $false
-		$ctx = $storage.Context
-	}
-	else {
+    if ($createStrorage) {
+        $storage = CreateStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location
+    }
+    else {
         Write-Host "Storage creation skipped..." -ForegroundColor Cyan
     }
-	if($createWebApp)
-	{
-		$wp = Get-AzureRmWebApp -Name $appName
-		if ($null -eq $wp) {
-			Write-Host "Provisioning webapp started..." -ForegroundColor Cyan
-			New-AzureRmResourceGroupDeployment -Name $appName -TemplateFile akwebapp.json -ResourceGroupName $ResourceGroupName -baseResourceName $appName
-			Write-Host "Provisioning webapp ended..." -ForegroundColor Cyan
-		}
-		else {
-			Write-Host "Provisioning webapp skipped..." -ForegroundColor Cyan
-		}
-	}
-	else {
+    if ($createWebApp) {
+        $wp = Get-AzureRmWebApp -Name $appName
+        if ($null -eq $wp) {
+            Write-Host "Provisioning webapp started..." -ForegroundColor Cyan
+            New-AzureRmResourceGroupDeployment -Name $appName -TemplateFile akwebapp.json -ResourceGroupName $ResourceGroupName -baseResourceName $appName
+            Write-Host "Provisioning webapp ended..." -ForegroundColor Cyan
+        }
+        else {
+            Write-Host "Provisioning webapp skipped..." -ForegroundColor Cyan
+        }
+    }
+    else {
         Write-Host "Provisioning webapp skipped..." -ForegroundColor Cyan
     }     
-	if($createAKeyVault)
-	{
-		$servicePrincipals = $null
-		$iteration = 0
-		while ($iteration -le 12) {
-			$servicePrincipals = get-azurermadserviceprincipal -SearchString $appName
-			if ($null -ne $servicePrincipals) {
-				break
-			}
-			Start-Sleep -s 5
-			$iteration++
-		}
-		$objectId = $servicePrincipals[0].Id
-		$secretName = "StorageConnectionString"
-		$secretvalue = ConvertTo-SecureString –String $storage.ConnectionString –AsPlainText –Force 
-		$kv = Get-AzureRmKeyVault -VaultName $KeyVaultName
-		if ($null -eq $kv) {
-			Write-Host "Provisioning Keyvault started..." -ForegroundColor Cyan
-			New-AzureRmResourceGroupDeployment -Name AkWebAppKeyVault -tenantId $TenantId -keyVaultName $KeyVaultName -objectId $objectId -secretName $secretName -secretValue $secretValue -TemplateFile akkeyvault.json -ResourceGroupName $ResourceGroupName -userId  $user.Id.Guid.ToString()
-			Write-Host "Provisioning Keyvault ended..." -ForegroundColor Cyan
-		}
-		else {
-			Write-Host "Provisioning Keyvault skipped..." -ForegroundColor Cyan
-		}
-		$secretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
-	}
-	else {
-		Write-Host "Provisioning Keyvault skipped..." -ForegroundColor Cyan
-	}
-    
-	
-	
+    if ($createAKeyVault) {
+        $storageConnectionString=GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
+        $secretvalue = ConvertTo-SecureString –String $storageConnectionString –AsPlainText –Force 
+        AddKeyVault -teantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $appName -KeyVaultName $KeyVaultName -secretName "StorageConnectionString" -secretvalue $secretvalue
+        $secretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
+    }
+    else {
+        Write-Host "Provisioning Keyvault skipped..." -ForegroundColor Cyan
+    }
+    	
     if ($CreateRedisCache) {
-        #Create Redis
         Get-AzureRmRedisCache -Name $RedisCacheName -ErrorVariable rcNotExists -ErrorAction SilentlyContinue
         if ($rcNotExists) {
             Write-Host "Provisioning Redis cache started..." -ForegroundColor Cyan
@@ -155,37 +124,26 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
     }
 	
     if ($CreateAppGw) {		
-        #AppGateway
         $appGw = "$appName-appgw"
         Get-AzureRmApplicationGateway -Name $appGw -ResourceGroupName $ResourceGroupName  -ErrorVariable agNotExists -ErrorAction SilentlyContinue
         if ($agNotExists) {
             Write-Host "Provisioning App Gateway started..." -ForegroundColor Cyan
             $sslCertificate = [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($PfxFile))
-            #$cerFile= $PfxFile -replace '.pfx','.cer'
-            #$SslPublicCertificate=[System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($cerFile))
-            #New-AzureRmResourceGroupDeployment -TemplateFile testgateway.json -ResourceGroupName $ResourceGroupName -applicationGatewayName $appName -sslCertificate $sslCertificate -certPassword $securePassword -hostName $backendHostName -vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix
-			if($vnetAddressPrefix -eq "")
-			{
-				$vnetAddressPrefix = "10.10.0.0/16"
-			}
-			if($subnetPrefix -eq "")
-			{
-				$subnetPrefix = "10.10.0.0/24"
-			}
-			$webApps = Get-AzureRmWebApp -Name $appName -ResourceGroupName $ResourceGroupName
-			if ($null -eq $webApps)
-			{
-				$backendHostName = '$appName.onakumina.com'
-			}
-			else
-			{
-				$backendHostName = $webApps.DefaultHostName.ToString()				
-			}
-			#if ($backendHostName -eq "")
-			#{
-				#$backendHostName = '$appName.onakumina.com'
-			#}
-			New-AzureRmResourceGroupDeployment -TemplateFile akappgateway.json -ResourceGroupName $ResourceGroupName -applicationGatewaysName $appName -sslCertificate $sslCertificate -certPassword $securePassword -hostName $backendHostName -backendIPAddresses $backendHostName -vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix
+            if ($vnetAddressPrefix -eq "") {
+                $vnetAddressPrefix = "10.10.0.0/16"
+            }
+            if ($subnetPrefix -eq "") {
+                $subnetPrefix = "10.10.0.0/24"
+            }
+            $webApps = Get-AzureRmWebApp -Name $appName -ResourceGroupName $ResourceGroupName
+            if ($null -eq $webApps) {
+                $backendHostName = '$appName.onakumina.com'
+            }
+            else {
+                $backendHostName = $webApps.DefaultHostName.ToString()				
+            }
+
+            New-AzureRmResourceGroupDeployment -TemplateFile akappgateway.json -ResourceGroupName $ResourceGroupName -applicationGatewaysName $appName -sslCertificate $sslCertificate -certPassword $securePassword -hostName $backendHostName -backendIPAddresses $backendHostName -vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix
 						
             Write-Host "Provisioning App Gateway ended..." -ForegroundColor Cyan
         }
@@ -195,8 +153,6 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
     }
 	
     if ($CreateTrafficManager -and $CreateAppGw) {
-
-        #Create Traffic Manager
         Get-AzureRmTrafficManagerEndpoint -ProfileName $appname -Name $BackendHostName -ResourceGroupName $ResourceGroupName -Type ExternalEndpoints -ErrorVariable tmpNotExists -ErrorAction SilentlyContinue
         if ($tmpNotExists) {
             Write-Host "Provisioning Traffic manager profile started..." -ForegroundColor Cyan
@@ -211,171 +167,124 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
         }
     }
     $backgroundGuid = [guid]::NewGuid().ToString()
-	if ($CreateDistributionApp) 
-	{
-		$wp = Get-AzureRmWebApp -Name $FunctionAppName
-		if ($null -eq $wp) {
-			Write-Host "Provisioning content distribution app started..." -ForegroundColor Cyan
-			if($AkAppManagerUrl -eq "")
-			{
-				$AkAppManagerUrl="$appName.azurewebsites.net"	
-			}
-			if($AkQueryKey -eq "")
-			{
-				$AkQueryKey=$backgroundGuid	
-			}
-			#$appInsightLocation = $Location -replace "[^a-zA-Z]" , ''
-			$appInsightLocation = $Location
-			New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $FunctionAppName -appName $FunctionAppName -TemplateFile akfunapp.json -location $appInsightLocation
-			Write-Host "Provisioning content distribution app ended..." -ForegroundColor Cyan
-			if(($akDistributionConnectionName -eq ""))
-			{
-				$akDistributionConnectionKeyName = "AzureWebJobsStorage"
-			}
-			else {$akDistributionConnectionKeyName = $akDistributionConnectionName}
+    if ($CreateDistributionApp) {
+        $wp = Get-AzureRmWebApp -Name $FunctionAppName
+        if ($null -eq $wp) {
+            Write-Host "Provisioning content distribution app started..." -ForegroundColor Cyan
+            if ($AkAppManagerUrl -eq "") {
+                $AkAppManagerUrl = "$appName.azurewebsites.net"	
+            }
+            if ($AkQueryKey -eq "") {
+                $AkQueryKey = $backgroundGuid	
+            }
+            $appInsightLocation = $Location
+            New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $FunctionAppName -appName $FunctionAppName -TemplateFile akfunapp.json -location $appInsightLocation
+            Set-AzureRmWebApp -AssignIdentity $true -Name $FunctionAppName -ResourceGroupName $ResourceGroupName
+            Write-Host "Provisioning content distribution app ended..." -ForegroundColor Cyan
+            if (($akDistributionConnectionName -eq "")) {
+                $akDistributionConnectionName = "AzureWebJobsStorage"
+            }
 
-			if($StorageAccountName  -eq $ResourceGroupName)
-			{
-				$storage = CreateStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location -contentdistribution $true
-				$ctx = $storage.Context
-			}
-			else
-			{
-				$storage = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
-				$ctx = $storage.Context
-			}
-			if ($akDistributionKeyVaultUri -eq "")
-			{					
-				if($StorageAccountName -eq $ResourceGroupName)
-				{
-					$storage = CreateStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location -contentdistribution $true
-					$ctx = $storage.Context
-				}
-				else
-				{
-					$storage = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
-					$ctx = $storage.Context
-				}
-				#$KeyVaultName = $appname
-				if($keyVaultName -eq $ResourceGroupName)
-				{		
-					$servicePrincipals = $null
-					$iteration = 0
-					while ($iteration -le 12) {
-						$servicePrincipals = get-azurermadserviceprincipal -SearchString $FunctionAppName
-						if ($null -ne $servicePrincipals) {
-							break
-						}
-						Start-Sleep -s 5
-						$iteration++
-					}
-					$objectId = $servicePrincipals[0].Id
-					$secretName = "StorageConnectionString"
-					$secretvalue = ConvertTo-SecureString –String $storage.ConnectionString –AsPlainText –Force 
-					$kv = Get-AzureRmKeyVault -VaultName $KeyVaultName
-					if ($null -eq $kv) {
-						#Write-Host "Provisioning Keyvault started..." -ForegroundColor Cyan
-						New-AzureRmResourceGroupDeployment -Name AkWebAppKeyVault -tenantId $TenantId -keyVaultName $KeyVaultName -objectId $objectId -secretName $secretName -secretValue $secretValue -TemplateFile akkeyvault.json -ResourceGroupName $ResourceGroupName -userId  $user.Id.Guid.ToString()
-						#Write-Host "Provisioning Keyvault ended..." -ForegroundColor Cyan
-					}
-					$secretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
-					$akDistributionConnKeyVaultUri = $secretIdUri.Id
-					$akDistributionConnectionKeyValue ="@Microsoft.KeyVault(SecretUri=$akDistributionConnKeyVaultUri)"
-				}
-				else{				
-					$kv = Get-AzureRmKeyVault -VaultName $KeyVaultName
-					if ($null -eq $kv) {
-						#Write-Host "Provisioning Keyvault started..." -ForegroundColor Cyan
-						New-AzureRmResourceGroupDeployment -Name AkWebAppKeyVault -tenantId $TenantId -keyVaultName $KeyVaultName -objectId $objectId -secretName $secretName -secretValue $secretValue -TemplateFile akkeyvault.json -ResourceGroupName $ResourceGroupName -userId  $user.Id.Guid.ToString()
-						#Write-Host "Provisioning Keyvault ended..." -ForegroundColor Cyan
-					}
-					$secretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
-					$akDistributionConnKeyVaultUri = $secretIdUri.Id
-					$akDistributionConnectionKeyValue ="@Microsoft.KeyVault(SecretUri=$akDistributionConnKeyVaultUri)"
-				}
-			}
-			else
-			{
-				$akDistributionConnectionKeyValue ="@Microsoft.KeyVault(SecretUri=$akDistributionConnKeyVaultUri)"
-			}
+            $storageConnectionString=GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
+                 
+            $secretvalue = ConvertTo-SecureString –String $storageConnectionString –AsPlainText –Force 
+            $secretName="DistributionStorageConnectionString"
+            AddKeyVault -teantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $FunctionAppName -KeyVaultName $KeyVaultName -secretName $secretName -secretvalue $secretvalue
+            Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $secretName -SecretValue $secretvalue
+            $cdSecretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
+            $akDistributionConnectionKeyValue = "@Microsoft.KeyVault(SecretUri=$($cdSecretIdUri.Id))"
 			
-			Set-AzureRmWebApp -AssignIdentity $true -Name $FunctionAppName -ResourceGroupName $ResourceGroupName
-			$newGuid = [guid]::newguid()
-			$tempFolder = $env:temp
-			$extractLocation = "$tempFolder\Akumina"
-			if((Test-Path -Path $extractLocation))
-			{
-				Remove-Item  -Recurse -Force -Path $extractLocation
-				New-Item -Path $extractLocation -ItemType directory
-				$extractLocation = "$extractLocation\$newGuid"
-				New-Item -Path $extractLocation\ -ItemType directory
-			}
-			else{
-				New-Item -Path $extractLocation -ItemType directory
-				$extractLocation = "$extractLocation\$newGuid"
-				New-Item -Path $extractLocation\ -ItemType directory
-			}
-			$DownloadToFolder = $extractLocation
-			$cdFile = "contentdistributionv0.1.zip"
-			$downloadurl ="https://akumina.azureedge.net/interchange/contentdistribution/contentdistributionv0.1.zip"			
-			$fileFolder = DownloadContentDistributionFiles -DownloadToFolder $DownloadToFolder -downloadurl $downloadurl -cdFile $cdFile
-			$DistributionAppDirectory = $DownloadToFolder
-			$replaceText = """connection"":""$akDistributionConnectionKeyName"""
-			(Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"connection": "AzureWebJobsStorage"',$replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json
-			$replaceText = """connection"":""$akDistributionQueneName"""
-			(Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"queueName": "ws2019queue"',$replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json
-			$DistributionAppFtp = UpdateFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -AkQueryKey $AkQueryKey -AkAppManagerUrl $AkAppManagerUrl -FunctionAppName $FunctionAppName -AkDistributionKeyVaultUri $akDistributionKeyVaultUri -StorageAccountName $StorageAccountName -akDistributionConnectionKeyName $akDistributionConnectionKeyName -akDistributionConnectionKeyValue $akDistributionConnectionKeyValue			
-			
-		}
-		else{
-			Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
-		}
-    }
-	else{
-			Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
-	}
-
-    if ($localAppDirectory -ne "") {
-        ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:RemoteStorageConnection" -newValue $secretIdUri.Id
-        ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:BackgroundProcessorKey" -newValue $backgroundGuid
-        ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:LogListener" -newValue "AzureTable"
-        if ($CreateRedisCache) {
-            ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:PrimaryRedisConnection" -newValue $cacheKeyData.ConnectionString
-            UpdateUnityCachingToRedis -configFilePath "$localAppDirectory\unity.config" 
+            $newGuid = [guid]::newguid()
+            $tempFolder = $env:temp
+            $extractLocation = "$tempFolder\Akumina"
+            if ((Test-Path -Path $extractLocation)) {
+                Remove-Item  -Recurse -Force -Path $extractLocation
+                New-Item -Path $extractLocation -ItemType directory
+                $extractLocation = "$extractLocation\$newGuid"
+                New-Item -Path $extractLocation\ -ItemType directory
+            }
+            else {
+                New-Item -Path $extractLocation -ItemType directory
+                $extractLocation = "$extractLocation\$newGuid"
+                New-Item -Path $extractLocation\ -ItemType directory
+            }
+            $DownloadToFolder = $extractLocation
+            $cdFile = "contentdistributionv0.2.zip"
+            $downloadurl = "https://akumina.azureedge.net/interchange/contentdistribution/$cdFile"			
+            $fileFolder = DownloadContentDistributionFiles -DownloadToFolder $DownloadToFolder -downloadurl $downloadurl -cdFile $cdFile
+            $DistributionAppDirectory = $DownloadToFolder
+            $replaceText = """connection"":""$akDistributionConnectionName"""
+            (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"connection": "AzureWebJobsStorage"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json
+            $replaceText = """queueName"":""$akDistributionQueneName"""
+            (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"queueName": "ws2019queue"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json
+            $DistributionAppFtp = UpdateFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -AkQueryKey $AkQueryKey -AkAppManagerUrl $AkAppManagerUrl -AkDistributionKeyVaultUri $akDistributionKeyVaultUri -StorageAccountName $StorageAccountName -akDistributionConnectionKeyName $akDistributionConnectionKeyName -akDistributionConnectionKeyValue $akDistributionConnectionKeyValue			
         }
-    }
-		if($createWebApp)
-		{
-			$ftp = UpdateWebApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $appName -Location $Location -AppDirectory $localAppDirectory -CustomEmails $CustomEmails
+        else {
+            Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
+        }
+
+        else {
+            Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
+        }
+
+        if ($localAppDirectory -ne "") {
+            ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:RemoteStorageConnection" -newValue $secretIdUri.Id
+            ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:BackgroundProcessorKey" -newValue $backgroundGuid
+            ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:LogListener" -newValue "AzureTable"
+            if ($CreateRedisCache) {
+                ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:PrimaryRedisConnection" -newValue $cacheKeyData.ConnectionString
+                UpdateUnityCachingToRedis -configFilePath "$localAppDirectory\unity.config" 
+            }
+        }
+        if ($createWebApp) {
+            $ftp = UpdateWebApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $appName -Location $Location -AppDirectory $localAppDirectory -CustomEmails $CustomEmails
 			
-		}
+        }
 		
-		Write-Host "AD App Name: $AadAppName" -ForegroundColor Cyan
-		Write-Host "AD App ID: "($appData.AppId) -ForegroundColor Cyan
-		Write-Host "AD App Secret: "($appData.AppSecret) -ForegroundColor Cyan
-		Write-Host "Storage ConnectionString: "($storage.ConnectionString) -ForegroundColor Cyan
-		Write-Host "Secret Id Uri: "($secretIdUri.Id) -ForegroundColor Cyan
-		Write-Host "Redis Connection String: "($cacheKeyData.ConnectionString) -ForegroundColor Cyan
-		Write-Host "AzureWebSite Url: $HomePage" -ForegroundColor Cyan		
-		Write-Host "BackgroundProcessorKey: $backgroundGuid" -ForegroundColor Cyan
-		if($createWebApp)
-		{			
-			Write-Host "FTP Host: "($ftp.Host) -ForegroundColor Cyan
-			Write-Host "FTP User: "($ftp.UserName) -ForegroundColor Cyan
-			Write-Host "FTP Password: "($ftp.Password) -ForegroundColor Cyan
-		}
-		elseif($DistributionAppFtp -ne "")
-		{
-			Write-Host "FTP Host: "($DistributionAppFtp.Host) -ForegroundColor Cyan
-			Write-Host "FTP User: "($DistributionAppFtp.UserName) -ForegroundColor Cyan
-			Write-Host "FTP Password: "($DistributionAppFtp.Password) -ForegroundColor Cyan
-		}
-
-
-		Write-Host "DONE!" -ForegroundColor Green
-	
+        Write-Host "AD App Name: $AadAppName" -ForegroundColor Cyan
+        Write-Host "AD App ID: "($appData.AppId) -ForegroundColor Cyan
+        Write-Host "AD App Secret: "($appData.AppSecret) -ForegroundColor Cyan
+        Write-Host "Storage ConnectionString: "($storage.ConnectionString) -ForegroundColor Cyan
+        Write-Host "Secret Id Uri: "($secretIdUri.Id) -ForegroundColor Cyan
+        Write-Host "Redis Connection String: "($cacheKeyData.ConnectionString) -ForegroundColor Cyan
+        Write-Host "AzureWebSite Url: $HomePage" -ForegroundColor Cyan		
+        Write-Host "BackgroundProcessorKey: $backgroundGuid" -ForegroundColor Cyan
+        if ($createWebApp) {			
+            Write-Host "FTP Host: "($ftp.Host) -ForegroundColor Cyan
+            Write-Host "FTP User: "($ftp.UserName) -ForegroundColor Cyan
+            Write-Host "FTP Password: "($ftp.Password) -ForegroundColor Cyan
+        }
+        elseif ($DistributionAppFtp -ne "") {
+            Write-Host "FTP Host: "($DistributionAppFtp.Host) -ForegroundColor Cyan
+            Write-Host "FTP User: "($DistributionAppFtp.UserName) -ForegroundColor Cyan
+            Write-Host "FTP Password: "($DistributionAppFtp.Password) -ForegroundColor Cyan
+        }
+        Write-Host "DONE!" -ForegroundColor Green
+    }
 }
 
+Function AddKeyVault([string] $tenantId, [string] $resourceGroupName, [string] $userId, [string] $appName, [string]  $KeyVaultName, [string] $secretName, [string] $secretvalue) {
+    $servicePrincipals = $null
+    $iteration = 0
+    while ($iteration -le 12) {
+        $servicePrincipals = get-azurermadserviceprincipal -SearchString $appName
+        if ($null -ne $servicePrincipals) {
+            break
+        }
+        Start-Sleep -s 5
+        $iteration++
+    }
+    $objectId = $servicePrincipals[0].Id
+    $kv = Get-AzureRmKeyVault -VaultName $KeyVaultName
+    if ($null -eq $kv) {
+        Write-Host "Provisioning Keyvault started..." -ForegroundColor Cyan
+        New-AzureRmResourceGroupDeployment -Name AkWebAppKeyVault -tenantId $TenantId -keyVaultName $KeyVaultName -objectId $objectId -secretName $secretName -secretValue $secretValue -TemplateFile akkeyvault.json -ResourceGroupName $resourceGroupName -userId  $userId
+        Write-Host "Provisioning Keyvault ended..." -ForegroundColor Cyan
+    }
+    else {
+        Write-Host "Provisioning Keyvault skipped..." -ForegroundColor Cyan
+    }
+}
 Function ComputePassword {
     $aesManaged = New-Object "System.Security.Cryptography.AesManaged"
     $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
@@ -526,7 +435,7 @@ Function ReplaceInterchangeSetting([string] $configFilePath, [string] $key, [str
 Function UpdateUnityCachingToRedis([string] $configFilePath) {
     $content = Get-Content $configFilePath | Out-String
     [xml] $xmlContent = $content
-    $target = (($xmlContent.unity.container|Where-Object {$_.name -eq "caching"}).register|where {$_.type -eq "ICachingService"})
+    $target = (($xmlContent.unity.container | Where-Object { $_.name -eq "caching" }).register | where { $_.type -eq "ICachingService" })
     $target.mapTo = "RedisCachingService"
     $xmlContent.save($configFilePath)
 }
@@ -549,26 +458,16 @@ Function CreateResourceGroup([string]$ResourceGroupName, [string]$Location) {
 
 Function CreateStorageAccount {
     [OutputType([StorageData])]
-    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$StorageAccountName, [string]$Location, $SkuName = "Standard_LRS",[bool]$contentdistribution)
+    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$StorageAccountName, [string]$Location, $SkuName = "Standard_LRS")
     $st = Get-AzureRmStorageAccountNameAvailability -Name $StorageAccountName
     if ($st.NameAvailable) {
         Write-Host "Provisioning storage account started..." -ForegroundColor Cyan
         $storageAccount = New-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName -Location $Location -SkuName $SkuName
         Write-Host "Provisioning storage account ended..." -ForegroundColor Cyan
     }
-    else {
-		if($contentdistribution -eq $false)
-		{
-			Write-Host "Provisioning storage account skipped..." -ForegroundColor Cyan
-		}
-    }
-    # Retrieve the context. 
-    #$ctx = $storageAccount.Context
-    $storageAccountKey = (Get-AzureRmStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccountName).Value[0]
     $result = New-Object StorageData
-    $result.ConnectionString = "DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$storageAccountKey" 
+    $result.ConnectionString = GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
     return $result
-    #New-AzureRmStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccountName -KeyName key1 
 }
 
 Function UpdateWebApp {
@@ -586,7 +485,7 @@ Function UpdateWebApp {
     #AppSettings and 32Bit Processor
     $webApp = Get-AzureRMWebApp -ResourceGroupName $ResourceGroupName -Name $WebAppName 
     $appSettings = $webApp.SiteConfig.AppSettings
-    $hash = @{}
+    $hash = @{ }
     ForEach ($kvp in $appSettings) {
         $hash[$kvp.Name] = $kvp.Value
     }
@@ -597,7 +496,7 @@ Function UpdateWebApp {
     #AlwaysOn
     $WebAppResourceType = 'microsoft.web/sites'
     
-    $WebAppProperties = @{"siteConfig" = @{"AlwaysOn" = $true}}
+    $WebAppProperties = @{"siteConfig" = @{"AlwaysOn" = $true } }
     #$webAppResource = Get-AzureRmResource -ResourceType $WebAppResourceType -ResourceGroupName $ResourceGroupName
     $ResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$WebAppName"
     Set-AzureRmResource -ResourceId $ResourceId -PropertyObject $WebAppProperties -Force
@@ -614,10 +513,15 @@ Function UpdateWebApp {
     $result.Password = $password
     return $result
 }
-
+Function GetStorageConnectionString {[OutputType([string])]
+    param([string] $ResourceGroupName, [string] $StorageAccountName)
+    $storageAccountKey = (Get-AzureRmStorageAccountKey -ResourceGroupName $ResourceGroupName -AccountName $StorageAccountName).Value[0]
+    $storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$storageAccountKey"
+    return $storageConnectionString;
+}
 Function UpdateFunctionApp {
     [OutputType([FtpData])]
-    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "",[string]$AkQueryKey,[string]$AkAppManagerUrl,[string]$FunctionAppName,[string]$AkDistributionKeyVaultUri,[string]$StorageAccountName,[string]$akDistributionConnectionKeyName ,[string]$akDistributionConnectionKeyValue)
+    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "", [string]$AkQueryKey, [string]$AkAppManagerUrl, [string]$AkDistributionKeyVaultUri, [string]$StorageAccountName, [string]$akDistributionConnectionKeyName , [string]$akDistributionConnectionKeyValue)
 
     # Get publishing profile for the web app
     [xml] $xml = (Get-AzureRmWebAppPublishingProfile -Name $WebAppName -ResourceGroupName $ResourceGroupName -OutputFile null)
@@ -628,33 +532,32 @@ Function UpdateFunctionApp {
     $url = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
 
     #AppSettings and 32Bit Processor
-    $webApp = Get-AzureRMWebApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppName 
+    $webApp = Get-AzureRMWebApp -ResourceGroupName $ResourceGroupName -Name $WebAppName 
     $appSettings = $webApp.SiteConfig.AppSettings
-    $hash = @{}
+    $hash = @{ }
     $hash['AkQueryKey'] = $AkQueryKey
-	$hash['AkAppManagerUrl'] = $AkAppManagerUrl
+    $hash['AkAppManagerUrl'] = $AkAppManagerUrl
     $hash['SCM_COMMAND_IDLE_TIMEOUT'] = "3600"
-	$hash['AkDistributionKeyVaultUri'] = $AkDistributionKeyVaultUri
-	$appInsight = Get-AzureRmApplicationInsights -ResourceGroupName $ResourceGroupName -Name $FunctionAppName 
-	$hash['APPINSIGHTS_INSTRUMENTATIONKEY'] = $appInsight.InstrumentationKey.ToString()
-	$storageAccountKey = (Get-AzureRmStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccountName).Value[0]
-    $storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$storageAccountKey"
+    $hash['AkDistributionKeyVaultUri'] = $AkDistributionKeyVaultUri
+    $appInsight = Get-AzureRmApplicationInsights -ResourceGroupName $ResourceGroupName -Name $WebAppName 
+    $hash['APPINSIGHTS_INSTRUMENTATIONKEY'] = $appInsight.InstrumentationKey.ToString()
+    $storageConnectionString=GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
 
-	#$hash['AzureWebJobsStorage'] = $storageConnectionString
-	$hash['AzureWebJobsDashboard'] = $storageConnectionString
-	$hash['FUNCTIONS_EXTENSION_VERSION'] = '~2'
-	$hash[$akDistributionConnectionKeyName] = $akDistributionConnectionKeyValue
+    #$hash['AzureWebJobsStorage'] = $storageConnectionString
+    $hash['AzureWebJobsDashboard'] = $storageConnectionString
+    $hash['FUNCTIONS_EXTENSION_VERSION'] = '~2'
+    $hash[$akDistributionConnectionKeyName] = $akDistributionConnectionKeyValue
 	
     
-    Set-AzureRmWebApp -Name $FunctionAppName -ResourceGroupName $resourceGroupName -Use32BitWorkerProcess $false -AppSettings $hash
+    #Set-AzureRmWebApp -Name $WebAppName -ResourceGroupName $resourceGroupName -Use32BitWorkerProcess $false -AppSettings $hash
 
     #AlwaysOn
     $WebAppResourceType = 'microsoft.web/sites'
     
     #$WebAppProperties = @{"siteConfig" = @{"AlwaysOn" = $true}}
     
-    $ResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$FunctionAppName"
-    Set-AzureRmResource -ResourceId $ResourceId -PropertyObject $WebAppProperties -Force
+    #$ResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$WebAppName"
+    #Set-AzureRmResource -ResourceId $ResourceId -PropertyObject $WebAppProperties -Force
 	    
     #AddWebAppAlert -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroupName -WebAppName $appName -Location $location -CustomEmails $CustomEmails
 	
@@ -674,7 +577,7 @@ Function UploadFilesUsingFtp([string]$appdirectory, [string]$username, [string]$
     CreateEmptyDirectory -rootDirectory $appdirectory -username $username -password $password
     $webclient = New-Object -TypeName System.Net.WebClient
     $webclient.Credentials = New-Object System.Net.NetworkCredential($username, $password)
-    $files = Get-ChildItem -Path $AppDirectory -Recurse | Where-Object {!($_.PSIsContainer)}
+    $files = Get-ChildItem -Path $AppDirectory -Recurse | Where-Object { !($_.PSIsContainer) }
     foreach ($file in $files) {
         $relativepath = (Resolve-Path -Path $file.FullName -Relative).Replace(".\", "").Replace('\', '/')
         $uri = New-Object System.Uri("$url/$relativepath")
@@ -728,44 +631,33 @@ Function AddVmAlert ([string]$SubscriptionId, [string]$ResourceGroupName, [strin
 }
 
 
-Function validateInput([string]$Readhost)
-{
-    Switch ($ReadHost) 
-     { 
-       Y {$result = $true} 
-       N {$result =  $false} 
-       Default {$result = $false} 
-     } 
+Function validateInput([string]$Readhost) {
+    Switch ($ReadHost) { 
+        Y { $result = $true } 
+        N { $result = $false } 
+        Default { $result = $false } 
+    } 
     return $result
 }
 
-Function DownloadContentDistributionFiles([string]$DownloadToFolder,[string]$downloadurl,[string]$cdFile)
-{
-try {
+Function DownloadContentDistributionFiles([string]$DownloadToFolder, [string]$downloadurl, [string]$cdFile) {
+    try {
         if (!(Test-Path -Path $DownloadToFolder)) {
             New-Item -Path $DownloadToFolder -Type Directory -Force -ErrorAction Stop | Out-Null
         }
-        else{
-			$url = $DownloadToFolder+ "\" + $cdFile
-			$wc = New-Object System.Net.WebClient
-			$wc.DownloadFile($downloadurl, $url)
-			$extractLocation = $DownloadToFolder
-			#$fileFolder = $DownloadToFolder +"\" + "contentdistribution\"
-			#if((Test-Path -Path $extractLocation))
-			#{
-			#	Remove-Item –path $extractLocation –recurse
-			#}			
-			#if (!(Test-Path -Path $extractLocation)) {
-			#	New-Item -Path $extractLocation -Type Directory -Force
-			#}
-			if (Test-Path $extractLocation) {
-				Expand-Archive -LiteralPath $url -DestinationPath $extractLocation
-			}		
-		} 
-		return $DownloadToFolder
+        else {
+            $url = $DownloadToFolder + "\" + $cdFile
+            $wc = New-Object System.Net.WebClient
+            $wc.DownloadFile($downloadurl, $url)
+            $extractLocation = $DownloadToFolder
+            if (Test-Path $extractLocation) {
+                Expand-Archive -LiteralPath $url -DestinationPath $extractLocation
+            }		
+        } 
+        return $DownloadToFolder
     }
-    catch{
-          Write-Error -Message $_.Exception
-          throw $_.Exception
+    catch {
+        Write-Error -Message $_.Exception
+        throw $_.Exception
     }
- }
+}
