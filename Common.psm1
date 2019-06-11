@@ -14,7 +14,7 @@ class FtpData {
     [string]$Password
 }
 
-Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = "", [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "", [bool]$CreateDistributionApp = $false, [string]$AkQueryKey = "", [string]$AkAppManagerUrl = "", [string]$DistributionAppDirectory, [string]$FunctionAppName, [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false, [bool]$createAzureADApp = $false, [bool]$createStrorage = $false, [bool]$createAKeyVault = $false, [string]$akDistributionConnectionName = "",[string]$akDistributionQueneName) {
+Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = "", [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "", [bool]$CreateDistributionApp = $false, [string]$AkQueryKey = "", [string]$AkAppManagerUrl = "", [string]$DistributionAppDirectory, [string]$FunctionAppName, [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false, [bool]$createAzureADApp = $false, [bool]$createStrorage = $false, [bool]$createAKeyVault = $false, [string]$akDistributionConnectionName = "", [string]$akDistributionQueneName) {
     if ($BaseName -eq "") {
         $BaseName = $ResourceGroupName
     }
@@ -81,7 +81,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
         $storage = CreateStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location
     }
     else {
-        Write-Host "Storage creation skipped..." -ForegroundColor Cyan
+        Write-Host "Provisioning storage account skipped..." -ForegroundColor Cyan
     }
     if ($createWebApp) {
         $wp = Get-AzureRmWebApp -Name $appName
@@ -98,7 +98,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
         Write-Host "Provisioning webapp skipped..." -ForegroundColor Cyan
     }     
     if ($createAKeyVault) {
-        $storageConnectionString=GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
+        $storageConnectionString = GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
         $secretvalue = ConvertTo-SecureString –String $storageConnectionString –AsPlainText –Force 
         AddKeyVault -teantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $appName -KeyVaultName $KeyVaultName -secretName "StorageConnectionString" -secretvalue $secretvalue
         $secretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
@@ -185,10 +185,10 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
                 $akDistributionConnectionName = "AzureWebJobsStorage"
             }
 
-            $storageConnectionString=GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
+            $storageConnectionString = GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
                  
             $secretvalue = ConvertTo-SecureString –String $storageConnectionString –AsPlainText –Force 
-            $secretName="DistributionStorageConnectionString"
+            $secretName = "DistributionStorageConnectionString"
             AddKeyVault -teantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $FunctionAppName -KeyVaultName $KeyVaultName -secretName $secretName -secretvalue $secretvalue
             Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $secretName -SecretValue $secretvalue
             $cdSecretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
@@ -222,46 +222,46 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
         else {
             Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
         }
-
-        else {
-            Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
-        }
-
-        if ($localAppDirectory -ne "") {
-            ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:RemoteStorageConnection" -newValue $secretIdUri.Id
-            ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:BackgroundProcessorKey" -newValue $backgroundGuid
-            ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:LogListener" -newValue "AzureTable"
-            if ($CreateRedisCache) {
-                ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:PrimaryRedisConnection" -newValue $cacheKeyData.ConnectionString
-                UpdateUnityCachingToRedis -configFilePath "$localAppDirectory\unity.config" 
-            }
-        }
-        if ($createWebApp) {
-            $ftp = UpdateWebApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $appName -Location $Location -AppDirectory $localAppDirectory -CustomEmails $CustomEmails
-			
-        }
-		
-        Write-Host "AD App Name: $AadAppName" -ForegroundColor Cyan
-        Write-Host "AD App ID: "($appData.AppId) -ForegroundColor Cyan
-        Write-Host "AD App Secret: "($appData.AppSecret) -ForegroundColor Cyan
-        Write-Host "Storage ConnectionString: "($storage.ConnectionString) -ForegroundColor Cyan
-        Write-Host "Secret Id Uri: "($secretIdUri.Id) -ForegroundColor Cyan
-        Write-Host "Redis Connection String: "($cacheKeyData.ConnectionString) -ForegroundColor Cyan
-        Write-Host "AzureWebSite Url: $HomePage" -ForegroundColor Cyan		
-        Write-Host "BackgroundProcessorKey: $backgroundGuid" -ForegroundColor Cyan
-        if ($createWebApp) {			
-            Write-Host "FTP Host: "($ftp.Host) -ForegroundColor Cyan
-            Write-Host "FTP User: "($ftp.UserName) -ForegroundColor Cyan
-            Write-Host "FTP Password: "($ftp.Password) -ForegroundColor Cyan
-        }
-        elseif ($DistributionAppFtp -ne "") {
-            Write-Host "FTP Host: "($DistributionAppFtp.Host) -ForegroundColor Cyan
-            Write-Host "FTP User: "($DistributionAppFtp.UserName) -ForegroundColor Cyan
-            Write-Host "FTP Password: "($DistributionAppFtp.Password) -ForegroundColor Cyan
-        }
-        Write-Host "DONE!" -ForegroundColor Green
     }
+    else {
+        Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
+    }
+
+    if ($localAppDirectory -ne "") {
+        ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:RemoteStorageConnection" -newValue $secretIdUri.Id
+        ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:BackgroundProcessorKey" -newValue $backgroundGuid
+        ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:LogListener" -newValue "AzureTable"
+        if ($CreateRedisCache) {
+            ReplaceInterchangeSetting -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:PrimaryRedisConnection" -newValue $cacheKeyData.ConnectionString
+            UpdateUnityCachingToRedis -configFilePath "$localAppDirectory\unity.config" 
+        }
+    }
+    if ($createWebApp) {
+        $ftp = UpdateWebApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $appName -Location $Location -AppDirectory $localAppDirectory -CustomEmails $CustomEmails
+			
+    }
+		
+    Write-Host "AD App Name: $AadAppName" -ForegroundColor Cyan
+    Write-Host "AD App ID: "($appData.AppId) -ForegroundColor Cyan
+    Write-Host "AD App Secret: "($appData.AppSecret) -ForegroundColor Cyan
+    Write-Host "Storage ConnectionString: "($storage.ConnectionString) -ForegroundColor Cyan
+    Write-Host "Secret Id Uri: "($secretIdUri.Id) -ForegroundColor Cyan
+    Write-Host "Redis Connection String: "($cacheKeyData.ConnectionString) -ForegroundColor Cyan
+    Write-Host "AzureWebSite Url: $HomePage" -ForegroundColor Cyan		
+    Write-Host "BackgroundProcessorKey: $backgroundGuid" -ForegroundColor Cyan
+    if ($createWebApp) {			
+        Write-Host "FTP Host: "($ftp.Host) -ForegroundColor Cyan
+        Write-Host "FTP User: "($ftp.UserName) -ForegroundColor Cyan
+        Write-Host "FTP Password: "($ftp.Password) -ForegroundColor Cyan
+    }
+    if ($DistributionAppFtp -ne "") {
+        Write-Host "Distribution App FTP Host: "($DistributionAppFtp.Host) -ForegroundColor Cyan
+        Write-Host "Distribution App FTP User: "($DistributionAppFtp.UserName) -ForegroundColor Cyan
+        Write-Host "Distribution App FTP Password: "($DistributionAppFtp.Password) -ForegroundColor Cyan
+    }
+    Write-Host "DONE!" -ForegroundColor Green
 }
+
 
 Function AddKeyVault([string] $tenantId, [string] $resourceGroupName, [string] $userId, [string] $appName, [string]  $KeyVaultName, [string] $secretName, [string] $secretvalue) {
     $servicePrincipals = $null
@@ -513,7 +513,8 @@ Function UpdateWebApp {
     $result.Password = $password
     return $result
 }
-Function GetStorageConnectionString {[OutputType([string])]
+Function GetStorageConnectionString {
+    [OutputType([string])]
     param([string] $ResourceGroupName, [string] $StorageAccountName)
     $storageAccountKey = (Get-AzureRmStorageAccountKey -ResourceGroupName $ResourceGroupName -AccountName $StorageAccountName).Value[0]
     $storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$storageAccountKey"
@@ -541,7 +542,7 @@ Function UpdateFunctionApp {
     $hash['AkDistributionKeyVaultUri'] = $AkDistributionKeyVaultUri
     $appInsight = Get-AzureRmApplicationInsights -ResourceGroupName $ResourceGroupName -Name $WebAppName 
     $hash['APPINSIGHTS_INSTRUMENTATIONKEY'] = $appInsight.InstrumentationKey.ToString()
-    $storageConnectionString=GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
+    $storageConnectionString = GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
 
     #$hash['AzureWebJobsStorage'] = $storageConnectionString
     $hash['AzureWebJobsDashboard'] = $storageConnectionString
