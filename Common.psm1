@@ -100,7 +100,8 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
     if ($createAKeyVault) {
         $storageConnectionString = GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
         $secretvalue = ConvertTo-SecureString –String $storageConnectionString –AsPlainText –Force 
-        AddKeyVault -teantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $appName -KeyVaultName $KeyVaultName -secretName "StorageConnectionString" -secretvalue $secretvalue
+        $secretName = "StorageConnectionString"
+        AddKeyVault -tenantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $appName -KeyVaultName $KeyVaultName -secretName $secretName -secretvalue $secretvalue
         $secretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
     }
     else {
@@ -189,16 +190,16 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
                  
             $secretvalue = ConvertTo-SecureString –String $storageConnectionString –AsPlainText –Force 
             $secretName = "DistributionStorageConnectionString"
-            AddKeyVault -teantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $FunctionAppName -KeyVaultName $KeyVaultName -secretName $secretName -secretvalue $secretvalue
+            AddKeyVault -tenantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $FunctionAppName -KeyVaultName $KeyVaultName -secretName $secretName -secretvalue $secretvalue
             Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $secretName -SecretValue $secretvalue
             $cdSecretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
-            $akDistributionConnectionValue = "@Microsoft.KeyVault(SecretUri=$($cdSecretIdUri.Id))"
-			
+            $akDistributionConnectionValue = "@Microsoft.KeyVault(SecretUri=$($cdSecretIdUri.Id))"			
+			AddStorageQueue -resourceGroupName $ResourceGroupName -queueName $akDistributionQueneName -StorageAccountName $StorageAccountName
             $newGuid = [guid]::newguid()
             $tempFolder = $env:temp
             $extractLocation = "$tempFolder\Akumina"
             if ((Test-Path -Path $extractLocation)) {
-                Remove-Item  -Recurse -Force -Path $extractLocation
+				Get-ChildItem $extractLocation -Recurse | Remove-Item -Force
                 New-Item -Path $extractLocation -ItemType directory
                 $extractLocation = "$extractLocation\$newGuid"
                 New-Item -Path $extractLocation\ -ItemType directory
@@ -216,8 +217,8 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
             $replaceText = """connection"":""$akDistributionConnectionName"""
             (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"connection": "AzureWebJobsStorage"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json
             $replaceText = """queueName"":""$akDistributionQueneName"""
-            (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"queueName": "ws2019queue"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json
-            $DistributionAppFtp = UpdateFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -AkQueryKey $AkQueryKey -AkAppManagerUrl $AkAppManagerUrl -AkDistributionKeyVaultUri $akDistributionKeyVaultUri -StorageAccountName $StorageAccountName -akDistributionConnectionKeyName $akDistributionConnectionName -akDistributionConnectionKeyValue $akDistributionConnectionValue			
+            (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"queueName": "ws2019queue"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json			
+            $DistributionAppFtp = UpdateFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -AkQueryKey $AkQueryKey -AkAppManagerUrl $AkAppManagerUrl -StorageAccountName $StorageAccountName -akDistributionConnectionName $akDistributionConnectionName -akDistributionConnectionValue $akDistributionConnectionValue			
         }
         else {
             Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
@@ -263,18 +264,23 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
 }
 
 
-Function AddKeyVault([string] $tenantId, [string] $resourceGroupName, [string] $userId, [string] $appName, [string]  $KeyVaultName, [string] $secretName, [string] $secretvalue) {
+Function AddKeyVault([string] $tenantId, [string] $resourceGroupName, [string] $userId, [string] $appName, [string]  $KeyVaultName, [string] $secretName, [Security.SecureString] $secretvalue) {
     $servicePrincipals = $null
     $iteration = 0
-    while ($iteration -le 12) {
-        $servicePrincipals = get-azurermadserviceprincipal -SearchString $appName
-        if ($null -ne $servicePrincipals) {
-            break
+    $objectId = $userId
+    $wp = Get-AzureRmWebApp -Name $appName
+    if ($null -ne $wp) {     
+        
+        while ($iteration -le 12) {
+            $servicePrincipals = get-azurermadserviceprincipal -SearchString $appName
+            if ($null -ne $servicePrincipals) {
+                break
+            }
+            Start-Sleep -s 5
+            $iteration++
         }
-        Start-Sleep -s 5
-        $iteration++
+        $objectId = $servicePrincipals[0].Id
     }
-    $objectId = $servicePrincipals[0].Id
     $kv = Get-AzureRmKeyVault -VaultName $KeyVaultName
     if ($null -eq $kv) {
         Write-Host "Provisioning Keyvault started..." -ForegroundColor Cyan
@@ -284,6 +290,11 @@ Function AddKeyVault([string] $tenantId, [string] $resourceGroupName, [string] $
     else {
         Write-Host "Provisioning Keyvault skipped..." -ForegroundColor Cyan
     }
+}
+Function AddStorageQueue([string] $resourceGroupName, [string] $queueName, [string]$StorageAccountName) {	
+	$storage =  Get-AzureRmStorageAccount -ResourceGroupName $resourceGroupName -AccountName $StorageAccountName
+	$storageContext = $storage.Context
+	New-AzureStorageQueue -Name  $queueName -Context $storageContext
 }
 Function ComputePassword {
     $aesManaged = New-Object "System.Security.Cryptography.AesManaged"
@@ -522,7 +533,7 @@ Function GetStorageConnectionString {
 }
 Function UpdateFunctionApp {
     [OutputType([FtpData])]
-    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "", [string]$AkQueryKey, [string]$AkAppManagerUrl, [string]$AkDistributionKeyVaultUri, [string]$StorageAccountName, [string]$akDistributionConnectionName , [string]$akDistributionConnectionValue)
+    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "", [string]$AkQueryKey, [string]$AkAppManagerUrl, [string]$StorageAccountName, [string]$akDistributionConnectionName , [string]$akDistributionConnectionValue)
 
     # Get publishing profile for the web app
     [xml] $xml = (Get-AzureRmWebAppPublishingProfile -Name $WebAppName -ResourceGroupName $ResourceGroupName -OutputFile null)
@@ -539,7 +550,6 @@ Function UpdateFunctionApp {
     $hash['AkQueryKey'] = $AkQueryKey
     $hash['AkAppManagerUrl'] = $AkAppManagerUrl
     $hash['SCM_COMMAND_IDLE_TIMEOUT'] = "3600"
-    $hash['AkDistributionKeyVaultUri'] = $AkDistributionKeyVaultUri
     $appInsight = Get-AzureRmApplicationInsights -ResourceGroupName $ResourceGroupName -Name $WebAppName 
     $hash['APPINSIGHTS_INSTRUMENTATIONKEY'] = $appInsight.InstrumentationKey.ToString()
     $storageConnectionString = GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
@@ -641,6 +651,7 @@ Function DownloadContentDistributionFiles([string]$DownloadToFolder, [string]$do
                 Expand-Archive -LiteralPath $url -DestinationPath $extractLocation
             }		
         } 
+		Remove-Item –path $extractLocation\* -include *.zip
         return $DownloadToFolder
     }
     catch {
