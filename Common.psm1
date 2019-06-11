@@ -192,7 +192,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
             AddKeyVault -teantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $FunctionAppName -KeyVaultName $KeyVaultName -secretName $secretName -secretvalue $secretvalue
             Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $secretName -SecretValue $secretvalue
             $cdSecretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
-            $akDistributionConnectionKeyValue = "@Microsoft.KeyVault(SecretUri=$($cdSecretIdUri.Id))"
+            $akDistributionConnectionValue = "@Microsoft.KeyVault(SecretUri=$($cdSecretIdUri.Id))"
 			
             $newGuid = [guid]::newguid()
             $tempFolder = $env:temp
@@ -217,7 +217,7 @@ Function ProvisionAkWebApp([string]$TenantId, [string]$SubscriptionId, [string]$
             (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"connection": "AzureWebJobsStorage"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json
             $replaceText = """queueName"":""$akDistributionQueneName"""
             (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"queueName": "ws2019queue"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json
-            $DistributionAppFtp = UpdateFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -AkQueryKey $AkQueryKey -AkAppManagerUrl $AkAppManagerUrl -AkDistributionKeyVaultUri $akDistributionKeyVaultUri -StorageAccountName $StorageAccountName -akDistributionConnectionKeyName $akDistributionConnectionKeyName -akDistributionConnectionKeyValue $akDistributionConnectionKeyValue			
+            $DistributionAppFtp = UpdateFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -AkQueryKey $AkQueryKey -AkAppManagerUrl $AkAppManagerUrl -AkDistributionKeyVaultUri $akDistributionKeyVaultUri -StorageAccountName $StorageAccountName -akDistributionConnectionKeyName $akDistributionConnectionName -akDistributionConnectionKeyValue $akDistributionConnectionValue			
         }
         else {
             Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
@@ -522,7 +522,7 @@ Function GetStorageConnectionString {
 }
 Function UpdateFunctionApp {
     [OutputType([FtpData])]
-    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "", [string]$AkQueryKey, [string]$AkAppManagerUrl, [string]$AkDistributionKeyVaultUri, [string]$StorageAccountName, [string]$akDistributionConnectionKeyName , [string]$akDistributionConnectionKeyValue)
+    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "", [string]$AkQueryKey, [string]$AkAppManagerUrl, [string]$AkDistributionKeyVaultUri, [string]$StorageAccountName, [string]$akDistributionConnectionName , [string]$akDistributionConnectionValue)
 
     # Get publishing profile for the web app
     [xml] $xml = (Get-AzureRmWebAppPublishingProfile -Name $WebAppName -ResourceGroupName $ResourceGroupName -OutputFile null)
@@ -543,26 +543,12 @@ Function UpdateFunctionApp {
     $appInsight = Get-AzureRmApplicationInsights -ResourceGroupName $ResourceGroupName -Name $WebAppName 
     $hash['APPINSIGHTS_INSTRUMENTATIONKEY'] = $appInsight.InstrumentationKey.ToString()
     $storageConnectionString = GetStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
-
-    #$hash['AzureWebJobsStorage'] = $storageConnectionString
     $hash['AzureWebJobsDashboard'] = $storageConnectionString
     $hash['FUNCTIONS_EXTENSION_VERSION'] = '~2'
-    $hash[$akDistributionConnectionKeyName] = $akDistributionConnectionKeyValue
-	
-    
-    #Set-AzureRmWebApp -Name $WebAppName -ResourceGroupName $resourceGroupName -Use32BitWorkerProcess $false -AppSettings $hash
-
-    #AlwaysOn
-    $WebAppResourceType = 'microsoft.web/sites'
-    
-    #$WebAppProperties = @{"siteConfig" = @{"AlwaysOn" = $true}}
-    
-    #$ResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$WebAppName"
-    #Set-AzureRmResource -ResourceId $ResourceId -PropertyObject $WebAppProperties -Force
+    $hash[$akDistributionConnectionName] = $akDistributionConnectionValue
 	    
-    #AddWebAppAlert -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroupName -WebAppName $appName -Location $location -CustomEmails $CustomEmails
-	
-    # Upload files recursively 
+    Set-AzureRmWebApp -Name $WebAppName -ResourceGroupName $resourceGroupName -Use32BitWorkerProcess $false -AppSettings $hash
+
     if ($appdirectory -ne "") {
         UploadFilesUsingFtp -appdirectory $appdirectory -username $username -password $password
     }
