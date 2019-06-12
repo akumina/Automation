@@ -34,7 +34,7 @@
       "value": "",
       "inputMessage": "Do you want to create WebApp (y/n)"
     },
-    "createStrorage": {
+    "createStorage": {
       "value": "",
       "inputMessage": "Do you want to create strorage (y/n)"
     },
@@ -98,25 +98,21 @@
       "value": "",
       "inputMessage": "Enter Function App name"
     },
-    "akDistributionConnectionName": {
+    "distributionConnectionName": {
       "value": "",
       "inputMessage": "Enter Content Distribution Queue binding ConnectionName"
     },
-    "akDistributionQueneName": {
+    "distributionQueneName": {
       "value": "",
       "inputMessage": "Enter Distribution Queue Name"
     },
-    "akAppManagerUrl": {
+    "distributionApiUrl": {
       "value": "",
       "inputMessage": "Enter AppManager content distribution Url"
     },
-    "akQueryKey": {
+    "appManagerQueryKey": {
       "value": "",
       "inputMessage": "Enter AppManager Query Key"
-    },
-    "akDistributionKeyVaultUri": {
-      "value": "",
-      "inputMessage": "Enter Distribution Storage Connection KeyVaultUri to bind QueueEvent of Content Distribution"
     }
   }
 }
