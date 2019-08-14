@@ -50,6 +50,7 @@ if(Test-Path $parametersFile)
 		$baseName=Get-AkParams  -params $jo.parameters -param "baseName" -displayName "Webapp Name"
 		$localAppDirectory=Get-AkParams  -params $jo.parameters -param "localAppDirectory" -displayName "Local location for webapp files upload"
 		$customEmails=Get-AkParams  -params $jo.parameters -param "customEmails" -displayName "Notification Email"			
+		$http20Enabled =Convert-AkInput(Get-AkParams  -params $jo.parameters -param "http20Enabled" -displayName "http 20 Enabled?")
 	}
 	$createAKeyVault=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createAKeyVault" -displayName "Create keyVault?")	
 	if($createAKeyVault)
@@ -96,7 +97,7 @@ if(Test-Path $parametersFile)
 	{
 		$baseName = $resourceGroupName
 	}
-	Add-AkAppResources  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -CreateDistributionApp $createDistributionApp -appManagerQueryKey $appManagerQueryKey -distributionApiUrl $distributionApiUrl -DistributionAppDirectory $distributionAppDirectory -FunctionAppName $functionAppName	-vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStorage $createStorage -createAKeyVault $createAKeyVault -akDistributionKeyVaultUri $distributionConnectionName -distributionQueneName $distributionQueneName
+	Add-AkAppResources  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -CreateDistributionApp $createDistributionApp -appManagerQueryKey $appManagerQueryKey -distributionApiUrl $distributionApiUrl -DistributionAppDirectory $distributionAppDirectory -FunctionAppName $functionAppName	-vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStorage $createStorage -createAKeyVault $createAKeyVault -akDistributionKeyVaultUri $distributionConnectionName -distributionQueneName $distributionQueneName -http20Enabled $http20Enabled
 }
 else
 {

@@ -113,6 +113,10 @@
     "appManagerQueryKey": {
       "value": "",
       "inputMessage": "Enter AppManager Query Key"
+    },
+    "http20Enabled": {
+      "value": "",
+      "inputMessage": "Do you wanto enable http 2.0  (y/n)"
     }
   }
 }

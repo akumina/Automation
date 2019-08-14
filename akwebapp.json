@@ -1,4 +1,4 @@
-{ 
+{
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
@@ -47,10 +47,6 @@
         "family": "Pv2",
         "capacity": 1
       }
-      //,
-      //"sku": {
-      //  "name": "[if(lessOrEquals(length(parameters('environments')), variables('standardPlanMaxAdditionalSlots')), 'P1v2', 'P1')]"
-      //}
     },
     {
       "apiVersion": "2016-08-01",

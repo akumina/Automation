@@ -14,7 +14,7 @@ class FtpData {
     [string]$Password
 }
 
-Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = "", [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "", [bool]$CreateDistributionApp = $false, [string]$appManagerQueryKey = "", [string]$distributionApiUrl = "", [string]$DistributionAppDirectory, [string]$FunctionAppName, [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false, [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createAKeyVault = $false, [string]$distributionConnectionName = "", [string]$distributionQueneName) {
+Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = "", [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "", [bool]$CreateDistributionApp = $false, [string]$appManagerQueryKey = "", [string]$distributionApiUrl = "", [string]$DistributionAppDirectory, [string]$FunctionAppName, [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false, [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createAKeyVault = $false, [string]$distributionConnectionName = "", [string]$distributionQueneName, [bool]$http20Enabled=$true ) {
     if ($BaseName -eq "") {
         $BaseName = $ResourceGroupName
     }
@@ -88,7 +88,14 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
         if ($null -eq $wp) {
             Write-Host "Provisioning webapp started..." -ForegroundColor Cyan
             New-AzureRmResourceGroupDeployment -Name $appName -TemplateFile akwebapp.json -ResourceGroupName $ResourceGroupName -baseResourceName $appName
-            Write-Host "Provisioning webapp ended..." -ForegroundColor Cyan
+			if($http20Enabled)
+			{
+				$propertiesObject = @{ 
+							http20Enabled = $true;
+				}
+				Set-AzureRmResource -PropertyObject $propertiesObject -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.Web/sites/config -ResourceName "$ResourceGroupName/web" -ApiVersion 2016-08-01 -Force  
+			}
+			Write-Host "Provisioning webapp ended..." -ForegroundColor Cyan
         }
         else {
             Write-Host "Provisioning webapp skipped..." -ForegroundColor Cyan
@@ -608,17 +615,42 @@ Function Add-AkWebAppAlert ([string]$SubscriptionId, [string]$ResourceGroupName,
     if ($CustomEmails -ne "") {
         $actionEmail = New-AzureRmAlertRuleEmail -CustomEmail $CustomEmails
         Remove-AzureRmAlertRule -ResourceGroup $ResourceGroupName -Name "HttpServerErrors5xx"
+		Remove-AzureRmAlertRule -ResourceGroup $ResourceGroupName -Name "HttpServerErrors4xx"
         Remove-AzureRmAlertRule -ResourceGroup $ResourceGroupName -Name "ResponseOver5Sec"
         Remove-AzureRmAlertRule -ResourceGroup $ResourceGroupName -Name "RequestsOver1000For5Min"
 
-        Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "HttpServerErrors5xx" -MetricName "Http5xx" -Operator GreaterThan -Threshold 2 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "5xx over 2 for 5 minutes"
+        Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "HttpServerErrors5xx" -MetricName "Http5xx" -Operator GreaterThan -Threshold 2 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "5xx over 2 for 5 minutes"		
+		Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "HttpServerErrors4xx" -MetricName "Http4xx" -Operator GreaterThan -Threshold 2 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "4xx over 2 for 5 minutes"		
         Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "ResponseOver5Sec" -MetricName "AverageResponseTime" -Operator GreaterThan -Threshold 5 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "Average response over 5 sec for 5 minutes"
         Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "RequestsOver1000For5Min" -MetricName "Requests" -Operator GreaterThan -Threshold 1000 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "Total request over 1000 for 5 minutes"
+
+		
     }
 }
 
-Function Add-AkVmAlert ([string]$SubscriptionId, [string]$ResourceGroupName, [string]$VmName, [string]$Location, [string]$Email = "") {
+Function Add-AkWebAppAlertV2 ([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$CustomEmails = "") {
     Set-AzureRmContext -SubscriptionId $SubscriptionId
+    $ResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$WebAppName"
+   	if ($null -eq $CustomEmails) {
+        $CustomEmails = ""
+    }
+    if ($CustomEmails -ne "") {		
+        $actionEmail = New-AzureRmAlertRuleEmail -CustomEmail $CustomEmails
+        Remove-AzMetricAlertRuleV2 -ResourceGroup $ResourceGroupName -Name "HttpServerErrors5xx"
+		Remove-AzMetricAlertRuleV2 -ResourceGroup $ResourceGroupName -Name "HttpServerErrors4xx"
+        Remove-AzMetricAlertRuleV2 -ResourceGroup $ResourceGroupName -Name "ResponseOver5Sec"
+        Remove-AzMetricAlertRuleV2 -ResourceGroup $ResourceGroupName -Name "RequestsOver1000For5Min"
+
+        Add-AzMetricAlertRuleV2 -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "HttpServerErrors5xx" -MetricName "Http5xx" -Operator GreaterThan -Threshold 2 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "5xx over 2 for 5 minutes"		
+		Add-AzMetricAlertRuleV2 -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "HttpServerErrors4xx" -MetricName "Http4xx" -Operator GreaterThan -Threshold 2 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "4xx over 2 for 5 minutes"		
+        Add-AzMetricAlertRuleV2 -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "ResponseOver5Sec" -MetricName "AverageResponseTime" -Operator GreaterThan -Threshold 5 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "Average response over 5 sec for 5 minutes"
+        Add-AzMetricAlertRuleV2 -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "RequestsOver1000For5Min" -MetricName "Requests" -Operator GreaterThan -Threshold 1000 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "Total request over 1000 for 5 minutes"
+    }
+}
+
+Function Add-AkVmAlert ([string]$TenantId,[string]$SubscriptionId, [string]$ResourceGroupName, [string]$VmName, [string]$Location, [string]$Email = "") {
+	$credentials = Connect-AzureAD -TenantId $TenantId
+	Set-AzureRmContext -SubscriptionId $SubscriptionId
     $ResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/virtualMachines/$VmName"
     if ($CustomEmails -ne "") {
         $actionEmail = New-AzureRmAlertRuleEmail -CustomEmail $Email
