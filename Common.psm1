@@ -14,7 +14,7 @@ class FtpData {
     [string]$Password
 }
 
-Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = "", [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "", [bool]$CreateDistributionApp = $false, [string]$appManagerQueryKey = "", [string]$distributionApiUrl = "", [string]$DistributionAppDirectory, [string]$FunctionAppName, [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false, [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createAKeyVault = $false, [string]$distributionConnectionName = "", [string]$distributionQueneName, [bool]$http20Enabled=$true ) {
+Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = "", [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "", [bool]$CreateDistributionApp = $false, [string]$appManagerQueryKey = "", [string]$distributionApiUrl = "", [string]$DistributionAppDirectory, [string]$FunctionAppName, [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false, [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createAKeyVault = $false, [string]$distributionConnectionName = "", [string]$distributionQueneName, [bool]$http20Enabled=$true,[bool]$http20EnabledAppGw=$true) {
     if ($BaseName -eq "") {
         $BaseName = $ResourceGroupName
     }
@@ -49,7 +49,14 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
     if ($PfxFile -and $CreateAppGw) {
         $SecurePassword = Read-Host -Prompt "Enter Pfx password" -AsSecureString
     }
-    
+    if(!$http20Enabled)
+	{
+		$http20Enabled = $false
+	}
+	if(!$http20EnabledAppGw)
+	{
+		$http20EnabledAppGw = $false
+	}
     Login-AzureRmAccount -TenantId $TenantId 
     $credentials = Connect-AzureAD -TenantId $TenantId
     $user = Get-AzureRmADUser -UserPrincipalName $credentials.Account.Id
@@ -152,6 +159,13 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
             }
 
             New-AzureRmResourceGroupDeployment -TemplateFile akappgateway.json -ResourceGroupName $ResourceGroupName -applicationGatewaysName $appName -sslCertificate $sslCertificate -certPassword $securePassword -hostName $backendHostName -backendIPAddresses $backendHostName -vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix
+
+			if($http20EnabledAppGw)
+			{
+				$gw = Get-AzureRmApplicationGateway -name $appGw -ResourceGroupName $ResourceGroupName
+				$gw.EnableHttp2 = $true
+				Set-AzureRmApplicationGateway -ApplicationGateway @gw
+			}
 						
             Write-Host "Provisioning App Gateway ended..." -ForegroundColor Cyan
         }
