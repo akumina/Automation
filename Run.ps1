@@ -20,7 +20,7 @@ if($version -lt 5)
 {
     Throw "Version is not supported, please upgrade to 5 or later"
 }
-
+cd $PSScriptRoot
 import-module .\Common.psm1
 
 #get-help  Provision-AkAppResources
@@ -36,6 +36,7 @@ if(Test-Path $parametersFile)
 	$resourceGroupName=Get-AkParams  -params $jo.parameters -param "resourceGroupName" -displayName "Resource Group Name"
 	$location=Get-AkParams  -params $jo.parameters -param "location" -displayName "Location"
 	$createStorage=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createStorage" -displayName "Create Storage Account?")
+	$storageAccountName=""
 	if($createStorage)	{
 		$storageAccountName=Get-AkParams  -params $jo.parameters -param "storageAccountName" -displayName "Storage Account Name"			
 	}

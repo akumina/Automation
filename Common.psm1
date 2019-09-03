@@ -215,7 +215,7 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
             Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $secretName -SecretValue $secretvalue
             $cdSecretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
             $akDistributionConnectionValue = "@Microsoft.KeyVault(SecretUri=$($cdSecretIdUri.Id))"			
-			Add-AkStorageQueue -resourceGroupName $ResourceGroupName -queueName $distributionQueneName -StorageAccountName $StorageAccountName
+			Add-AkStorageQueue -resourceGroupName $ResourceGroupName -queueName $distributionQueneName -StorageAccountName $StorageAccountName			
             $newGuid = [guid]::newguid()
             $tempFolder = $env:temp
             $extractLocation = "$tempFolder\Akumina"
@@ -238,7 +238,7 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
             $replaceText = """connection"":""$distributionConnectionName"""
             (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"connection": "AzureWebJobsStorage"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json
             $replaceText = """queueName"":""$distributionQueneName"""
-            (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"queueName": "ws2019queue"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json			
+            (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"queueName": "ws2019queue"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json						
             $DistributionAppFtp = Update-AkFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -appManagerQueryKey $appManagerQueryKey -distributionApiUrl $distributionApiUrl -StorageAccountName $StorageAccountName -distributionConnectionName $distributionConnectionName -akDistributionConnectionValue $akDistributionConnectionValue			
         }
         else {
@@ -315,7 +315,11 @@ Function Add-AkKeyVault([string] $tenantId, [string] $resourceGroupName, [string
 Function Add-AkStorageQueue([string] $resourceGroupName, [string] $queueName, [string]$StorageAccountName) {	
 	$storage =  Get-AzureRmStorageAccount -ResourceGroupName $resourceGroupName -AccountName $StorageAccountName
 	$storageContext = $storage.Context
-	New-AzureStorageQueue -Name  $queueName -Context $storageContext
+	$azureStorageQueue = Get-AzureStorageQueue –Context $storageContext | Where-Object {$_.Name -eq $queueName}
+	if(-not $azureStorageQueue){ 
+		New-AzureStorageQueue -Name  $queueName -Context $storageContext
+	}
+	
 }
 Function New-AkPassword {
     $aesManaged = New-Object "System.Security.Cryptography.AesManaged"
