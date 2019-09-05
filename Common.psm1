@@ -572,8 +572,8 @@ Function Update-AkFunctionApp {
     $webApp = Get-AzureRMWebApp -ResourceGroupName $ResourceGroupName -Name $WebAppName 
     $appSettings = $webApp.SiteConfig.AppSettings
     $hash = @{ }
-    $hash['appManagerQueryKey'] = $appManagerQueryKey
-    $hash['distributionApiUrl'] = $distributionApiUrl
+    $hash['AkQueryKey'] = $appManagerQueryKey
+    $hash['AkAppManagerUrl'] = $distributionApiUrl
     $hash['SCM_COMMAND_IDLE_TIMEOUT'] = "3600"
     $appInsight = Get-AzureRmApplicationInsights -ResourceGroupName $ResourceGroupName -Name $WebAppName 
     $hash['APPINSIGHTS_INSTRUMENTATIONKEY'] = $appInsight.InstrumentationKey.ToString()
