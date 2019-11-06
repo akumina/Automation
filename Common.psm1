@@ -14,7 +14,7 @@ class FtpData {
     [string]$Password
 }
 
-Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = "", [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "", [bool]$CreateDistributionApp = $false, [string]$appManagerQueryKey = "", [string]$distributionApiUrl = "", [string]$DistributionAppDirectory, [string]$FunctionAppName, [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false, [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createAKeyVault = $false, [string]$distributionConnectionName = "", [string]$distributionQueneName, [bool]$http20Enabled=$true,[bool]$http20EnabledAppGw=$true) {
+Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = "", [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "", [bool]$CreateDistributionApp = $false, [string]$appManagerQueryKey = "", [string]$distributionApiUrl = "", [string]$DistributionAppDirectory, [string]$FunctionAppName, [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false, [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createAKeyVault = $false, [string]$distributionConnectionName = "", [string]$distributionQueneName, [bool]$http20Enabled=$true,[bool]$http20EnabledAppGw=$true,[bool]$funAppUploadFiles=$false) {
     if ($BaseName -eq "") {
         $BaseName = $ResourceGroupName
     }
@@ -100,7 +100,7 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
 				$propertiesObject = @{ 
 							http20Enabled = $true;
 				}
-				Set-AzureRmResource -PropertyObject $propertiesObject -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.Web/sites/config -ResourceName "$ResourceGroupName/web" -ApiVersion 2016-08-01 -Force  
+				Set-AzureRmResource -PropertyObject $propertiesObject -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.Web/sites/config -ResourceName "$appName/web" -ApiVersion 2016-08-01 -Force  
 			}
 			Write-Host "Provisioning webapp ended..." -ForegroundColor Cyan
         }
@@ -239,7 +239,8 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
             (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"connection": "AzureWebJobsStorage"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json
             $replaceText = """queueName"":""$distributionQueneName"""
             (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"queueName": "ws2019queue"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json						
-            $DistributionAppFtp = Update-AkFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -appManagerQueryKey $appManagerQueryKey -distributionApiUrl $distributionApiUrl -StorageAccountName $StorageAccountName -distributionConnectionName $distributionConnectionName -akDistributionConnectionValue $akDistributionConnectionValue			
+			$DistributionAppFtp = Update-AkFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -appManagerQueryKey $appManagerQueryKey -distributionApiUrl $distributionApiUrl -StorageAccountName $StorageAccountName -distributionConnectionName $distributionConnectionName -akDistributionConnectionValue $akDistributionConnectionValue	-funAppUploadFiles $funAppUploadFiles
+
         }
         else {
             Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
@@ -280,6 +281,9 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
         Write-Host "Distribution App FTP Host: "($DistributionAppFtp.Host) -ForegroundColor Cyan
         Write-Host "Distribution App FTP User: "($DistributionAppFtp.UserName) -ForegroundColor Cyan
         Write-Host "Distribution App FTP Password: "($DistributionAppFtp.Password) -ForegroundColor Cyan
+		if($funAppUploadFiles -eq $false){
+			Write-Host "Content distribution app files location... : $DownloadToFolder" -ForegroundColor Cyan
+		}
     }
     Write-Host "DONE!" -ForegroundColor Green
 }
@@ -408,28 +412,29 @@ Function Register-AkAdApp ([string]$AppName, [string]$Uri = "https://localhost:4
     $appId = "00000003-0000-0000-c000-000000000000"
     #$appPermissions=Get-AkAppPermissions($appId)
     #$deligatedPermission=Get-AkDeligatedPermissions($appId)
-    $appPermissions = "Sites.ReadWrite.All|Sites.Read.All|Group.Read.All|Group.ReadWrite.All|Directory.Read.All|User.Read.All|Calendars.Read"
-    $deligatedPermission = "User.ReadBasic.All|User.Read.All|Group.Read.All|Group.ReadWrite.All|Directory.Read.All|Directory.AccessAsUser.All|Calendars.Read|Sites.Read.All|Tasks.Read|MailboxSettings.ReadWrite"
+	$appPermissions = "Group.ReadWrite.All|User.Read.All"
+    $deligatedPermission = "Calendar.Read|Directory.AccessAsUser.All|Group.Read.All|Group.ReadWrite.All|MailboxSettings.ReadWrite|Tasks.Read|User.Read.All"    
     $microsoftGraphRequiredPermissions = Get-AkRequiredPermissions -appId $appId -requiredDelegatedPermissions $deligatedPermission -requiredApplicationPermissions $appPermissions
     $requiredResourcesAccess.Add($microsoftGraphRequiredPermissions)  
 
     $appId = "00000002-0000-0000-c000-000000000000"
     $appPermissions = "Directory.Read.All"
-    $deligatedPermission = "User.Read"
+    $deligatedPermission = ""
     $wadRequiredPermissions = Get-AkRequiredPermissions -appId $appId -requiredDelegatedPermissions $deligatedPermission -requiredApplicationPermissions $appPermissions
     $requiredResourcesAccess.Add($wadRequiredPermissions)  
     
-    $appId = "00000003-0000-0ff1-ce00-000000000000"
-    $appPermissions = "User.Read.All|User.ReadWrite.All|TermStore.ReadWrite.All|TermStore.Read.All|Sites.Manage.All|Sites.FullControl.All|Sites.Read.All|Sites.ReadWrite.All"
-    $deligatedPermission = "User.Read.All|User.ReadWrite.All|MyFiles.Write|MyFiles.Read|AllSites.FullControl|AllSites.Manage|AllSites.Write|AllSites.Read|Sites.Search.All|TermStore.ReadWrite.All|TermStore.Read.All"     
+    $appId = "00000003-0000-0ff1-ce00-000000000000"    
+	$appPermissions = ""
+    $deligatedPermission = "AllSites.FullControl|MyFiles.Read|MyFiles.Write|Sites.Search.All|TermStore.Read.All|User.ReadWrite.All"     
+    
     $microsoftSpRequiredPermissions = Get-AkRequiredPermissions -appId $appId -requiredDelegatedPermissions $deligatedPermission -requiredApplicationPermissions $appPermissions
     $requiredResourcesAccess.Add($microsoftSpRequiredPermissions)  
     
-    $appId = "00000004-0000-0ff1-ce00-000000000000"
-    $appPermissions = "Conversations.Chat"
-    $deligatedPermission = "User.ReadWrite|Contacts.ReadWrite"     
-    $lyncRequiredPermissions = Get-AkRequiredPermissions -appId $appId -requiredDelegatedPermissions $deligatedPermission -requiredApplicationPermissions $appPermissions
-    $requiredResourcesAccess.Add($lyncRequiredPermissions)  
+    #$appId = "00000004-0000-0ff1-ce00-000000000000"
+    #$appPermissions = "Conversations.Chat"
+    #$deligatedPermission = "User.ReadWrite|Contacts.ReadWrite"     
+    #$lyncRequiredPermissions = Get-AkRequiredPermissions -appId $appId -requiredDelegatedPermissions $deligatedPermission -requiredApplicationPermissions $appPermissions
+    #$requiredResourcesAccess.Add($lyncRequiredPermissions)  
     
     $identifierUris = $uri + "/" + [GUID]::NewGuid().ToString()
 
@@ -558,7 +563,7 @@ Function Get-AkStorageConnectionString {
 }
 Function Update-AkFunctionApp {
     [OutputType([FtpData])]
-    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "", [string]$appManagerQueryKey, [string]$distributionApiUrl, [string]$StorageAccountName, [string]$distributionConnectionName , [string]$akDistributionConnectionValue)
+    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "", [string]$appManagerQueryKey, [string]$distributionApiUrl, [string]$StorageAccountName, [string]$distributionConnectionName , [string]$akDistributionConnectionValue,[bool]$funAppUploadFiles)
 
     # Get publishing profile for the web app
     [xml] $xml = (Get-AzureRmWebAppPublishingProfile -Name $WebAppName -ResourceGroupName $ResourceGroupName -OutputFile null)
@@ -584,7 +589,7 @@ Function Update-AkFunctionApp {
 	    
     Set-AzureRmWebApp -Name $WebAppName -ResourceGroupName $resourceGroupName -Use32BitWorkerProcess $false -AppSettings $hash
 
-    if ($appdirectory -ne "") {
+    if ($appdirectory -ne "" -and $funAppUploadFiles -eq $true) {
         Publish-AkFtp -appdirectory $appdirectory -username $username -password $password
     }
     $result = New-Object FtpData

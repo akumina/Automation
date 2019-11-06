@@ -117,6 +117,10 @@
     "http20Enabled": {
       "value": "",
       "inputMessage": "Do you wanto enable http 2.0  (y/n)"
+    },
+    "funAppUploadFiles": {
+      "value": "",
+      "inputMessage": "Do you wanto upload content distribution app files using FTP?"
     }
   }
 }
