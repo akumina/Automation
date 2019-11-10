@@ -57,7 +57,7 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
 	{
 		$http20EnabledAppGw = $false
 	}
-    Login-AzureRmAccount -TenantId $TenantId 
+    #Login-AzureRmAccount -TenantId $TenantId 
     $credentials = Connect-AzureAD -TenantId $TenantId
     $user = Get-AzureRmADUser -UserPrincipalName $credentials.Account.Id
     $appData = Get-AzureRmADApplication -DisplayNameStartWith $AadAppName -ErrorVariable aadAppNotExists -ErrorAction SilentlyContinue
@@ -214,7 +214,8 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
             Add-AkKeyVault -tenantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $FunctionAppName -KeyVaultName $KeyVaultName -secretName $secretName -secretvalue $secretvalue
             Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $secretName -SecretValue $secretvalue
             $cdSecretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
-            $akDistributionConnectionValue = "@Microsoft.KeyVault(SecretUri=$($cdSecretIdUri.Id))"			
+            #$akDistributionConnectionValue = "@Microsoft.KeyVault(SecretUri=$($cdSecretIdUri.Id))"			
+			$akDistributionConnectionValue = $storageConnectionString		
 			Add-AkStorageQueue -resourceGroupName $ResourceGroupName -queueName $distributionQueneName -StorageAccountName $StorageAccountName			
             $newGuid = [guid]::newguid()
             $tempFolder = $env:temp
@@ -584,7 +585,7 @@ Function Update-AkFunctionApp {
     $hash['APPINSIGHTS_INSTRUMENTATIONKEY'] = $appInsight.InstrumentationKey.ToString()
     $storageConnectionString = Get-AkStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
     $hash['AzureWebJobsDashboard'] = $storageConnectionString
-    $hash['FUNCTIONS_EXTENSION_VERSION'] = '~2'
+    $hash['FUNCTIONS_EXTENSION_VERSION'] = '~1'
     $hash[$distributionConnectionName] = $akDistributionConnectionValue
 	    
     Set-AzureRmWebApp -Name $WebAppName -ResourceGroupName $resourceGroupName -Use32BitWorkerProcess $false -AppSettings $hash
