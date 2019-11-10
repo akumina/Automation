@@ -57,7 +57,7 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
 	{
 		$http20EnabledAppGw = $false
 	}
-    #Login-AzureRmAccount -TenantId $TenantId 
+    Login-AzureRmAccount -TenantId $TenantId 
     $credentials = Connect-AzureAD -TenantId $TenantId
     $user = Get-AzureRmADUser -UserPrincipalName $credentials.Account.Id
     $appData = Get-AzureRmADApplication -DisplayNameStartWith $AadAppName -ErrorVariable aadAppNotExists -ErrorAction SilentlyContinue
