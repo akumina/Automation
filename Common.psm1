@@ -413,8 +413,8 @@ Function Register-AkAdApp ([string]$AppName, [string]$Uri = "https://localhost:4
     $appId = "00000003-0000-0000-c000-000000000000"
     #$appPermissions=Get-AkAppPermissions($appId)
     #$deligatedPermission=Get-AkDeligatedPermissions($appId)
-	$appPermissions = "Group.ReadWrite.All|User.Read.All"
-    $deligatedPermission = "Calendar.Read|Directory.AccessAsUser.All|Group.Read.All|Group.ReadWrite.All|MailboxSettings.ReadWrite|Tasks.Read|User.Read.All"    
+	$appPermissions = "Group.ReadWrite.All"
+    $deligatedPermission = "Calendars.Read|Directory.AccessAsUser.All|Group.Read.All|Group.ReadWrite.All|MailboxSettings.ReadWrite|Tasks.Read|User.Read.All"    
     $microsoftGraphRequiredPermissions = Get-AkRequiredPermissions -appId $appId -requiredDelegatedPermissions $deligatedPermission -requiredApplicationPermissions $appPermissions
     $requiredResourcesAccess.Add($microsoftGraphRequiredPermissions)  
 
