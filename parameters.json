@@ -1,126 +1,222 @@
 {
-	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
-	"contentVersion": "1.0.0.0",
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
   "parameters": {
     "tenantId": {
       "value": "",
-      "inputMessage": "Enter TenantId (DirectoryId)"
+      "metadata": {
+        "description": "Enter TenantId (DirectoryId)"
+      }
     },
     "subscriptionId": {
       "value": "",
-      "inputMessage": "Enter subscriptionId"
+      "metadata": {
+        "description": "Enter subscriptionId"
+      }
     },
     "resourceGroupName": {
       "value": "",
-      "inputMessage": "Enter Resource group name, if the name not exists then new resource group with this name will be created"
+      "metadata": {
+        "description": "Enter Resource group name, if the name not exists then new resource group with this name will be created"
+      }
     },
     "location": {
       "value": "",
-      "inputMessage": "Enter location (ex.,eastus2), if you leave empty location will be default to eastus2"
+      "metadata": {
+        "description": "Enter location (ex.,eastus2), if you leave empty location will be default to eastus2"
+      }
     },
     "baseName": {
       "value": "",
-      "inputMessage": "Enter App name (ex.,aksvchub01), leave empty if you want to create a App name as resource group name"
+      "metadata": {
+        "description": "Enter App name (ex.,aksvchub01), leave empty if you want to create a App name as resource group name"
+      }
     },
     "storageAccountName": {
       "value": "",
-      "inputMessage": "Enter StorageAccount name, leave empty if you want to create a Storage Account as App name"
+      "metadata": {
+        "description": "Enter StorageAccount name, leave empty if you want to create a Storage Account as App name"
+      }
     },
     "createAzureADApp": {
       "value": "",
-      "inputMessage": "Do you want to create Azure AD app (y/n)"
+      "metadata": {
+        "description": "Do you want to create Azure AD app (y/n)?"
+      }
     },
     "createWebApp": {
       "value": "",
-      "inputMessage": "Do you want to create WebApp (y/n)"
+      "metadata": {
+        "description": "Do you want to create WebApp (y/n)?"
+      }
     },
     "createStorage": {
       "value": "",
-      "inputMessage": "Do you want to create strorage (y/n)"
+      "metadata": {
+        "description": "Do you want to create strorage (y/n)?"
+      }
     },
     "createAKeyVault": {
       "value": "",
-      "inputMessage": "Do you wanto create KeyVault (y/n)"
+      "metadata": {
+        "description": "Do you wanto create KeyVault (y/n)?"
+      }
     },
     "keyVaultName": {
       "value": "",
-      "inputMessage": "Enter KeyVault name, leave empty if you want to create a key vault as App name"
+      "metadata": {
+        "description": "Enter KeyVault name, leave empty if you want to create a key vault as App name"
+      }
     },
     "aadAppName": {
       "value": "",
-      "inputMessage": "Enter AAD App name, leave empty if you want to create a aadApp as App name"
+      "metadata": {
+        "description": "Enter AAD App name, leave empty if you want to create a aadApp as App name"
+      }
     },
     "localAppDirectory": {
       "value": "",
-      "inputMessage": "Enter Local App Directory, leave empty if you want to upload the files later"
+      "metadata": {
+        "description": "Enter Local App Directory, leave empty if you want to upload the files later"
+      }
     },
     "customEmails": {
       "value": "",
-      "inputMessage": "Enter email address to set alert notification, leave empty if you do not want to set alert notification"
+      "metadata": {
+        "description": "Enter email address to set alert notification, leave empty if you do not want to set alert notification"
+      }
     },
     "createAppGw": {
       "value": "",
-      "inputMessage": "Provision App Gateway (y/n)"
+      "metadata": {
+        "description": "Do you want to create App Gateway (y/n)"
+      }
     },
     "pfxFile": {
       "value": "",
-      "inputMessage": "Enter full path to pfx file to configure app gateway secure frontend"
+      "metadata": {
+        "description": "Enter full path to pfx file to configure app gateway secure frontend"
+      }
     },
     "backendHostName": {
       "value": "",
-      "inputMessage": "Enter fqdn for the web app backend pool(ex., prod.onakumina.com)"
+      "metadata": {
+        "description": "Enter fqdn for the web app backend pool(ex., prod.onakumina.com)"
+      }
     },
     "vnetAddressPrefix": {
       "value": "",
-      "inputMessage": "Address prefix for the Virtual Network(ex., 10.10.0.0/16)"
+      "metadata": {
+        "description": "Address prefix for the Virtual Network(ex., 10.10.0.0/16)"
+      }
     },
     "subnetPrefix": {
       "value": "",
-      "inputMessage": "Subnet prefix CIDR(ex., 10.10.0.0/24)"
+      "metadata": {
+        "description": "Subnet prefix CIDR(ex., 10.10.0.0/24)"
+      }
     },
     "createRedisCache": {
       "value": "",
-      "inputMessage": "Provision Redis Cache (y/n)"
+      "metadata": {
+        "description": "Do you want to create Redis Cache (y/n)?"
+      }
     },
     "redisCacheName": {
       "value": "",
-      "inputMessage": "Enter Redis Service name, leave empty if you want to create a Redis Service as App name"
+      "metadata": {
+        "description": "Enter Redis Service name, leave empty if you want to create a Redis Service as App name"
+      }
     },
     "createTrafficManager": {
       "value": "",
-      "inputMessage": "Provision Traffic Manager (y/n)"
+      "metadata": {
+        "description": "Do you want to create Traffic Manager (y/n)"
+      }
     },
     "createDistributionApp": {
       "value": "",
-      "inputMessage": "Provision Content Distribution App  (y/n)"
+      "metadata": {
+        "description": "Do you want to create create Akumina Content Distribution App  (y/n)?"
+      }
     },
-    "functionAppName": {
+    "funcDistributionAppName": {
       "value": "",
-      "inputMessage": "Enter Function App name"
+      "metadata": {
+        "description": "Enter Function App name"
+      }
     },
     "distributionConnectionName": {
       "value": "",
-      "inputMessage": "Enter Content Distribution Queue binding ConnectionName"
+      "metadata": {
+        "description": "Enter Content Distribution Queue binding ConnectionName"
+      }
     },
     "distributionQueneName": {
       "value": "",
-      "inputMessage": "Enter Distribution Queue Name"
+      "metadata": {
+        "description": "Enter Distribution Queue Name"
+      }
     },
     "distributionApiUrl": {
       "value": "",
-      "inputMessage": "Enter AppManager content distribution Url"
+      "metadata": {
+        "description": "Enter AppManager content distribution Url"
+      }
     },
     "appManagerQueryKey": {
       "value": "",
-      "inputMessage": "Enter AppManager Query Key"
+      "metadata": {
+        "description": "Enter AppManager Query Key"
+      }
     },
     "http20Enabled": {
-      "value": "",
-      "inputMessage": "Do you wanto enable http 2.0  (y/n)"
+      "value": "y",
+      "metadata": {
+        "description": "Do you wanto enable http 2.0  (y/n)?"
+      }
     },
-    "funAppUploadFiles": {
+    "funcDistributionUploadFiles": {
       "value": "",
-      "inputMessage": "Do you wanto upload content distribution app files using FTP?"
+      "metadata": {
+        "description": "Do you wanto upload content distribution app files using FTP (y/n)?"
+      }
+    },
+    "enableActivityStream": {
+      "value": "",
+      "metadata": {
+        "description": "Do you want to create services for activity stream (y/n)?"
+      }
+    },
+    "createCosmosDb": {
+      "value": "n",
+      "metadata": {
+        "description": "Do you want to create Cosmos DB (y/n)?"
+      }
+    },
+    "databaseAccountName": {
+      "value": "",
+      "metadata": {
+        "description": "Enter database account name"
+      }
+    },
+    "databaseName": {
+      "value": "",
+      "metadata": {
+        "description": "Enter database name"
+      }
+    },
+    "activityStreamQueues": {
+      "value": "activity-stream,calendar-events,notification-digest,user-changes",
+      "metadata": {
+        "description": "Enter Activity Stream Queues"
+      }
+    },
+    "funcActivityStreamAppName": {
+      "value": "",
+      "metadata": {
+        "description": "Enter Activity Stream Function App Name"
+      }
     }
   }
 }

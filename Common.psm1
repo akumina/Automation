@@ -14,7 +14,16 @@ class FtpData {
     [string]$Password
 }
 
-Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = "", [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails, [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false, [string]$BackendHostName = "", [string]$PfxFile = "", [bool]$CreateDistributionApp = $false, [string]$appManagerQueryKey = "", [string]$distributionApiUrl = "", [string]$DistributionAppDirectory, [string]$FunctionAppName, [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false, [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createAKeyVault = $false, [string]$distributionConnectionName = "", [string]$distributionQueneName, [bool]$http20Enabled=$true,[bool]$http20EnabledAppGw=$true,[bool]$funAppUploadFiles=$false) {
+Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = ""
+                    ,[string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails
+                    ,[bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false, [string]$BackendHostName = ""
+                    ,[string]$PfxFile = "", [bool]$CreateDistributionApp = $false, [string]$appManagerQueryKey = "", [string]$distributionApiUrl = ""
+                    ,[string]$DistributionAppDirectory, [string]$funcDistributionAppName, [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false
+                    ,[bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createAKeyVault = $false, [string]$distributionConnectionName = ""
+                    ,[string]$distributionQueneName, [bool]$http20Enabled=$true,[bool]$http20EnabledAppGw=$true,[bool]$funcDistributionUploadFiles=$false
+                    ,[bool]$enableActivityStream=$false,[string]$activityStreamQueues="",[string]$funcActivityStreamAppName="",[bool]$createCosmosDb=$false,[string]$databaseAccountName="",[string]$databaseName="") 
+{
+     
     if ($BaseName -eq "") {
         $BaseName = $ResourceGroupName
     }
@@ -40,8 +49,8 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
     if ($AadAppName -eq "") {
         $AadAppName = "ad-$appName"
     }
-    if ($FunctionAppName -eq "") {
-        $FunctionAppName = "fn-$appName"
+    if ($funcDistributionAppName -eq "") {
+        $funcDistributionAppName = "fn-$appName"
     }
     if ($RedisCacheName -eq "") {
         $RedisCacheName = $appName
@@ -57,7 +66,7 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
 	{
 		$http20EnabledAppGw = $false
 	}
-    Login-AzureRmAccount -TenantId $TenantId 
+    #Login-AzureRmAccount -TenantId $TenantId 
     $credentials = Connect-AzureAD -TenantId $TenantId
     $user = Get-AzureRmADUser -UserPrincipalName $credentials.Account.Id
     $appData = Get-AzureRmADApplication -DisplayNameStartWith $AadAppName -ErrorVariable aadAppNotExists -ErrorAction SilentlyContinue
@@ -78,7 +87,7 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
     Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorVariable rgNotExists -ErrorAction SilentlyContinue
     if ($rgNotExists) {
         Write-Host "Provisioning Resource Group started..." -ForegroundColor Cyan
-        Add-AkResourceGroup -ResourceGroupName $ResourceGroupName -Location $Location
+        New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location 
         Write-Host "Provisioning Resource Group ended..." -ForegroundColor Cyan
     }
     else {
@@ -190,7 +199,7 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
     }
     $backgroundGuid = [guid]::NewGuid().ToString()
     if ($CreateDistributionApp) {
-        $wp = Get-AzureRmWebApp -Name $FunctionAppName
+        $wp = Get-AzureRmWebApp -Name $funcDistributionAppName
         if ($null -eq $wp) {
             Write-Host "Provisioning content distribution app started..." -ForegroundColor Cyan
             if ($distributionApiUrl -eq "") {
@@ -200,8 +209,8 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
                 $appManagerQueryKey = $backgroundGuid	
             }
             $appInsightLocation = $Location
-            New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $FunctionAppName -appName $FunctionAppName -TemplateFile akfunapp.json -location $appInsightLocation
-            Set-AzureRmWebApp -AssignIdentity $true -Name $FunctionAppName -ResourceGroupName $ResourceGroupName
+            New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $funcDistributionAppName -appName $funcDistributionAppName -TemplateFile akdistributionfunc.json -location $appInsightLocation
+            Set-AzureRmWebApp -AssignIdentity $true -Name $funcDistributionAppName -ResourceGroupName $ResourceGroupName
             Write-Host "Provisioning content distribution app ended..." -ForegroundColor Cyan
             if (($distributionConnectionName -eq "")) {
                 $distributionConnectionName = "AzureWebJobsStorage"
@@ -211,36 +220,20 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
                  
             $secretvalue = ConvertTo-SecureString –String $storageConnectionString –AsPlainText –Force 
             $secretName = "DistributionStorageConnectionString"
-            Add-AkKeyVault -tenantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $FunctionAppName -KeyVaultName $KeyVaultName -secretName $secretName -secretvalue $secretvalue
+            Add-AkKeyVault -tenantId $TenantId -resourceGroupName $ResourceGroupName -userId $user.Id.Guid.ToString() -appName $funcDistributionAppName -KeyVaultName $KeyVaultName -secretName $secretName -secretvalue $secretvalue
             Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $secretName -SecretValue $secretvalue
             $cdSecretIdUri = Get-AzureKeyVaultSecret -VaultName  $KeyVaultName -Name $secretName
-            #$akDistributionConnectionValue = "@Microsoft.KeyVault(SecretUri=$($cdSecretIdUri.Id))"			
 			$akDistributionConnectionValue = $storageConnectionString		
 			Add-AkStorageQueue -resourceGroupName $ResourceGroupName -queueName $distributionQueneName -StorageAccountName $StorageAccountName			
-            $newGuid = [guid]::newguid()
-            $tempFolder = $env:temp
-            $extractLocation = "$tempFolder\Akumina"
-            if ((Test-Path -Path $extractLocation)) {
-				Get-ChildItem $extractLocation -Recurse | Remove-Item -Force
-                New-Item -Path $extractLocation -ItemType directory
-                $extractLocation = "$extractLocation\$newGuid"
-                New-Item -Path $extractLocation\ -ItemType directory
-            }
-            else {
-                New-Item -Path $extractLocation -ItemType directory
-                $extractLocation = "$extractLocation\$newGuid"
-                New-Item -Path $extractLocation\ -ItemType directory
-            }
-            $DownloadToFolder = $extractLocation
-            $cdFile = "contentdistributionv0.2.zip"
-            $downloadurl = "https://akumina.azureedge.net/interchange/contentdistribution/$cdFile"			
-            $fileFolder = Request-AkContentDistributionPackage -DownloadToFolder $DownloadToFolder -downloadurl $downloadurl -cdFile $cdFile
+            
+            $DownloadToFolder = Get-AkTempWorkDir
+            Request-AkInstallPackage -DownloadToFolder $DownloadToFolder -downloadPath "https://akumina.azureedge.net/interchange/contentdistribution/contentdistributionv0.2.zip" -downloadFile "contentdistributionv0.2.zip"
             $DistributionAppDirectory = $DownloadToFolder
             $replaceText = """connection"":""$distributionConnectionName"""
             (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"connection": "AzureWebJobsStorage"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json
             $replaceText = """queueName"":""$distributionQueneName"""
             (Get-Content $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json ).Replace('"queueName": "ws2019queue"', $replaceText) | Out-File $DistributionAppDirectory\ContentDistributionQueueProcessor\function.json						
-			$DistributionAppFtp = Update-AkFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $FunctionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -appManagerQueryKey $appManagerQueryKey -distributionApiUrl $distributionApiUrl -StorageAccountName $StorageAccountName -distributionConnectionName $distributionConnectionName -akDistributionConnectionValue $akDistributionConnectionValue	-funAppUploadFiles $funAppUploadFiles
+			$DistributionAppFtp = Update-AkFunctionApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $funcDistributionAppName -Location $Location -AppDirectory $DistributionAppDirectory -CustomEmails $CustomEmails -appManagerQueryKey $appManagerQueryKey -distributionApiUrl $distributionApiUrl -StorageAccountName $StorageAccountName -distributionConnectionName $distributionConnectionName -akDistributionConnectionValue $akDistributionConnectionValue	-funcDistributionUploadFiles $funcDistributionUploadFiles
 
         }
         else {
@@ -260,11 +253,19 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
             Set-AkRedisCacheToUnity -configFilePath "$localAppDirectory\unity.config" 
         }
     }
+
     if ($createWebApp) {
         $ftp = Update-AkWebApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $appName -Location $Location -AppDirectory $localAppDirectory -CustomEmails $CustomEmails
-			
     }
-		
+
+    if($enableActivityStream){
+        Add-AkCosmosDb -createCosmosDb $createCosmosDb -databaseAccountName $databaseAccountName -databaseName $databaseName -Location $Location
+        foreach ($queue in $activityStreamQueues.Split(",")) {
+            Add-AkStorageQueue -ResourceGroupName $ResourceGroupName -queueName $queue -StorageAccountName $StorageAccountName
+        }
+        Add-AkActivityStreamFuncApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -Location $Location -funcActivityStreamAppName $funcActivityStreamAppName 
+    }
+    
     Write-Host "AD App Name: $AadAppName" -ForegroundColor Cyan
     Write-Host "AD App ID: "($appData.AppId) -ForegroundColor Cyan
     Write-Host "AD App Secret: "($appData.AppSecret) -ForegroundColor Cyan
@@ -282,13 +283,75 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
         Write-Host "Distribution App FTP Host: "($DistributionAppFtp.Host) -ForegroundColor Cyan
         Write-Host "Distribution App FTP User: "($DistributionAppFtp.UserName) -ForegroundColor Cyan
         Write-Host "Distribution App FTP Password: "($DistributionAppFtp.Password) -ForegroundColor Cyan
-		if($funAppUploadFiles -eq $false){
+		if($funcDistributionUploadFiles -eq $false){
 			Write-Host "Content distribution app files location... : $DownloadToFolder" -ForegroundColor Cyan
 		}
     }
     Write-Host "DONE!" -ForegroundColor Green
 }
 
+Function Add-AkCosmosDb([bool]$createCosmosDb,[string]$databaseAccountName,[string]$databaseName,[string]$Location){
+    if ($createCosmosDb) {
+        Write-Host "Provisioning CosmosDB started..." -ForegroundColor Cyan
+        New-AzureRmResourceGroupDeployment -TemplateFile akcosmosdb.json -ResourceGroupName $ResourceGroupName -databaseAccountName $databaseAccountName -databaseName $databaseName -location $Location
+        Write-Host "Provisioning CosmosDB ended..." -ForegroundColor Cyan
+    }
+    else {
+        Write-Host "Provisioning CosmosDB skipped..." -ForegroundColor Cyan
+    }
+}
+
+Function Add-AkActivityStreamFuncApp([string]$SubscriptionId,[string]$ResourceGroupName,[string]$Location,[string]$funcActivityStreamAppName){
+    $wp = Get-AzureRmWebApp -Name $funcActivityStreamAppName
+    if ($null -eq $wp) {
+        Write-Host "Provisioning Activity Stream function app started..." -ForegroundColor Cyan
+        New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -funcActivityStreamName $funcActivityStreamAppName -TemplateFile akactivitystreamfunc.json -location $Location
+        Write-Host "Provisioning Activity Stream function app ended..." -ForegroundColor Cyan
+        $DownloadToFolder = Get-AkTempWorkDir
+        Request-AkInstallPackage -DownloadToFolder $DownloadToFolder -downloadPath "https://akumina.azureedge.net/interchange/activitystream/activitystream.v0.1.zip" -downloadFile "activitystream.v0.1.zip"
+        Update-AkActivityStreamFuncApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $funcActivityStreamAppName -Location $Location -AppDirectory $DownloadToFolder -StorageAccountName $StorageAccountName
+    }
+    else {
+        Write-Host "Provisioning content distribution app skipped..." -ForegroundColor Cyan
+    }
+}
+
+Function Update-AkActivityStreamFuncApp {
+    [OutputType([FtpData])]
+    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "", [string]$appManagerQueryKey, [string]$distributionApiUrl, [string]$StorageAccountName, [string]$distributionConnectionName , [string]$akDistributionConnectionValue,[bool]$funcDistributionUploadFiles)
+
+    # Get publishing profile for the web app
+    [xml] $xml = (Get-AzureRmWebAppPublishingProfile -Name $WebAppName -ResourceGroupName $ResourceGroupName -OutputFile null)
+
+    # Extract connection information from publishing profile
+    $username = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value
+    $password = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
+    $url = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
+
+    $appInsight = Get-AzureRmApplicationInsights -ResourceGroupName $ResourceGroupName -Name $WebAppName 
+
+    $items=Get-Content activitystreamappsettings.json | ConvertFrom-Json
+    $hash=@{}
+    foreach($item in $items)
+    {
+        $hash[$item.name]=$item.value;
+    }
+    $hash['APPINSIGHTS_INSTRUMENTATIONKEY'] = $appInsight.InstrumentationKey.ToString()
+    $hash['APPLICATIONINSIGHTS_CONNECTION_STRING'] = "InstrumentationKey=$appInsight.InstrumentationKey.ToString()"
+    $storageConnectionString = Get-AkStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
+    $hash['AzureWebJobsDashboard'] = $storageConnectionString
+ 	$hash['AzureWebJobsStorage']=$storageConnectionString
+    Set-AzureRmWebApp -Name $WebAppName -ResourceGroupName $resourceGroupName -Use32BitWorkerProcess $false -AppSettings $hash
+
+    if ($appdirectory -ne "") {
+        Publish-AkFtp -appdirectory $appdirectory -username $username -password $password
+    }
+    $result = New-Object FtpData
+    $result.Host = $url 
+    $result.UserName = $username
+    $result.Password = $password
+    return $result
+}
 
 Function Add-AkKeyVault([string] $tenantId, [string] $resourceGroupName, [string] $userId, [string] $appName, [string]  $KeyVaultName, [string] $secretName, [Security.SecureString] $secretvalue) {
     $servicePrincipals = $null
@@ -317,6 +380,7 @@ Function Add-AkKeyVault([string] $tenantId, [string] $resourceGroupName, [string
         Write-Host "Provisioning Keyvault skipped..." -ForegroundColor Cyan
     }
 }
+
 Function Add-AkStorageQueue([string] $resourceGroupName, [string] $queueName, [string]$StorageAccountName) {	
 	$storage =  Get-AzureRmStorageAccount -ResourceGroupName $resourceGroupName -AccountName $StorageAccountName
 	$storageContext = $storage.Context
@@ -324,8 +388,8 @@ Function Add-AkStorageQueue([string] $resourceGroupName, [string] $queueName, [s
 	if(-not $azureStorageQueue){ 
 		New-AzureStorageQueue -Name  $queueName -Context $storageContext
 	}
-	
 }
+
 Function New-AkPassword {
     $aesManaged = New-Object "System.Security.Cryptography.AesManaged"
     $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
@@ -418,11 +482,11 @@ Function Register-AkAdApp ([string]$AppName, [string]$Uri = "https://localhost:4
     $microsoftGraphRequiredPermissions = Get-AkRequiredPermissions -appId $appId -requiredDelegatedPermissions $deligatedPermission -requiredApplicationPermissions $appPermissions
     $requiredResourcesAccess.Add($microsoftGraphRequiredPermissions)  
 
-    $appId = "00000002-0000-0000-c000-000000000000"
-    $appPermissions = "Directory.Read.All"
-    $deligatedPermission = ""
-    $wadRequiredPermissions = Get-AkRequiredPermissions -appId $appId -requiredDelegatedPermissions $deligatedPermission -requiredApplicationPermissions $appPermissions
-    $requiredResourcesAccess.Add($wadRequiredPermissions)  
+    #$appId = "00000002-0000-0000-c000-000000000000"
+    #$appPermissions = "Directory.Read.All"
+    #$deligatedPermission = ""
+    #$wadRequiredPermissions = Get-AkRequiredPermissions -appId $appId -requiredDelegatedPermissions $deligatedPermission -requiredApplicationPermissions $appPermissions
+    #$requiredResourcesAccess.Add($wadRequiredPermissions)  
     
     $appId = "00000003-0000-0ff1-ce00-000000000000"    
 	$appPermissions = ""
@@ -474,6 +538,7 @@ Function Set-AkAppManagerSettings([string] $configFilePath, [string] $key, [stri
     }
     $xmlContent.save($configFilePath)
 }
+
 Function Set-AkRedisCacheToUnity([string] $configFilePath) {
     $content = Get-Content $configFilePath | Out-String
     [xml] $xmlContent = $content
@@ -481,6 +546,7 @@ Function Set-AkRedisCacheToUnity([string] $configFilePath) {
     $target.mapTo = "RedisCachingService"
     $xmlContent.save($configFilePath)
 }
+
 Function Set-AkAppSettings([string] $configFilePath, [string] $key, [string] $newValue) {
     [xml] $content = Get-Content $configFilePath
     $appSettings = $content.configuration.appSettings; 
@@ -492,10 +558,6 @@ Function Set-AkAppSettings([string] $configFilePath, [string] $key, [string] $ne
         Throw "Key '$key' not found in file '$configFilePath'"
     }
     $content.save($configFilePath)
-}
-
-Function Add-AkResourceGroup([string]$ResourceGroupName, [string]$Location) {
-    New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location 
 }
 
 Function Add-AkStorageAccount {
@@ -555,6 +617,7 @@ Function Update-AkWebApp {
     $result.Password = $password
     return $result
 }
+
 Function Get-AkStorageConnectionString {
     [OutputType([string])]
     param([string] $ResourceGroupName, [string] $StorageAccountName)
@@ -562,9 +625,10 @@ Function Get-AkStorageConnectionString {
     $storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$storageAccountKey"
     return $storageConnectionString;
 }
+
 Function Update-AkFunctionApp {
     [OutputType([FtpData])]
-    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "", [string]$appManagerQueryKey, [string]$distributionApiUrl, [string]$StorageAccountName, [string]$distributionConnectionName , [string]$akDistributionConnectionValue,[bool]$funAppUploadFiles)
+    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "", [string]$appManagerQueryKey, [string]$distributionApiUrl, [string]$StorageAccountName, [string]$distributionConnectionName , [string]$akDistributionConnectionValue,[bool]$funcDistributionUploadFiles)
 
     # Get publishing profile for the web app
     [xml] $xml = (Get-AzureRmWebAppPublishingProfile -Name $WebAppName -ResourceGroupName $ResourceGroupName -OutputFile null)
@@ -590,7 +654,7 @@ Function Update-AkFunctionApp {
 	    
     Set-AzureRmWebApp -Name $WebAppName -ResourceGroupName $resourceGroupName -Use32BitWorkerProcess $false -AppSettings $hash
 
-    if ($appdirectory -ne "" -and $funAppUploadFiles -eq $true) {
+    if ($appdirectory -ne "" -and $funcDistributionUploadFiles -eq $true) {
         Publish-AkFtp -appdirectory $appdirectory -username $username -password $password
     }
     $result = New-Object FtpData
@@ -647,8 +711,6 @@ Function Add-AkWebAppAlert ([string]$SubscriptionId, [string]$ResourceGroupName,
 		Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "HttpServerErrors4xx" -MetricName "Http4xx" -Operator GreaterThan -Threshold 2 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "4xx over 2 for 5 minutes"		
         Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "ResponseOver5Sec" -MetricName "AverageResponseTime" -Operator GreaterThan -Threshold 5 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "Average response over 5 sec for 5 minutes"
         Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "RequestsOver1000For5Min" -MetricName "Requests" -Operator GreaterThan -Threshold 1000 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "Total request over 1000 for 5 minutes"
-
-		
     }
 }
 
@@ -673,7 +735,6 @@ Function Add-AkWebAppAlertV2 ([string]$SubscriptionId, [string]$ResourceGroupNam
 }
 
 Function Add-AkVmAlert ([string]$TenantId,[string]$SubscriptionId, [string]$ResourceGroupName, [string]$VmName, [string]$Location, [string]$Email = "") {
-	$credentials = Connect-AzureAD -TenantId $TenantId
 	Set-AzureRmContext -SubscriptionId $SubscriptionId
     $ResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/virtualMachines/$VmName"
     if ($CustomEmails -ne "") {
@@ -683,6 +744,52 @@ Function Add-AkVmAlert ([string]$TenantId,[string]$SubscriptionId, [string]$Reso
     }
 }
 
+Function Request-AkInstallPackage([string]$DownloadToFolder, [string]$downloadPath, [string]$downloadFile) {
+    try {
+        if (!(Test-Path -Path $DownloadToFolder)) {
+            New-Item -Path $DownloadToFolder -Type Directory -Force -ErrorAction Stop | Out-Null
+        }
+        else {
+            $url = $DownloadToFolder + "\" + $downloadFile
+            $wc = New-Object System.Net.WebClient
+            $wc.DownloadFile($downloadPath, $url)
+            if (Test-Path $DownloadToFolder) {
+                Expand-Archive -LiteralPath $url -DestinationPath $DownloadToFolder
+            }		
+        } 
+		Remove-Item –path $DownloadToFolder\* -include *.zip
+        return $DownloadToFolder
+    }
+    catch {
+        Write-Error -Message $_.Exception
+        throw $_.Exception
+    }
+}
+
+Function Get-AkTempWorkDir(){
+    $newGuid = [guid]::newguid()
+    $tempFolder = $env:temp
+    $workDir="$tempFolder\Akumina"
+    if ((Test-Path -Path $workDir)) {
+        Get-ChildItem $workDir -Recurse | Remove-Item -Force
+    }
+    $workDir = "$workDir\$newGuid"
+    New-Item -Path $workDir\ -ItemType directory | Out-Null
+    return $workDir;
+}
+
+Function Get-AkParams {
+    [OutputType([string])]
+    param([System.Object] $params,[string] $param)
+	$val= $params.$param.value
+    $displayName=$params.$param.metadata.description
+	if($val -eq "")
+	{
+		$val=read-host $displayName
+	}
+	else { Write-Host "$displayName= " $val }
+	return $val;
+}
 
 Function Convert-AkInput([string]$Readhost) {
     Switch ($ReadHost) { 
@@ -691,38 +798,4 @@ Function Convert-AkInput([string]$Readhost) {
         Default { $result = $false } 
     } 
     return $result
-}
-
-Function Request-AkContentDistributionPackage([string]$DownloadToFolder, [string]$downloadurl, [string]$cdFile) {
-    try {
-        if (!(Test-Path -Path $DownloadToFolder)) {
-            New-Item -Path $DownloadToFolder -Type Directory -Force -ErrorAction Stop | Out-Null
-        }
-        else {
-            $url = $DownloadToFolder + "\" + $cdFile
-            $wc = New-Object System.Net.WebClient
-            $wc.DownloadFile($downloadurl, $url)
-            $extractLocation = $DownloadToFolder
-            if (Test-Path $extractLocation) {
-                Expand-Archive -LiteralPath $url -DestinationPath $extractLocation
-            }		
-        } 
-		Remove-Item –path $extractLocation\* -include *.zip
-        return $DownloadToFolder
-    }
-    catch {
-        Write-Error -Message $_.Exception
-        throw $_.Exception
-    }
-}
-Function Get-AkParams {
-    [OutputType([string])]
-    param([System.Object] $params,[string] $param,[string] $displayName)
-	$val= $params.$param.value
-	if($val -eq "")
-	{
-		$val=read-host $params.$param.inputMessage
-	}
-	else { Write-Host "$displayName= " $val }
-	return $val;
 }
