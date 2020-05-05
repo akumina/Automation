@@ -2,208 +2,176 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "appName": {
-      "type": "string",
-      "metadata": {
-        "description": "The name of the function app that you wish to create."
+      "appName": {
+          "defaultValue": "",
+          "type": "string"
+      },
+      "location": {
+          "defaultValue": "eastus2",
+          "type": "string"
       }
-    },
-    "location": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().location]",
-      "metadata": {
-        "description": "Location for all resources."
-      }
-    }
   },
   "variables": {
-    "serverfarmsPlan": "[concat(parameters('appName'),'plan')]"
+      "serverfarmsPlan": "[concat('asp-',parameters('appName'))]"
   },
   "resources": [
-    {
-      "type": "microsoft.insights/components",
-      "apiVersion": "2015-05-01",
-      "name": "[parameters('appName')]",
-      "location": "[parameters('location')]",
-      "tags": {
-        "applicationType": "web",
-        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('appName'))]": "Resource"
+      {
+          "type": "microsoft.insights/components",
+          "apiVersion": "2015-05-01",
+          "name": "[parameters('appName')]",
+          "location": "[parameters('location')]",
+          "kind": "web",
+          "properties": {
+              "Application_Type": "web",
+              "Request_Source": "IbizaWebAppExtensionCreate"
+          }
       },
-      "kind": "web",
-      "properties": {
-        "Application_Type": "web",
-        "Flow_Type": "Redfield",
-        "Request_Source": "AppServiceEnablementCreate"
-      }
-    },
-    {
-      "type": "Microsoft.Web/serverfarms",
-      "apiVersion": "2016-09-01",
-      "name": "[variables('serverfarmsPlan')]",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "Y1",
-        "tier": "Dynamic",
-        "size": "Y1",
-        "family": "Y",
-        "capacity": 0
-      },
-      "kind": "functionapp",
-      "properties": {
-        "name": "[variables('serverfarmsPlan')]",
-        "perSiteScaling": false,
-        "reserved": false,
-        "targetWorkerCount": 0,
-        "targetWorkerSizeId": 0
-      }
-    },
-    {
-      "type": "Microsoft.Web/sites",
-      "apiVersion": "2016-08-01",
-      "name": "[parameters('appName')]",
-      "location": "[parameters('location')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('serverfarmsPlan'))]"
-      ],
-      "kind": "functionapp",
-      "identity": {
-        "type": "SystemAssigned"
-      },
-      "properties": {
-        "enabled": true,
-        "hostNameSslStates": [
-          {
-            "name": "[concat(parameters('appName'),'.azurewebsites.net')]",
-            "sslState": "Disabled",
-            "hostType": "Standard"
+      {
+          "type": "Microsoft.Web/serverfarms",
+          "apiVersion": "2018-02-01",
+          "name": "[variables('serverfarmsPlan')]",
+          "location": "East US 2",
+          "sku": {
+              "name": "Y1",
+              "tier": "Dynamic",
+              "size": "Y1",
+              "family": "Y",
+              "capacity": 0
           },
-          {
-            "name": "[concat(parameters('appName'),'.scm.azurewebsites.net')]",
-            "sslState": "Disabled",
-            "hostType": "Repository"
+          "kind": "functionapp",
+          "properties": {
+              "perSiteScaling": false,
+              "maximumElasticWorkerCount": 1,
+              "isSpot": false,
+              "reserved": false,
+              "isXenon": false,
+              "hyperV": false,
+              "targetWorkerCount": 0,
+              "targetWorkerSizeId": 0
           }
-        ],
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('serverfarmsPlan'))]",
-        "reserved": false,
-        "scmSiteAlsoStopped": false,
-        "clientAffinityEnabled": true,
-        "clientCertEnabled": false,
-        "hostNamesDisabled": false,
-        "containerSize": 1536,
-        "dailyMemoryTimeQuota": 0,
-        "httpsOnly": true
-      }
-    },
-    {
-      "type": "Microsoft.Web/sites/config",
-      "apiVersion": "2016-08-01",
-      "name": "[concat(parameters('appName'), '/web')]",
-      "location": "[parameters('location')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
-      ],
-      "properties": {
-        "numberOfWorkers": 1,
-        "defaultDocuments": [
-          "Default.htm",
-          "Default.html",
-          "Default.asp",
-          "index.htm",
-          "index.html",
-          "iisstart.htm",
-          "default.aspx",
-          "index.php"
-        ],
-        "netFrameworkVersion": "v4.0",
-        "phpVersion": "5.6",
-        "pythonVersion": "",
-        "nodeVersion": "",
-        "linuxFxVersion": "",
-        "requestTracingEnabled": false,
-        "remoteDebuggingEnabled": false,
-        "remoteDebuggingVersion": "VS2017",
-        "httpLoggingEnabled": false,
-        "logsDirectorySizeLimit": 35,
-        "detailedErrorLoggingEnabled": false,
-        "publishingUsername": "[concat('$',parameters('appName'))]",
-        "scmType": "None",
-        "use32BitWorkerProcess": true,
-        "webSocketsEnabled": false,
-        "appCommandLine": "",
-        "managedPipelineMode": "Integrated",
-        "virtualApplications": [
-          {
-            "virtualPath": "/",
-            "physicalPath": "site\\wwwroot",
-            "preloadEnabled": false,
-            "virtualDirectories": null
+      },
+      {
+          "type": "Microsoft.Web/sites",
+          "apiVersion": "2018-11-01",
+          "name": "[parameters('appName')]",
+          "location": "[parameters('location')]",
+          "kind": "functionapp",
+          "identity": {
+              "type": "SystemAssigned"
+          },
+          "properties": {
+              "enabled": true,
+              "hostNameSslStates": [
+                  {
+                      "name": "[concat(parameters('appName'), '.azurewebsites.net')]",
+                      "sslState": "Disabled",
+                      "hostType": "Standard"
+                  },
+                  {
+                      "name": "[concat(parameters('appName'), '.scm.azurewebsites.net')]",
+                      "sslState": "Disabled",
+                      "hostType": "Repository"
+                  }
+              ],
+              "serverFarmId":"[resourceId('Microsoft.Web/serverfarms', variables('serverfarmsPlan'))]",
+              "reserved": false,
+              "isXenon": false,
+              "hyperV": false,
+              "scmSiteAlsoStopped": false,
+              "clientAffinityEnabled": true,
+              "clientCertEnabled": false,
+              "hostNamesDisabled": false,
+              "containerSize": 1536,
+              "dailyMemoryTimeQuota": 0,
+              "httpsOnly": false,
+              "redundancyMode": "None"
           }
-        ],
-        "winAuthAdminState": 0,
-        "winAuthTenantState": 0,
-        "customAppPoolIdentityAdminState": false,
-        "customAppPoolIdentityTenantState": false,
-        "loadBalancing": "LeastRequests",
-        "routingRules": [],
-        "experiments": {
-          "rampUpRules": []
-        },
-        "autoHealEnabled": false,
-        "vnetName": "",
-        "siteAuthEnabled": false,
-        "siteAuthSettings": {
-          "enabled": null,
-          "unauthenticatedClientAction": null,
-          "tokenStoreEnabled": null,
-          "allowedExternalRedirectUrls": null,
-          "defaultProvider": null,
-          "clientId": null,
-          "clientSecret": null,
-          "clientSecretCertificateThumbprint": null,
-          "issuer": null,
-          "allowedAudiences": null,
-          "additionalLoginParams": null,
-          "isAadAutoProvisioned": false,
-          "googleClientId": null,
-          "googleClientSecret": null,
-          "googleOAuthScopes": null,
-          "facebookAppId": null,
-          "facebookAppSecret": null,
-          "facebookOAuthScopes": null,
-          "twitterConsumerKey": null,
-          "twitterConsumerSecret": null,
-          "microsoftAccountClientId": null,
-          "microsoftAccountClientSecret": null,
-          "microsoftAccountOAuthScopes": null
-        },
-        "cors": {
-          "allowedOrigins": [
-            "https://functions.azure.com",
-            "https://functions-staging.azure.com",
-            "https://functions-next.azure.com"
+      },
+      {
+          "type": "Microsoft.Web/sites/config",
+          "apiVersion": "2018-11-01",
+          "name": "[concat(parameters('appName'), '/web')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+              "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
           ],
-          "supportCredentials": false
-        },
-        "localMySqlEnabled": false,
-        "managedServiceIdentityId": 8807,
-        "http20Enabled": true,
-        "minTlsVersion": "1.2",
-        "ftpsState": "AllAllowed",
-        "reservedInstanceCount": 0
+          "properties": {
+              "numberOfWorkers": 1,
+              "defaultDocuments": [
+                  "Default.htm",
+                  "Default.html"
+              ],
+              "netFrameworkVersion": "v4.0",
+              "phpVersion": "5.6",
+              "requestTracingEnabled": false,
+              "remoteDebuggingEnabled": false,
+              "remoteDebuggingVersion": "VS2019",
+              "httpLoggingEnabled": false,
+              "logsDirectorySizeLimit": 35,
+              "detailedErrorLoggingEnabled": false,
+              "scmType": "None",
+              "use32BitWorkerProcess": true,
+              "webSocketsEnabled": false,
+              "alwaysOn": false,
+              "managedPipelineMode": "Integrated",
+              "virtualApplications": [
+                  {
+                      "virtualPath": "/",
+                      "physicalPath": "site\\wwwroot",
+                      "preloadEnabled": false
+                  }
+              ],
+              "loadBalancing": "LeastRequests",
+              "experiments": {
+                  "rampUpRules": []
+              },
+              "autoHealEnabled": false,
+              "cors": {
+                  "allowedOrigins": [
+                      "https://functions.azure.com",
+                      "https://functions-staging.azure.com",
+                      "https://functions-next.azure.com"
+                  ],
+                  "supportCredentials": false
+              },
+              "localMySqlEnabled": false,
+              "ipSecurityRestrictions": [
+                  {
+                      "ipAddress": "Any",
+                      "action": "Allow",
+                      "priority": 1,
+                      "name": "Allow all",
+                      "description": "Allow all access"
+                  }
+              ],
+              "scmIpSecurityRestrictions": [
+                  {
+                      "ipAddress": "Any",
+                      "action": "Allow",
+                      "priority": 1,
+                      "name": "Allow all",
+                      "description": "Allow all access"
+                  }
+              ],
+              "scmIpSecurityRestrictionsUseMain": false,
+              "http20Enabled": true,
+              "minTlsVersion": "1.2",
+              "ftpsState": "AllAllowed",
+              "reservedInstanceCount": 0
+          }
+      },
+      {
+          "type": "Microsoft.Web/sites/hostNameBindings",
+          "apiVersion": "2018-11-01",
+          "name": "[concat(parameters('appName'), '/', parameters('appName'), '.azurewebsites.net')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+              "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+          ],
+          "properties": {
+              "siteName": "[parameters('appName')]",
+              "hostNameType": "Verified"
+          }
       }
-    },
-    {
-      "type": "Microsoft.Web/sites/hostNameBindings",
-      "apiVersion": "2016-08-01",
-      "name": "[concat(parameters('appName'), '/', parameters('appName'), '.azurewebsites.net')]",
-      "location": "[parameters('location')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
-      ],
-      "properties": {
-        "siteName": "parameters('appName')",
-        "hostNameType": "Verified"
-      }
-    }
   ]
 }

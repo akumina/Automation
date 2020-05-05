@@ -30,7 +30,7 @@
             "type": "Microsoft.Web/serverfarms",
             "apiVersion": "2018-02-01",
             "name": "[variables('serverfarmsPlan')]",
-            "location": "East US 2",
+            "location": "[parameters('location')]",
             "sku": {
                 "name": "Y1",
                 "tier": "Dynamic",

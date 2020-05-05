@@ -72,7 +72,7 @@
   },
   {
     "name": "Database",
-    "value": "",
+    "value": "qa",
     "slotSetting": false
   },
   {
@@ -92,12 +92,12 @@
   },
   {
     "name": "HostedBlobContainer",
-    "value": "aksettings",
+    "value": "",
     "slotSetting": false
   },
   {
     "name": "HostedLocation",
-    "value": "eastus2",
+    "value": "",
     "slotSetting": false
   },
   {

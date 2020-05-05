@@ -189,7 +189,7 @@
       }
     },
     "createCosmosDb": {
-      "value": "n",
+      "value": "",
       "metadata": {
         "description": "Do you want to create Cosmos DB (y/n)?"
       }
@@ -216,6 +216,54 @@
       "value": "",
       "metadata": {
         "description": "Enter Activity Stream Function App Name"
+      }
+    },
+    "funcActivityStreamAppDownloadUrl": {
+      "value": "",
+      "metadata": {
+        "description": "Enter Activity Stream Function App Download Url"
+      }
+    },
+    "hostedAadAppId": {
+      "value": "",
+      "metadata": {
+        "description": "Enter Azure service contributor clientId  for ActivityStream Azure resource"
+      }
+    },
+    "hostedAadAppSecret": {
+      "value": "",
+      "metadata": {
+        "description": "Enter Azure service contributor secret for ActivityStream Azure resource"
+      }
+    },
+    "hostedBlobContainer": {
+      "value": "",
+      "metadata": {
+        "description": "Enter Azure service blob-container name for ActivityStream Azure resource"
+      }
+    },
+    "hostedLocation": {
+      "value": "",
+      "metadata": {
+        "description": "Enter Azure service location for ActivityStream Azure resource"
+      }
+    },
+    "hostedResourceGroup": {
+      "value": "",
+      "metadata": {
+        "description": "Enter Azure service resource group for ActivityStream Azure resource"
+      }
+    },
+    "hostedSubscriptionId": {
+      "value": "",
+      "metadata": {
+        "description": "Enter Azure service subscription Id for ActivityStream Azure resource"
+      }
+    },
+    "hostedTenantId": {
+      "value": "",
+      "metadata": {
+        "description": "Enter Azure service tenant Id for ActivityStream Azure resource for ActivityStream Azure resource" 
       }
     }
   }

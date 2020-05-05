@@ -102,11 +102,9 @@ if($enableActivityStream)
 	{
 		$storageAccountName=Get-AkParams  -params $jo.parameters -param "storageAccountName"
 	}
-	if($createCosmosDb)
-	{
-		$databaseAccountName=Get-AkParams  -params $jo.parameters -param "databaseAccountName"
-		$databaseName=Get-AkParams  -params $jo.parameters -param "databaseName"
-	}
+	$databaseAccountName=Get-AkParams  -params $jo.parameters -param "databaseAccountName"
+	$databaseName=Get-AkParams  -params $jo.parameters -param "databaseName"
+
 	$activityStreamQueues=Get-AkParams  -params $jo.parameters -param "activityStreamQueues"
 	$funcActivityStreamAppName=Get-AkParams  -params $jo.parameters -param "funcActivityStreamAppName"
 }

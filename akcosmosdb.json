@@ -13,18 +13,11 @@
         "location": {
             "defaultValue": "eastus2",
             "type": "string"
-        },
-        "throughput": {
-            "type": "int",
-            "defaultValue": 2000,
-            "minValue": 2000,
-            "maxValue": 20000,
-            "metadata": {
-                "description": "The throughput for the database"
-            }
         }
     },
-    "variables": {},
+    "variables": {
+        "throughputName": "[concat('/',concat(parameters('databaseName'),'/default'))]"
+    },
     "resources": [
         {
             "type": "Microsoft.DocumentDB/databaseAccounts",
@@ -73,7 +66,7 @@
                     "id": "[parameters('databaseName')]"
                 },
                 "options": {
-                    "throughput": "[parameters('throughput')]"
+                   
                 }
             }
         },
@@ -450,6 +443,23 @@
                     }
                 },
                 "options": {}
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/throughputSettings",
+            "apiVersion": "2020-03-01",
+            "name": "[concat(parameters('databaseAccountName'), variables('throughputName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "throughput": 400,
+                    "provisionedThroughputSettings": {
+                        "maxThroughput": 20000
+                    }
+                }
             }
         }
     ]
