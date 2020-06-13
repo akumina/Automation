@@ -21,13 +21,13 @@
     "resources": [
         {
             "type": "Microsoft.DocumentDB/databaseAccounts",
-            "apiVersion": "2020-03-01",
+            "apiVersion": "2020-04-01",
             "name": "[parameters('databaseAccountName')]",
             "location": "[parameters('location')]",
             "tags": {
                 "defaultExperience": "Core (SQL)",
                 "hidden-cosmos-mmspecial": "",
-                "CosmosAccountType": "Non-Production"
+                "CosmosAccountType": "Production"
             },
             "kind": "GlobalDocumentDB",
             "properties": {
@@ -51,12 +51,13 @@
                         "isZoneRedundant": false
                     }
                 ],
-                "capabilities": []
+                "capabilities": [],
+                "ipRules": []
             }
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
-            "apiVersion": "2020-03-01",
+            "apiVersion": "2020-04-01",
             "name": "[concat(parameters('databaseAccountName'), concat('/',parameters('databaseName')))]",
             "dependsOn": [
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
@@ -65,14 +66,12 @@
                 "resource": {
                     "id": "[parameters('databaseName')]"
                 },
-                "options": {
-                   
-                }
+                "options": {}
             }
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-            "apiVersion": "2020-03-01",
+            "apiVersion": "2020-04-01",
             "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/activitysubscriptions'))]",
             "dependsOn": [
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
@@ -114,7 +113,7 @@
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-            "apiVersion": "2020-03-01",
+            "apiVersion": "2020-04-01",
             "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/comments'))]",
             "dependsOn": [
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
@@ -137,6 +136,9 @@
                             },
                             {
                                 "path": "/Message/?"
+                            },
+                            {
+                                "path": "/TranslatedMessage/?"
                             },
                             {
                                 "path": "/Concern/?"
@@ -163,7 +165,7 @@
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-            "apiVersion": "2020-03-01",
+            "apiVersion": "2020-04-01",
             "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/eventsubscriptions'))]",
             "dependsOn": [
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
@@ -205,7 +207,7 @@
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-            "apiVersion": "2020-03-01",
+            "apiVersion": "2020-04-01",
             "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/leases'))]",
             "dependsOn": [
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
@@ -247,7 +249,7 @@
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-            "apiVersion": "2020-03-01",
+            "apiVersion": "2020-04-01",
             "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/other'))]",
             "dependsOn": [
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
@@ -293,7 +295,7 @@
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-            "apiVersion": "2020-03-01",
+            "apiVersion": "2020-04-01",
             "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/streamactivities'))]",
             "dependsOn": [
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
@@ -305,11 +307,12 @@
                     "indexingPolicy": {
                         "indexingMode": "consistent",
                         "automatic": true,
-                        "includedPaths": [],
-                        "excludedPaths": [
+                        "includedPaths": [
                             {
                                 "path": "/*"
-                            },
+                            }
+                        ],
+                        "excludedPaths": [
                             {
                                 "path": "/\"_etag\"/?"
                             }
@@ -335,7 +338,7 @@
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-            "apiVersion": "2020-03-01",
+            "apiVersion": "2020-04-01",
             "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/users'))]",
             "dependsOn": [
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
@@ -377,7 +380,7 @@
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-            "apiVersion": "2020-03-01",
+            "apiVersion": "2020-04-01",
             "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/userstreamactivities'))]",
             "dependsOn": [
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
@@ -447,7 +450,7 @@
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/throughputSettings",
-            "apiVersion": "2020-03-01",
+            "apiVersion": "2020-04-01",
             "name": "[concat(parameters('databaseAccountName'), variables('throughputName'))]",
             "dependsOn": [
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
@@ -456,8 +459,8 @@
             "properties": {
                 "resource": {
                     "throughput": 400,
-                    "provisionedThroughputSettings": {
-                        "maxThroughput": 20000
+                    "autoscaleSettings": {
+                        "maxThroughput": 4000
                     }
                 }
             }
