@@ -207,7 +207,7 @@
       }
     },
     "activityStreamQueues": {
-      "value": "activity-stream,calendar-events,notification-digest,user-changes",
+      "value": "activity-stream,calendar-events,sharepoint-events,notification-digest,user-changes",
       "metadata": {
         "description": "Enter Activity Stream Queues"
       }
