@@ -63,10 +63,14 @@
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
             ],
             "properties": {
+                "options": {
+                    "autoscaleSettings": {
+                        "maxThroughput": 4000
+                    }
+                },
                 "resource": {
                     "id": "[parameters('databaseName')]"
-                },
-                "options": {}
+                }
             }
         },
         {
@@ -446,23 +450,6 @@
                     }
                 },
                 "options": {}
-            }
-        },
-        {
-            "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/throughputSettings",
-            "apiVersion": "2020-04-01",
-            "name": "[concat(parameters('databaseAccountName'), variables('throughputName'))]",
-            "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
-            ],
-            "properties": {
-                "resource": {
-                    "throughput": 400,
-                    "autoscaleSettings": {
-                        "maxThroughput": 4000
-                    }
-                }
             }
         }
     ]

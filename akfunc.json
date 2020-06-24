@@ -2,7 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "funcActivityStreamName": {
+        "funcAppName": {
             "defaultValue": "",
             "type": "string"
         },
@@ -12,13 +12,13 @@
         }
     },
     "variables": {
-        "serverfarmsPlan": "[concat('asp-',parameters('funcActivityStreamName'))]"
+        "serverfarmsPlan": "[concat('asp-',parameters('funcAppName'))]"
     },
     "resources": [
         {
             "type": "microsoft.insights/components",
             "apiVersion": "2015-05-01",
-            "name": "[parameters('funcActivityStreamName')]",
+            "name": "[parameters('funcAppName')]",
             "location": "[parameters('location')]",
             "kind": "web",
             "properties": {
@@ -53,7 +53,7 @@
         {
             "type": "Microsoft.Web/sites",
             "apiVersion": "2018-11-01",
-            "name": "[parameters('funcActivityStreamName')]",
+            "name": "[parameters('funcAppName')]",
             "location": "[parameters('location')]",
             "kind": "functionapp",
             "identity": {
@@ -63,12 +63,12 @@
                 "enabled": true,
                 "hostNameSslStates": [
                     {
-                        "name": "[concat(parameters('funcActivityStreamName'), '.azurewebsites.net')]",
+                        "name": "[concat(parameters('funcAppName'), '.azurewebsites.net')]",
                         "sslState": "Disabled",
                         "hostType": "Standard"
                     },
                     {
-                        "name": "[concat(parameters('funcActivityStreamName'), '.scm.azurewebsites.net')]",
+                        "name": "[concat(parameters('funcAppName'), '.scm.azurewebsites.net')]",
                         "sslState": "Disabled",
                         "hostType": "Repository"
                     }
@@ -90,10 +90,10 @@
         {
             "type": "Microsoft.Web/sites/config",
             "apiVersion": "2018-11-01",
-            "name": "[concat(parameters('funcActivityStreamName'), '/web')]",
+            "name": "[concat(parameters('funcAppName'), '/web')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('funcActivityStreamName'))]"
+                "[resourceId('Microsoft.Web/sites', parameters('funcAppName'))]"
             ],
             "properties": {
                 "numberOfWorkers": 1,
@@ -163,13 +163,13 @@
         {
             "type": "Microsoft.Web/sites/hostNameBindings",
             "apiVersion": "2018-11-01",
-            "name": "[concat(parameters('funcActivityStreamName'), '/', parameters('funcActivityStreamName'), '.azurewebsites.net')]",
+            "name": "[concat(parameters('funcAppName'), '/', parameters('funcAppName'), '.azurewebsites.net')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('funcActivityStreamName'))]"
+                "[resourceId('Microsoft.Web/sites', parameters('funcAppName'))]"
             ],
             "properties": {
-                "siteName": "[parameters('funcActivityStreamName')]",
+                "siteName": "[parameters('funcAppName')]",
                 "hostNameType": "Verified"
             }
         }

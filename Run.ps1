@@ -49,10 +49,9 @@ if($createWebApp)	{
 	$baseName=Get-AkParams  -params $jo.parameters -param "baseName"
 	$localAppDirectory=Get-AkParams  -params $jo.parameters -param "localAppDirectory" 
 	$customEmails=Get-AkParams  -params $jo.parameters -param "customEmails" 			
-	$http20Enabled =Convert-AkInput(Get-AkParams  -params $jo.parameters -param "http20Enabled" )		
 }
-$createAKeyVault=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createAKeyVault" )	
-if($createAKeyVault)
+$createKeyVault=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createKeyVault" )	
+if($createKeyVault)
 {
 	$keyVaultName=Get-AkParams  -params $jo.parameters -param "keyVaultName"		
 }
@@ -68,7 +67,6 @@ if($createAppGw)
 	$backendHostName=Get-AkParams  -params $jo.parameters -param "backendHostName" 	
 	$vnetAddressPrefix=Get-AkParams  -params $jo.parameters -param "vnetAddressPrefix"	
 	$subnetPrefix=Get-AkParams  -params $jo.parameters -param "subnetPrefix"	
-	$http20EnabledAppGw =Convert-AkInput(Get-AkParams  -params $jo.parameters -param "http20Enabled")
 }
 $createRedisCache=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createRedisCache")
 if($createRedisCache)
@@ -77,25 +75,8 @@ if($createRedisCache)
 }
 $createTrafficManager=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createTrafficManager")
 $createDistributionApp=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createDistributionApp")
-if($createDistributionApp)
-{
-	$funcDistributionAppName=Get-AkParams  -params $jo.parameters -param "funcDistributionAppName"
-	$distributionConnectionName=Get-AkParams  -params $jo.parameters -param "distributionConnectionName"
-	$distributionQueneName=Get-AkParams  -params $jo.parameters -param "distributionQueneName"
-	if($storageAccountName -eq "")
-	{
-		$storageAccountName=Get-AkParams  -params $jo.parameters -param "storageAccountName"
-	}
-	if($keyVaultName -eq "")
-	{
-		$keyVaultName=Get-AkParams  -params $jo.parameters -param "keyVaultName"
-	}
-	$appManagerQueryKey=Get-AkParams  -params $jo.parameters -param "appManagerQueryKey"
-	$distributionApiUrl=Get-AkParams  -params $jo.parameters -param "distributionApiUrl"
-	$funcDistributionUploadFiles=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "funcDistributionUploadFiles")
-}
-$enableActivityStream=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "enableActivityStream")
-if($enableActivityStream)
+$createFuncApp=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createFuncApp")
+if($createFuncApp)
 {
 	$createCosmosDb=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createCosmosDb")
 	if($storageAccountName -eq "")
@@ -105,23 +86,15 @@ if($enableActivityStream)
 	$databaseAccountName=Get-AkParams  -params $jo.parameters -param "databaseAccountName"
 	$databaseName=Get-AkParams  -params $jo.parameters -param "databaseName"
 
-	$activityStreamQueues=Get-AkParams  -params $jo.parameters -param "activityStreamQueues"
-	$funcActivityStreamAppName=Get-AkParams  -params $jo.parameters -param "funcActivityStreamAppName"
+	$funcAppQueues=Get-AkParams  -params $jo.parameters -param "funcAppQueues"
+	$funcAppName=Get-AkParams  -params $jo.parameters -param "funcAppName"
 }
 if ($baseName -eq "")
 {
 	$baseName = $resourceGroupName
 }
-if(!$http20Enabled)
-{
-	$http20Enabled = $false
-}
-if(!$http20EnabledAppGw)
-{
-	$http20EnabledAppGw = $false
-}
 if(!$funcDistributionUploadFiles)
 {
 	$funcDistributionUploadFiles = $false
 }
-Add-AkAppResources  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -CreateDistributionApp $createDistributionApp -appManagerQueryKey $appManagerQueryKey -distributionApiUrl $distributionApiUrl -DistributionAppDirectory $distributionAppDirectory -funcDistributionAppName $funcDistributionAppName	-vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStorage $createStorage -createAKeyVault $createAKeyVault -distributionConnectionName $distributionConnectionName -distributionQueneName $distributionQueneName -http20Enabled $http20Enabled -http20EnabledAppGw $http20EnabledAppGw -funcDistributionUploadFiles $funcDistributionUploadFiles -enableActivityStream $enableActivityStream -activityStreamQueues $activityStreamQueues -createCosmosDb $createCosmosDb -databaseAccountName $databaseAccountName -databaseName $databaseName -funcActivityStreamAppName $funcActivityStreamAppName
+Add-AkAppResources  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -CreateDistributionApp $createDistributionApp -appManagerQueryKey $appManagerQueryKey -vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStorage $createStorage -createKeyVault $createKeyVault -funcDistributionUploadFiles $funcDistributionUploadFiles -createFuncApp $createFuncApp -funcAppQueues $funcAppQueues -createCosmosDb $createCosmosDb -databaseAccountName $databaseAccountName -databaseName $databaseName -funcAppName $funcAppName

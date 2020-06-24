@@ -56,7 +56,7 @@
         "description": "Do you want to create strorage (y/n)?"
       }
     },
-    "createAKeyVault": {
+    "createKeyVault": {
       "value": "",
       "metadata": {
         "description": "Do you wanto create KeyVault (y/n)?"
@@ -134,58 +134,22 @@
         "description": "Do you want to create Traffic Manager (y/n)"
       }
     },
-    "createDistributionApp": {
-      "value": "",
-      "metadata": {
-        "description": "Do you want to create create Akumina Content Distribution App  (y/n)?"
-      }
-    },
-    "funcDistributionAppName": {
-      "value": "",
-      "metadata": {
-        "description": "Enter Function App name"
-      }
-    },
-    "distributionConnectionName": {
-      "value": "",
-      "metadata": {
-        "description": "Enter Content Distribution Queue binding ConnectionName"
-      }
-    },
-    "distributionQueneName": {
-      "value": "",
-      "metadata": {
-        "description": "Enter Distribution Queue Name"
-      }
-    },
-    "distributionApiUrl": {
-      "value": "",
-      "metadata": {
-        "description": "Enter AppManager content distribution Url"
-      }
-    },
     "appManagerQueryKey": {
       "value": "",
       "metadata": {
         "description": "Enter AppManager Query Key"
       }
     },
-    "http20Enabled": {
-      "value": "y",
-      "metadata": {
-        "description": "Do you wanto enable http 2.0  (y/n)?"
-      }
-    },
-    "funcDistributionUploadFiles": {
+    "createFuncApp": {
       "value": "",
       "metadata": {
-        "description": "Do you wanto upload content distribution app files using FTP (y/n)?"
+        "description": "Do you want to create function app for back-end processing (y/n)?"
       }
     },
-    "enableActivityStream": {
+    "funcAppName": {
       "value": "",
       "metadata": {
-        "description": "Do you want to create services for activity stream (y/n)?"
+        "description": "Enter Activity Stream Function App Name"
       }
     },
     "createCosmosDb": {
@@ -206,64 +170,22 @@
         "description": "Enter database name"
       }
     },
-    "activityStreamQueues": {
-      "value": "activity-stream,calendar-events,sharepoint-events,notification-digest,user-changes",
+    "funcAppQueues": {
+      "value": "activity-stream,calendar-events,sharepoint-events,notification-digest,user-changes,contentdistribution,tasks",
       "metadata": {
         "description": "Enter Activity Stream Queues"
       }
     },
-    "funcActivityStreamAppName": {
-      "value": "",
-      "metadata": {
-        "description": "Enter Activity Stream Function App Name"
-      }
-    },
-    "funcActivityStreamAppDownloadUrl": {
+    "funcAppPackageUrl": {
       "value": "",
       "metadata": {
         "description": "Enter Activity Stream Function App Download Url"
-      }
-    },
-    "hostedAadAppId": {
-      "value": "",
-      "metadata": {
-        "description": "Enter Azure service contributor clientId  for ActivityStream Azure resource"
-      }
-    },
-    "hostedAadAppSecret": {
-      "value": "",
-      "metadata": {
-        "description": "Enter Azure service contributor secret for ActivityStream Azure resource"
       }
     },
     "hostedBlobContainer": {
       "value": "",
       "metadata": {
         "description": "Enter Azure service blob-container name for ActivityStream Azure resource"
-      }
-    },
-    "hostedLocation": {
-      "value": "",
-      "metadata": {
-        "description": "Enter Azure service location for ActivityStream Azure resource"
-      }
-    },
-    "hostedResourceGroup": {
-      "value": "",
-      "metadata": {
-        "description": "Enter Azure service resource group for ActivityStream Azure resource"
-      }
-    },
-    "hostedSubscriptionId": {
-      "value": "",
-      "metadata": {
-        "description": "Enter Azure service subscription Id for ActivityStream Azure resource"
-      }
-    },
-    "hostedTenantId": {
-      "value": "",
-      "metadata": {
-        "description": "Enter Azure service tenant Id for ActivityStream Azure resource for ActivityStream Azure resource" 
       }
     }
   }

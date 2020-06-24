@@ -60,11 +60,6 @@
     "slotSetting": false
   },
   {
-    "name": "AppMgrUrl",
-    "value": "",
-    "slotSetting": false
-  },
-  {
     "name": "CalendarQueueName",
     "value": "calendar-events",
     "slotSetting": false
@@ -85,37 +80,7 @@
     "slotSetting": false
   },
   {
-    "name": "HostedAadAppId",
-    "value": "",
-    "slotSetting": false
-  },
-  {
-    "name": "HostedAadAppSecret",
-    "value": "",
-    "slotSetting": false
-  },
-  {
     "name": "HostedBlobContainer",
-    "value": "",
-    "slotSetting": false
-  },
-  {
-    "name": "HostedLocation",
-    "value": "",
-    "slotSetting": false
-  },
-  {
-    "name": "HostedResourceGroup",
-    "value": "",
-    "slotSetting": false
-  },
-  {
-    "name": "HostedSubscriptionId",
-    "value": "",
-    "slotSetting": false
-  },
-  {
-    "name": "HostedTenantId",
     "value": "",
     "slotSetting": false
   },
@@ -162,6 +127,16 @@
   {
     "name": "CosmosTriggerMaxTries",
     "value": "3",
+    "slotSetting": false
+  },
+  {
+    "name": "SharePointQueueName",
+    "value": "sharepoint-events",
+    "slotSetting": false
+  },
+  {
+    "name": "TasksQueueName",
+    "value": "tasks",
     "slotSetting": false
   }
 ]
