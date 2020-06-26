@@ -1,5 +1,5 @@
 # Automation
-**Akumina AppManager/ServiceHub PowerShell and ARM template based installation.**
+## Akumina AppManager/ServiceHub PowerShell and ARM template based installation.
 
 **Current Version:** v5-preview  (AppManager and PeopleSync)
 
