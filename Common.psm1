@@ -228,9 +228,6 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
         Write-Host "Function App FTP Host: "($funcAppFtp.Host) -ForegroundColor Cyan
         Write-Host "Function App FTP User: "($funcAppFtp.UserName) -ForegroundColor Cyan
         Write-Host "Function App FTP Password: "($funcAppFtp.Password) -ForegroundColor Cyan
-		if($funcDistributionUploadFiles -eq $false){
-			Write-Host "Function app files location... : $DownloadToFolder" -ForegroundColor Cyan
-		}
     }
     Write-Host "DONE!" -ForegroundColor Green
 }
