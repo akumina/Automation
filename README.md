@@ -1,9 +1,9 @@
 # Automation
-Akumina AppManager/ServiceHub PowerShell and ARM template based installation.
+**Akumina AppManager/ServiceHub PowerShell and ARM template based installation.**
 
-Current Version: v5-preview  (AppManager and PeopleSync)
+**Current Version:** v5-preview  (AppManager and PeopleSync)
 
-For previous verions (ex., 4.5 or 4.8): 
+**For previous verions (ex., 4.5 or 4.8):**
 
 You can still use the same scripts but in the parameters.json set "createFuncApp" to "n"
 
