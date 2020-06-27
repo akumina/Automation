@@ -2,7 +2,7 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "baseResourceName": {
+    "webAppName": {
       "type": "string",
       "metadata": {
         "description": "Name of the resource"
@@ -10,9 +10,7 @@
       "maxLength": 28
     },
     "environments": {
-      "defaultValue": [
-
-      ],
+      "defaultValue": [],
       "type": "array",
       "metadata": {
         "description": "Array with the names for the environment slots"
@@ -20,13 +18,11 @@
       "maxLength": 19
     }
   },
-
   "variables": {
     "standardPlanMaxAdditionalSlots": 4,
-    "webSiteName": "[parameters('baseResourceName')]",
-    "appServicePlanName": "[concat('AppServicePlan-', parameters('baseResourceName'))]"
+    "webSiteName": "[parameters('webAppName')]",
+    "appServicePlanName": "[concat('AppServicePlan-', parameters('webAppName'))]"
   },
-
   "resources": [
     {
       "apiVersion": "2017-08-01",
@@ -49,7 +45,19 @@
       }
     },
     {
-      "apiVersion": "2016-08-01",
+      "apiVersion": "2015-05-01",
+      "name": "[parameters('webAppName')]",
+      "type": "microsoft.insights/components",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "Request_Source": "IbizaWebAppExtensionCreate"
+      }
+    },
+    {
+      "apiVersion": "2018-11-01",
       "type": "Microsoft.Web/sites",
       "kind": "app",
       "name": "[variables('webSiteName')]",
@@ -63,9 +71,40 @@
       },
       "properties": {
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
-        "clientAffinityEnabled": false
+        "clientAffinityEnabled": false,
+        "httpsOnly": true,
+        "siteConfig": {
+          "netFrameworkVersion": "v4.6",
+          "use32BitWorkerProcess": false,
+          "alwaysOn": true,
+          "http20Enabled": true,
+          "minTlsVersion": "1.2",
+          "appSettings": [
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(concat('microsoft.insights/components/',parameters('webAppName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(concat('microsoft.insights/components/',parameters('webAppName')), '2015-05-01').ConnectionString]"
+            },
+            {
+              "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+              "value": "~2"
+            },
+            {
+              "name": "XDT_MicrosoftApplicationInsights_Mode",
+              "value": "default"
+            },
+            {
+              "name": "SCM_COMMAND_IDLE_TIMEOUT",
+              "value": "3600"
+            }
+          ]
+        }
       },
       "dependsOn": [
+        "[concat('microsoft.insights/components/',parameters('webAppName'))]",
         "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
       ]
     }

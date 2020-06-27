@@ -1,24 +1,8 @@
-﻿class AppData {
-    [string]$AppId
-    [string]$AppSecret
-}
-class StorageData {
-    [string]$ConnectionString
-}
-class RedisCache {
-    [string]$ConnectionString
-}
-class FtpData {
-    [string]$Host
-    [string]$UserName
-    [string]$Password
-}
-
-Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = ""
+﻿Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]$BaseName, [string]$Location, [string]$AadAppName = "", [string]$ResourceGroupName = ""
     , [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails
     , [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false
     , [string]$BackendHostName = "", [string]$PfxFile = "", [string]$appManagerQueryKey = "", [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false
-    , [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createKeyVault = $false, [bool]$http20Enabled = $true, [bool]$http20EnabledAppGw = $true
+    , [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createKeyVault = $false
     , [bool]$createFuncApp = $false, [string]$funcAppQueues = "", [string]$funcAppName = "", [bool]$createCosmosDb = $false, [string]$databaseAccountName = "", [string]$databaseName = "") {
      
     if ($BaseName -eq "") {
@@ -45,8 +29,8 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
     if ($AadAppName -eq "") {
         $AadAppName = "ad-$appName"
     }
-    if ($funcDistributionAppName -eq "") {
-        $funcDistributionAppName = "fn-$appName"
+    if ($funcAppName -eq "") {
+        $funcAppName = "fn-$appName"
     }
     if ($RedisCacheName -eq "") {
         $RedisCacheName = $appName
@@ -54,12 +38,7 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
     if ($PfxFile -and $CreateAppGw) {
         $SecurePassword = Read-Host -Prompt "Enter Pfx password" -AsSecureString
     }
-    if (!$http20Enabled) {
-        $http20Enabled = $false
-    }
-    if (!$http20EnabledAppGw) {
-        $http20EnabledAppGw = $false
-    }
+
     #Login-AzureRmAccount -TenantId $TenantId 
     $credentials = Connect-AzureAD -TenantId $TenantId
     $user = Get-AzureRmADUser -UserPrincipalName $credentials.Account.Id
@@ -86,27 +65,9 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
         Write-Host "Provisioning Resource Group skipped..." -ForegroundColor Cyan
     }
     if ($createStorage) {
-        $storage = Add-AkStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location
+        $storageConnectionString = Add-AkStorageAccount -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -Location $Location
     }
 
-    if ($createWebApp) {
-        $wp = Get-AzureRmWebApp -Name $appName
-        if ($null -eq $wp) {
-            Write-Host "Provisioning webapp started..." -ForegroundColor Cyan
-            New-AzureRmResourceGroupDeployment -Name $appName -TemplateFile akwebapp.json -ResourceGroupName $ResourceGroupName -baseResourceName $appName
-            if ($http20Enabled) {
-                $propertiesObject = @{ 
-                    http20Enabled = $true;
-                }
-                Set-AzureRmResource -PropertyObject $propertiesObject -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.Web/sites/config -ResourceName "$appName/web" -ApiVersion 2016-08-01 -Force  
-            }
-            Write-Host "Provisioning webapp ended..." -ForegroundColor Cyan
-        }
-        else {
-            Write-Host "Provisioning webapp skipped..." -ForegroundColor Cyan
-        }
-    }
-   
     if ($createKeyVault) {
         $storageConnectionString = Get-AkStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
         $secretvalue = ConvertTo-SecureString –String $storageConnectionString –AsPlainText –Force 
@@ -117,7 +78,7 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
     else {
         Write-Host "Provisioning Keyvault skipped..." -ForegroundColor Cyan
     }
-    	
+    
     if ($CreateRedisCache) {
         Get-AzureRmRedisCache -Name $RedisCacheName -ErrorVariable rcNotExists -ErrorAction SilentlyContinue
         if ($rcNotExists) {
@@ -125,15 +86,16 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
             New-AzureRmResourceGroupDeployment -TemplateFile akredis.json -ResourceGroupName $ResourceGroupName -RedisName $RedisCacheName 
             $cacheKeys = Get-AzureRmRedisCacheKey -ResourceGroupName $ResourceGroupName -Name $RedisCacheName
             $primaryCacheKey = $cacheKeys.PrimaryKey
-            $cacheKeyData = New-Object RedisCache
-            $cacheKeyData.ConnectionString = "$RedisCacheName.redis.cache.windows.net:6380,password=$primaryCacheKey,ssl=True,abortConnect=False" 
+            $redisConnectionString = "$RedisCacheName.redis.cache.windows.net:6380,password=$primaryCacheKey,ssl=True,abortConnect=False" 
             Write-Host "Provisioning Redis cache ended..." -ForegroundColor Cyan
         }
         else {
             Write-Host "Provisioning Redis cache skipped..." -ForegroundColor Cyan
         }
     }
-	
+    if ($createWebApp) {
+        $ftp = Add-AkWebApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $appName -Location $Location -AppDirectory $localAppDirectory -CustomEmails $CustomEmails -redisConnectionString $redisConnectionString
+    }
     if ($CreateAppGw) {		
         $appGw = "$appName-appgw"
         Get-AzureRmApplicationGateway -Name $appGw -ResourceGroupName $ResourceGroupName  -ErrorVariable agNotExists -ErrorAction SilentlyContinue
@@ -156,11 +118,9 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
 
             New-AzureRmResourceGroupDeployment -TemplateFile akappgateway.json -ResourceGroupName $ResourceGroupName -applicationGatewaysName $appName -sslCertificate $sslCertificate -certPassword $securePassword -hostName $backendHostName -backendIPAddresses $backendHostName -vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix
 
-            if ($http20EnabledAppGw) {
-                $gw = Get-AzureRmApplicationGateway -name $appGw -ResourceGroupName $ResourceGroupName
-                $gw.EnableHttp2 = $true
-                Set-AzureRmApplicationGateway -ApplicationGateway @gw
-            }
+            $gw = Get-AzureRmApplicationGateway -name $appGw -ResourceGroupName $ResourceGroupName
+            $gw.EnableHttp2 = $true
+            Set-AzureRmApplicationGateway -ApplicationGateway @gw
 						
             Write-Host "Provisioning App Gateway ended..." -ForegroundColor Cyan
         }
@@ -183,21 +143,7 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
             Write-Host "Provisioning Traffic manager profile skipped..." -ForegroundColor Cyan
         }
     }
-    $backgroundGuid = [guid]::NewGuid().ToString()
-    if ($localAppDirectory -ne "") {
-        Set-AkAppManagerSettings -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:RemoteStorageConnection" -newValue $secretIdUri.Id
-        Set-AkAppManagerSettings -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:BackgroundProcessorKey" -newValue $backgroundGuid
-        Set-AkAppManagerSettings -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:LogListener" -newValue "AzureTable"
-        if ($CreateRedisCache) {
-            Set-AkAppManagerSettings -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:PrimaryRedisConnection" -newValue $cacheKeyData.ConnectionString
-            Set-AkRedisCacheToUnity -configFilePath "$localAppDirectory\unity.config" 
-        }
-    }
-
-    if ($createWebApp) {
-        $ftp = Update-AkWebApp -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -WebAppName $appName -Location $Location -AppDirectory $localAppDirectory -CustomEmails $CustomEmails
-    }
-    
+      
     $cosmosDbPrimaryKey = Add-AkCosmosDb -createCosmosDb $createCosmosDb -databaseAccountName $databaseAccountName -databaseName $databaseName -Location $Location
     
     if ($createFuncApp) {
@@ -208,25 +154,27 @@ Function Add-AkAppResources([string]$TenantId, [string]$SubscriptionId, [string]
     }
     
     Write-Host "AD App Name: $AadAppName" -ForegroundColor Cyan
-    Write-Host "AD App ID: "($appData.AppId) -ForegroundColor Cyan
-    Write-Host "AD App Secret: "($appData.AppSecret) -ForegroundColor Cyan
-    Write-Host "Storage ConnectionString: "($storage.ConnectionString) -ForegroundColor Cyan
+    if ($null -ne $appData) {
+        Write-Host "AD App ID: "($appData["AppId"]) -ForegroundColor Cyan
+        Write-Host "AD App Secret: "($appData["AppSecret"]) -ForegroundColor Cyan
+    }
+    Write-Host "Storage ConnectionString: "($storageConnectionString) -ForegroundColor Cyan
     Write-Host "Secret Id Uri: "($secretIdUri.Id) -ForegroundColor Cyan
-    Write-Host "Redis Connection String: "($cacheKeyData.ConnectionString) -ForegroundColor Cyan
+    Write-Host "Redis Connection String: "($redisConnectionString) -ForegroundColor Cyan
     Write-Host "AzureWebSite Url: $HomePage" -ForegroundColor Cyan		
     Write-Host "BackgroundProcessorKey: $backgroundGuid" -ForegroundColor Cyan
     if ($createCosmosDb) {
         Write-Host "Cosmos DB Primary Key: $cosmosDbPrimaryKey" -ForegroundColor Cyan
     }
-    if ($createWebApp) {			
-        Write-Host "Web App FTP Host: "($ftp.Host) -ForegroundColor Cyan
-        Write-Host "Web App FTP User: "($ftp.UserName) -ForegroundColor Cyan
-        Write-Host "Web App FTP Password: "($ftp.Password) -ForegroundColor Cyan
+    if ($createWebApp -and ($null -ne $ftp)) {			
+        Write-Host "Web App FTP Host: "($ftp["Host"]) -ForegroundColor Cyan
+        Write-Host "Web App FTP User: "($ftp["UserName"]) -ForegroundColor Cyan
+        Write-Host "Web App FTP Password: "($ftp["Password"]) -ForegroundColor Cyan
     }
-    if ($createFuncApp) {
-        Write-Host "Function App FTP Host: "($funcAppFtp.Host) -ForegroundColor Cyan
-        Write-Host "Function App FTP User: "($funcAppFtp.UserName) -ForegroundColor Cyan
-        Write-Host "Function App FTP Password: "($funcAppFtp.Password) -ForegroundColor Cyan
+    if ($createFuncApp -and ($null -ne $funcAppFtp)) {
+        Write-Host "Function App FTP Host: "($funcAppFtp["Host"]) -ForegroundColor Cyan
+        Write-Host "Function App FTP User: "($funcAppFtp["UserName"]) -ForegroundColor Cyan
+        Write-Host "Function App FTP Password: "($funcAppFtp["Password"]) -ForegroundColor Cyan
     }
     Write-Host "DONE!" -ForegroundColor Green
 }
@@ -268,10 +216,10 @@ Function Add-AkFuncApp([string]$SubscriptionId, [string]$ResourceGroupName, [str
             Publish-AkFtp -appdirectory $DownloadToFolder -username $username -password $password
         }
 
-        $result = New-Object FtpData
-        $result.Host = $url 
-        $result.UserName = $username
-        $result.Password = $password
+        $result = @{}
+        $result.Add("Host", $url )
+        $result.Add("UserName", $username)
+        $result.Add("Password", $password)
         return $result
     }
     else {
@@ -444,10 +392,11 @@ Function Register-AkAdApp ([string]$AppName, [string]$Uri = "https://localhost:4
     New-AzureADApplicationPasswordCredential -ObjectId $aadApplication.ObjectId -CustomKeyIdentifier "ak-appkey"  -Value $pwdKeyValue -StartDate $startDate -EndDate $endDate 
     $aadServicePrincipal = New-AzureADServicePrincipal -AppId $aadApplication.AppId 
     #Update service principal
-    $appData = New-Object AppData
-    $appData.AppId = $aadApplication.AppId
-    $appData.AppSecret = $pwdKeyValue
-    return $appData
+    
+    $result = @{}
+    $result.Add("AppId", $aadApplication.AppId )
+    $result.Add("AppSecret", $pwdKeyValue)
+    return $result
 }
 
 #ReplaceSetting -configFilePath $configFilePath -key "akumina:RemoteStorageConnection" -newValue $storageConnectionString
@@ -486,64 +435,60 @@ Function Set-AkAppSettings([string] $configFilePath, [string] $key, [string] $ne
     $content.save($configFilePath)
 }
 
-Function Add-AkStorageAccount {
-    [OutputType([StorageData])]
-    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$StorageAccountName, [string]$Location, $SkuName = "Standard_LRS")
+Function Add-AkStorageAccount ([string]$SubscriptionId, [string]$ResourceGroupName, [string]$StorageAccountName, [string]$Location, $SkuName = "Standard_LRS") {
     $st = Get-AzureRmStorageAccountNameAvailability -Name $StorageAccountName
     if ($st.NameAvailable) {
         Write-Host "Provisioning storage account started..." -ForegroundColor Cyan
         New-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName -Location $Location -SkuName $SkuName
         Write-Host "Provisioning storage account ended..." -ForegroundColor Cyan
     }
-    $result = New-Object StorageData
-    $result.ConnectionString = Get-AkStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
+    $result = Get-AkStorageConnectionString -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
     return $result
 }
 
-Function Update-AkWebApp {
-    [OutputType([FtpData])]
-    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "")
+Function Add-AkWebApp ([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$AppDirectory, [string]$CustomEmails = "", [string]$redisConnectionString = "") {
+    $wp = Get-AzureRmWebApp -Name $WebAppName
+    if ($null -eq $wp) {
+        Write-Host "Provisioning webapp started..." -ForegroundColor Cyan
+        New-AzureRmResourceGroupDeployment -Name $WebAppName -TemplateFile akwebapp.json -ResourceGroupName $ResourceGroupName -webAppName $WebAppName
+        $backgroundGuid = [guid]::NewGuid().ToString()
+        if ($localAppDirectory -ne "") {
+            Set-AkAppManagerSettings -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:RemoteStorageConnection" -newValue $secretIdUri.Id
+            Set-AkAppManagerSettings -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:BackgroundProcessorKey" -newValue $backgroundGuid
+            Set-AkAppManagerSettings -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:LogListener" -newValue "AzureTable"
+            if ($redisConnectionString -ne "") {
+                Set-AkAppManagerSettings -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:PrimaryRedisConnection" -newValue $cacheKeyData.ConnectionString
+                Set-AkRedisCacheToUnity -configFilePath "$localAppDirectory\unity.config" 
+            }
+        }
+        # Get publishing profile for the web app
+        [xml] $xml = (Get-AzureRmWebAppPublishingProfile -Name $WebAppName -ResourceGroupName $ResourceGroupName -OutputFile null)
 
-    # Get publishing profile for the web app
-    [xml] $xml = (Get-AzureRmWebAppPublishingProfile -Name $WebAppName -ResourceGroupName $ResourceGroupName -OutputFile null)
+        # Extract connection information from publishing profile
+        $username = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value
+        $password = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
+        $url = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
 
-    # Extract connection information from publishing profile
-    $username = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value
-    $password = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
-    $url = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
-
-    #AppSettings and 32Bit Processor
-    $webApp = Get-AzureRMWebApp -ResourceGroupName $ResourceGroupName -Name $WebAppName 
-    $appSettings = $webApp.SiteConfig.AppSettings
-    $hash = @{ }
-    ForEach ($kvp in $appSettings) {
-        $hash[$kvp.Name] = $kvp.Value
-    }
-    $hash['SCM_COMMAND_IDLE_TIMEOUT'] = "3600"
-    
-    Set-AzureRmWebApp -Name $appName -ResourceGroupName $resourceGroupName -Use32BitWorkerProcess $false -AppSettings $hash
-  
-    $WebAppProperties = @{"siteConfig" = @{"AlwaysOn" = $true } }
-    #$webAppResource = Get-AzureRmResource -ResourceType $WebAppResourceType -ResourceGroupName $ResourceGroupName
-    $ResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$WebAppName"
-    Set-AzureRmResource -ResourceId $ResourceId -PropertyObject $WebAppProperties -Force
-	    
-    Add-AkWebAppAlert -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroupName -WebAppName $appName -Location $location -CustomEmails $CustomEmails
+        Add-AkWebAppAlert -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroupName -WebAppName $appName -Location $location -CustomEmails $CustomEmails
 	
-    # Upload files recursively 
-    if ($appdirectory -ne "") {
-        Publish-AkFtp -appdirectory $appdirectory -username $username -password $password
+        # Upload files recursively 
+        if ($appdirectory -ne "") {
+            Publish-AkFtp -appdirectory $appdirectory -username $username -password $password
+        }
+        Write-Host "Provisioning webapp ended..." -ForegroundColor Cyan
     }
-    $result = New-Object FtpData
-    $result.Host = $url 
-    $result.UserName = $username
-    $result.Password = $password
+    else {
+        Write-Host "Provisioning webapp skipped..." -ForegroundColor Cyan
+    }
+    $result = @{}
+    $result.Add("Host", $url )
+    $result.Add("UserName", $username)
+    $result.Add("Password", $password)
+    $result.Add("BackgroundProcessorId", $backgroundGuid)
     return $result
 }
 
-Function Get-AkStorageConnectionString {
-    [OutputType([string])]
-    param([string] $ResourceGroupName, [string] $StorageAccountName)
+Function Get-AkStorageConnectionString ([string] $ResourceGroupName, [string] $StorageAccountName) {
     $storageAccountKey = (Get-AzureRmStorageAccountKey -ResourceGroupName $ResourceGroupName -AccountName $StorageAccountName).Value[0]
     $storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$storageAccountKey"
     return $storageConnectionString;
@@ -596,26 +541,6 @@ Function Add-AkWebAppAlert ([string]$SubscriptionId, [string]$ResourceGroupName,
         Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "HttpServerErrors4xx" -MetricName "Http4xx" -Operator GreaterThan -Threshold 2 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "4xx over 2 for 5 minutes"		
         Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "ResponseOver5Sec" -MetricName "AverageResponseTime" -Operator GreaterThan -Threshold 5 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "Average response over 5 sec for 5 minutes"
         Add-AzureRmMetricAlertRule -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "RequestsOver1000For5Min" -MetricName "Requests" -Operator GreaterThan -Threshold 1000 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "Total request over 1000 for 5 minutes"
-    }
-}
-
-Function Add-AkWebAppAlertV2 ([string]$SubscriptionId, [string]$ResourceGroupName, [string]$WebAppName, [string]$Location, [string]$CustomEmails = "") {
-    Set-AzureRmContext -SubscriptionId $SubscriptionId
-    $ResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$WebAppName"
-   	if ($null -eq $CustomEmails) {
-        $CustomEmails = ""
-    }
-    if ($CustomEmails -ne "") {		
-        $actionEmail = New-AzureRmAlertRuleEmail -CustomEmail $CustomEmails
-        Remove-AzMetricAlertRuleV2 -ResourceGroup $ResourceGroupName -Name "HttpServerErrors5xx"
-        Remove-AzMetricAlertRuleV2 -ResourceGroup $ResourceGroupName -Name "HttpServerErrors4xx"
-        Remove-AzMetricAlertRuleV2 -ResourceGroup $ResourceGroupName -Name "ResponseOver5Sec"
-        Remove-AzMetricAlertRuleV2 -ResourceGroup $ResourceGroupName -Name "RequestsOver1000For5Min"
-
-        Add-AzMetricAlertRuleV2 -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "HttpServerErrors5xx" -MetricName "Http5xx" -Operator GreaterThan -Threshold 2 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "5xx over 2 for 5 minutes"		
-        Add-AzMetricAlertRuleV2 -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "HttpServerErrors4xx" -MetricName "Http4xx" -Operator GreaterThan -Threshold 2 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "4xx over 2 for 5 minutes"		
-        Add-AzMetricAlertRuleV2 -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "ResponseOver5Sec" -MetricName "AverageResponseTime" -Operator GreaterThan -Threshold 5 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "Average response over 5 sec for 5 minutes"
-        Add-AzMetricAlertRuleV2 -Location "$Location" -ResourceGroup $ResourceGroupName -TargetResourceId "$ResourceId" -Name "RequestsOver1000For5Min" -MetricName "Requests" -Operator GreaterThan -Threshold 1000 -WindowSize 00:05:00 -TimeAggregationOperator Total -Action $actionEmail -Description "Total request over 1000 for 5 minutes"
     }
 }
 
