@@ -15,13 +15,11 @@
 
 $ErrorActionPreference = 'Stop'
 cd $PSScriptRoot
-$version=$PSVersionTable.PSVersion.Major
-if($version -lt 5)
-{
-    Throw "Version is not supported, please upgrade to 5 or later"
+$version = $PSVersionTable.PSVersion.Major
+if ($version -lt 5) {
+	Throw "Version is not supported, please upgrade to 5 or later"
 }
-if(!(test-path "parameters.json"))
-{
+if (!(test-path "parameters.json")) {
 	Throw "Parameters file missing, Place the parameters.json file in app installation location"
 }
 import-module .\Common.psm1
@@ -29,68 +27,61 @@ import-module .\Common.psm1
 #get-help  Add-AkAppResources
 Write-Host "Reading parameters value" -ForegroundColor Cyan 
 $jo = Get-Content "parameters.json" | ConvertFrom-Json
-$tenantId=Get-AkParams  -params $jo.parameters -param "tenantId" 
-$subscriptionId=Get-AkParams  -params $jo.parameters -param "subscriptionId" 
-$resourceGroupName=Get-AkParams  -params $jo.parameters -param "resourceGroupName" 
-$location=Get-AkParams  -params $jo.parameters -param "location"
-$createStorage=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createStorage")
-$storageAccountName=""
-if($createStorage)	{
-	$storageAccountName=Get-AkParams  -params $jo.parameters -param "storageAccountName" 			
+$tenantId = Get-AkParams  -params $jo.parameters -param "tenantId" 
+$subscriptionId = Get-AkParams  -params $jo.parameters -param "subscriptionId" 
+$resourceGroupName = Get-AkParams  -params $jo.parameters -param "resourceGroupName" 
+$location = Get-AkParams  -params $jo.parameters -param "location"
+$createStorage = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createStorage")
+$storageAccountName = ""
+if ($createStorage)	{
+	$storageAccountName = Get-AkParams  -params $jo.parameters -param "storageAccountName" 			
 }
-$createWebApp=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createWebApp")
-if($createWebApp)	{		
-	if($storageAccountName -eq "")
-	{
+$createWebApp = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createWebApp")
+if ($createWebApp)	{		
+	if ($storageAccountName -eq "") {
 		Write-Host "Storage account must needed for webapp creation" -ForegroundColor Cyan
 		$createStorage = $true
-		$storageAccountName=Get-AkParams  -params $jo.parameters -param "storageAccountName" 
+		$storageAccountName = Get-AkParams  -params $jo.parameters -param "storageAccountName" 
 	}
-	$baseName=Get-AkParams  -params $jo.parameters -param "baseName"
-	$localAppDirectory=Get-AkParams  -params $jo.parameters -param "localAppDirectory" 
-	$customEmails=Get-AkParams  -params $jo.parameters -param "customEmails" 			
+	$baseName = Get-AkParams  -params $jo.parameters -param "baseName"
+	$localAppDirectory = Get-AkParams  -params $jo.parameters -param "localAppDirectory" 
+	$customEmails = Get-AkParams  -params $jo.parameters -param "customEmails" 			
 }
-$createKeyVault=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createKeyVault" )	
-if($createKeyVault)
-{
-	$keyVaultName=Get-AkParams  -params $jo.parameters -param "keyVaultName"		
+$createKeyVault = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createKeyVault" )	
+if ($createKeyVault) {
+	$keyVaultName = Get-AkParams  -params $jo.parameters -param "keyVaultName"		
 }
-$createAzureADApp=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createAzureADApp")
-if($createAzureADApp)
-{
-	$aadAppName=Get-AkParams  -params $jo.parameters -param "aadAppName"	
+$createAzureADApp = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createAzureADApp")
+if ($createAzureADApp) {
+	$aadAppName = Get-AkParams  -params $jo.parameters -param "aadAppName"	
 }
-$createAppGw=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createAppGw")
-if($createAppGw)
-{
-	$pfxFile=Get-AkParams  -params $jo.parameters -param "pfxFile" 	
-	$backendHostName=Get-AkParams  -params $jo.parameters -param "backendHostName" 	
-	$vnetAddressPrefix=Get-AkParams  -params $jo.parameters -param "vnetAddressPrefix"	
-	$subnetPrefix=Get-AkParams  -params $jo.parameters -param "subnetPrefix"	
+$createAppGw = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createAppGw")
+if ($createAppGw) {
+	$pfxFile = Get-AkParams  -params $jo.parameters -param "pfxFile" 	
+	$backendHostName = Get-AkParams  -params $jo.parameters -param "backendHostName" 	
+	$vnetAddressPrefix = Get-AkParams  -params $jo.parameters -param "vnetAddressPrefix"	
+	$subnetPrefix = Get-AkParams  -params $jo.parameters -param "subnetPrefix"	
 }
-$createRedisCache=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createRedisCache")
-if($createRedisCache)
-{
-	$RedisCacheName=Get-AkParams  -params $jo.parameters -param "RedisCacheName"
+$createRedisCache = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createRedisCache")
+if ($createRedisCache) {
+	$RedisCacheName = Get-AkParams  -params $jo.parameters -param "RedisCacheName"
 }
-$createTrafficManager=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createTrafficManager")
-$createDistributionApp=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createDistributionApp")
-$createFuncApp=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createFuncApp")
-if($createFuncApp)
-{
-	$createCosmosDb=Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createCosmosDb")
-	if($storageAccountName -eq "")
-	{
-		$storageAccountName=Get-AkParams  -params $jo.parameters -param "storageAccountName"
+$createTrafficManager = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createTrafficManager")
+$createDistributionApp = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createDistributionApp")
+$createFuncApp = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createFuncApp")
+if ($createFuncApp) {
+	if ($storageAccountName -eq "") {
+		$storageAccountName = Get-AkParams  -params $jo.parameters -param "storageAccountName"
 	}
-	$databaseAccountName=Get-AkParams  -params $jo.parameters -param "databaseAccountName"
-	$databaseName=Get-AkParams  -params $jo.parameters -param "databaseName"
-
-	$funcAppQueues=Get-AkParams  -params $jo.parameters -param "funcAppQueues"
-	$funcAppName=Get-AkParams  -params $jo.parameters -param "funcAppName"
+	$funcAppQueues = Get-AkParams  -params $jo.parameters -param "funcAppQueues"
+	$funcAppName = Get-AkParams  -params $jo.parameters -param "funcAppName"
 }
-if ($baseName -eq "")
-{
+$createCosmosDb = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createCosmosDb")
+if ($createCosmosDb) {
+	$databaseAccountName = Get-AkParams  -params $jo.parameters -param "databaseAccountName"
+	$databaseName = Get-AkParams  -params $jo.parameters -param "databaseName"
+}
+if ($baseName -eq "") {
 	$baseName = $resourceGroupName
 }
 

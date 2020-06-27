@@ -452,5 +452,11 @@
                 "options": {}
             }
         }
-    ]
+    ],
+    "outputs": {
+        "connectionString": {
+            "type": "string",
+            "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName')), '2020-04-01').primaryMasterKey]"
+        }
+    }
 }

@@ -155,7 +155,7 @@
     "createCosmosDb": {
       "value": "",
       "metadata": {
-        "description": "Do you want to create Cosmos DB (y/n)?"
+        "description": "Do you want to create Cosmos DB -SQL Core (y/n)?"
       }
     },
     "databaseAccountName": {
@@ -165,7 +165,7 @@
       }
     },
     "databaseName": {
-      "value": "",
+      "value": "akcontainers",
       "metadata": {
         "description": "Enter database name"
       }
