@@ -2,7 +2,7 @@
     , [string]$StorageAccountName = "", [string]$KeyVaultName = "", [string[]]$ReplyUrls = "", [string]$localAppDirectory = "", [string]$CustomEmails
     , [bool]$CreateAppGw = $false, [bool]$CreateRedisCache = $false, [string]$RedisCacheName = "", [bool]$CreateTrafficManager = $false
     , [string]$BackendHostName = "", [string]$PfxFile = "", [string]$appManagerQueryKey = "", [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false
-    , [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createKeyVault = $false
+    , [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createKeyVault = $false,[bool]$createCognitiveSearch=$false,[string]$cognitiveSearchName=""
     , [bool]$createFuncApp = $false, [string]$funcAppQueues = "", [string]$funcAppName = "", [bool]$createCosmosDb = $false, [string]$databaseAccountName = "", [string]$databaseName = "") {
      
     if ($BaseName -eq "") {
@@ -78,7 +78,12 @@
     else {
         Write-Host "Provisioning Keyvault skipped..." -ForegroundColor Cyan
     }
-    
+    if($createCognitiveSearch)
+    {
+        Write-Host "Provisioning Cognitive Search started..." -ForegroundColor Cyan
+        New-AzureRmResourceGroupDeployment -TemplateFile djssearch.json -ResourceGroupName $ResourceGroupName -serviceName $cognitiveSearchName 
+        Write-Host "Provisioning Cognitive Search ended..." -ForegroundColor Cyan
+    }
     if ($CreateRedisCache) {
         Get-AzureRmRedisCache -Name $RedisCacheName -ErrorVariable rcNotExists -ErrorAction SilentlyContinue
         if ($rcNotExists) {

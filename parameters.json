@@ -11,13 +11,13 @@
     "subscriptionId": {
       "value": "",
       "metadata": {
-        "description": "Enter subscriptionId"
+        "description": "Enter SubscriptionId"
       }
     },
     "resourceGroupName": {
       "value": "",
       "metadata": {
-        "description": "Enter Resource group name, if the name not exists then new resource group with this name will be created"
+        "description": "Enter Resource group name, if the name does not exists then new resource group with this name will be created"
       }
     },
     "location": {
@@ -71,7 +71,7 @@
     "aadAppName": {
       "value": "",
       "metadata": {
-        "description": "Enter AAD App name, leave empty if you want to create a aadApp as App name"
+        "description": "Enter Aad App name, leave empty if you want to create a aadApp as App name"
       }
     },
     "localAppDirectory": {
@@ -89,7 +89,7 @@
     "createAppGw": {
       "value": "",
       "metadata": {
-        "description": "Do you want to create App Gateway (y/n)"
+        "description": "Do you want to create App Gateway (y/n)?"
       }
     },
     "pfxFile": {
@@ -116,6 +116,18 @@
         "description": "Subnet prefix CIDR(ex., 10.10.0.0/24)"
       }
     },
+    "createCognitiveSearch": {
+      "value": "",
+      "metadata": {
+        "description": "Do you want to Cognitive Search (y/n)?"
+      }
+    },
+    "cognitiveSearchName": {
+      "value": "",
+      "metadata": {
+        "description": "Enter Cognitive Search name, leave empty if you want to create a Cognitive Search as App name"
+      }
+    },
     "createRedisCache": {
       "value": "",
       "metadata": {
@@ -131,7 +143,7 @@
     "createTrafficManager": {
       "value": "",
       "metadata": {
-        "description": "Do you want to create Traffic Manager (y/n)"
+        "description": "Do you want to create Traffic Manager (y/n)?"
       }
     },
     "appManagerQueryKey": {
@@ -161,13 +173,13 @@
     "databaseAccountName": {
       "value": "",
       "metadata": {
-        "description": "Enter database account name"
+        "description": "Enter Database Account name"
       }
     },
     "databaseName": {
       "value": "akcontainers",
       "metadata": {
-        "description": "Enter database name"
+        "description": "Enter Database name"
       }
     },
     "funcAppQueues": {

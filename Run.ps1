@@ -67,7 +67,10 @@ if ($createRedisCache) {
 	$RedisCacheName = Get-AkParams  -params $jo.parameters -param "RedisCacheName"
 }
 $createTrafficManager = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createTrafficManager")
-$createDistributionApp = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createDistributionApp")
+$createCognitiveSearch = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createCognitiveSearch")
+if ($createCognitiveSearch) {
+	$cognitiveSearchName = Get-AkParams  -params $jo.parameters -param "cognitiveSearchName"
+}
 $createFuncApp = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createFuncApp")
 if ($createFuncApp) {
 	if ($storageAccountName -eq "") {
@@ -85,4 +88,4 @@ if ($baseName -eq "") {
 	$baseName = $resourceGroupName
 }
 
-Add-AkAppResources  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -CreateDistributionApp $createDistributionApp -appManagerQueryKey $appManagerQueryKey -vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStorage $createStorage -createKeyVault $createKeyVault -createFuncApp $createFuncApp -funcAppQueues $funcAppQueues -createCosmosDb $createCosmosDb -databaseAccountName $databaseAccountName -databaseName $databaseName -funcAppName $funcAppName
+Add-AkAppResources  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -createCognitiveSearch $createCognitiveSearch -cognitiveSearchName $cognitiveSearchName -appManagerQueryKey $appManagerQueryKey -vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStorage $createStorage -createKeyVault $createKeyVault -createFuncApp $createFuncApp -funcAppQueues $funcAppQueues -createCosmosDb $createCosmosDb -databaseAccountName $databaseAccountName -databaseName $databaseName -funcAppName $funcAppName
