@@ -81,7 +81,7 @@
     if($createCognitiveSearch)
     {
         Write-Host "Provisioning Cognitive Search started..." -ForegroundColor Cyan
-        New-AzureRmResourceGroupDeployment -TemplateFile djssearch.json -ResourceGroupName $ResourceGroupName -serviceName $cognitiveSearchName 
+        New-AzureRmResourceGroupDeployment -TemplateFile search.json -ResourceGroupName $ResourceGroupName -serviceName $cognitiveSearchName 
         Write-Host "Provisioning Cognitive Search ended..." -ForegroundColor Cyan
     }
     if ($CreateRedisCache) {
