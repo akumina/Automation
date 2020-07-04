@@ -1,0 +1,15 @@
+{
+    "identity": {
+        "type": "SystemAssigned"
+    },
+    
+    "properties": {
+        "blueprintId": "",
+        "resourceGroups": {},
+        "locks": {
+            "mode": "none"
+        },
+        "parameters": {
+        }
+    }
+}
