@@ -43,7 +43,7 @@ if ($createWebApp)	{
 		$createStorage = $true
 		$storageAccountName = Get-AkParams  -params $jo.parameters -param "storageAccountName" 
 	}
-	$baseName = Get-AkParams  -params $jo.parameters -param "baseName"
+	$appName = Get-AkParams  -params $jo.parameters -param "appName"
 	$localAppDirectory = Get-AkParams  -params $jo.parameters -param "localAppDirectory" 
 	$customEmails = Get-AkParams  -params $jo.parameters -param "customEmails" 			
 }
@@ -64,7 +64,7 @@ if ($createAppGw) {
 }
 $createRedisCache = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createRedisCache")
 if ($createRedisCache) {
-	$RedisCacheName = Get-AkParams  -params $jo.parameters -param "RedisCacheName"
+	$redisCacheName = Get-AkParams  -params $jo.parameters -param "redisCacheName"
 }
 $createTrafficManager = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createTrafficManager")
 $createCognitiveSearch = Convert-AkInput(Get-AkParams  -params $jo.parameters -param "createCognitiveSearch")
@@ -84,8 +84,5 @@ if ($createCosmosDb) {
 	$databaseAccountName = Get-AkParams  -params $jo.parameters -param "databaseAccountName"
 	$databaseName = Get-AkParams  -params $jo.parameters -param "databaseName"
 }
-if ($baseName -eq "") {
-	$baseName = $resourceGroupName
-}
 
-Add-AkAppResources  -TenantId $tenantId -SubscriptionId $subscriptionId -BaseName $baseName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -RedisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -createCognitiveSearch $createCognitiveSearch -cognitiveSearchName $cognitiveSearchName -appManagerQueryKey $appManagerQueryKey -vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStorage $createStorage -createKeyVault $createKeyVault -createFuncApp $createFuncApp -funcAppQueues $funcAppQueues -createCosmosDb $createCosmosDb -databaseAccountName $databaseAccountName -databaseName $databaseName -funcAppName $funcAppName
+Add-AkAppResources  -TenantId $tenantId -SubscriptionId $subscriptionId -appName $appName -Location $location -ResourceGroupName $resourceGroupName -AadAppName $aadAppName -StorageAccountName $storageAccountName -KeyVaultName $keyVaultName -LocalAppDirectory $localAppDirectory -CustomEmails $customEmails -CreateAppGw $createAppGw -CreateRedisCache $createRedisCache -redisCacheName $redisCacheName -CreateTrafficManager $createTrafficManager -PfxFile $pfxFile -BackendHostName $backendHostName -createCognitiveSearch $createCognitiveSearch -cognitiveSearchName $cognitiveSearchName -appManagerQueryKey $appManagerQueryKey -vnetAddressPrefix $vnetAddressPrefix -subnetPrefix $subnetPrefix -createWebApp $createWebApp -createAzureADApp $createAzureADApp -createStorage $createStorage -createKeyVault $createKeyVault -createFuncApp $createFuncApp -funcAppQueues $funcAppQueues -createCosmosDb $createCosmosDb -databaseAccountName $databaseAccountName -databaseName $databaseName -funcAppName $funcAppName

@@ -26,7 +26,7 @@
         "description": "Enter location (ex.,eastus2), if you leave empty location will be default to eastus2"
       }
     },
-    "baseName": {
+    "appName": {
       "value": "",
       "metadata": {
         "description": "Enter App name (ex.,aksvchub01), leave empty if you want to create a App name as resource group name"

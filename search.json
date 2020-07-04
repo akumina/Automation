@@ -6,15 +6,10 @@
             "type": "string"
         },
         "sku": {
-            "defaultValue":"Basic",
-            "type": "string"
-        },
-        "hostingMode": {
-            "defaultValue":"Default",
+            "defaultValue":"basic",
             "type": "string"
         }
     },
-    "variables": {},
     "resources": [
         {
             "apiVersion": "2020-03-13",
@@ -27,11 +22,12 @@
             "properties": {
                 "replicaCount": 1,
                 "partitionCount": 1,
-                "hostingMode": "[parameters('hostingMode')]"
-            },
-            "tags": {},
-            "dependsOn": []
+                "hostingMode": "Default",
+                "publicNetworkAccess": "Enabled",
+                "networkRuleSet": {
+                    "ipRules": []
+                }
+            }
         }
-    ],
-    "outputs": {}
+    ]
 }
