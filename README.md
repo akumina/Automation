@@ -1,4 +1,7 @@
 # Automation
+
+# PowerShell
+
 ## Akumina AppManager/ServiceHub PowerShell and ARM template based installation.
 
 **Current Version:** v5-preview  (AppManager and PeopleSync)
@@ -18,3 +21,8 @@ If you use this script to create Aad App and Set require permissions for PeopleS
 #$wadRequiredPermissions = Get-AkRequiredPermissions -appId $appId -requiredDelegatedPermissions $deligatedPermission -requiredApplicationPermissions $appPermissions
 
 #$requiredResourcesAccess.Add($wadRequiredPermissions)  
+
+
+# Azure Blueprint
+
+Blueprint scripts creates required services only.  All configuration should be updated manually.
