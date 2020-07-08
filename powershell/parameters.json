@@ -197,7 +197,7 @@
     "hostedBlobContainer": {
       "value": "",
       "metadata": {
-        "description": "Enter Azure service blob-container name for ActivityStream Azure resource"
+        "description": "Enter Azure service blob-container name for ActivityStream"
       }
     }
   }
