@@ -24,7 +24,7 @@
         }
     },
     "variables": {
-        "serverfarmsPlan": "[concat('ASP-fn-',parameters('funcAppName'))]"
+        "serverfarmsPlan": "[concat('ASP-',parameters('funcAppName'))]"
     },
     "resources": [
         {
