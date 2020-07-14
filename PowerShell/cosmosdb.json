@@ -199,7 +199,18 @@
                         "kind": "Hash"
                     },
                     "uniqueKeyPolicy": {
-                        "uniqueKeys": []
+                        "uniqueKeys": [
+                            {
+                                "paths": [
+                                    "/MonitoredResource/Id"
+                                ]
+                            },
+                            {
+                                "paths": [
+                                    "/Name"
+                                ]
+                            }
+                        ]
                     },
                     "conflictResolutionPolicy": {
                         "mode": "LastWriterWins",
@@ -311,12 +322,11 @@
                     "indexingPolicy": {
                         "indexingMode": "consistent",
                         "automatic": true,
-                        "includedPaths": [
+                        "includedPaths": [],
+                        "excludedPaths": [
                             {
                                 "path": "/*"
-                            }
-                        ],
-                        "excludedPaths": [
+                            },
                             {
                                 "path": "/\"_etag\"/?"
                             }
