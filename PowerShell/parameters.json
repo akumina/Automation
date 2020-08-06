@@ -183,7 +183,7 @@
       }
     },
     "funcAppQueues": {
-      "value": "activity-stream,calendar-events,sharepoint-events,notification-digest,user-changes,contentdistribution,tasks",
+      "value": "activity-stream,calendar-events,sharepoint-events,notification-digest,user-changes,contentdistribution,tasks,activity-delivery",
       "metadata": {
         "description": "Enter Activity Stream Queues"
       }

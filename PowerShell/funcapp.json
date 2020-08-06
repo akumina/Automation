@@ -186,6 +186,10 @@
                         {
                             "name": "TasksQueueName",
                             "value": "tasks"
+                        },
+                        {
+                            "name": "ActivityDeliveryQueueName",
+                            "value": "activity-delivery"
                         }
                     ],
                     "hostNameSslStates": [
