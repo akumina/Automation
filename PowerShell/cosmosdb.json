@@ -414,10 +414,7 @@
                                 "path": "/Priority/?"
                             },
                             {
-                                "path": "/NotificationTypes/?"
-                            },
-                            {
-                                "path": "/EventSubscription/Id/?"
+                                "path": "/EventSubscriptionId/?"
                             },
                             {
                                 "path": "/ActionDate/?"
@@ -430,18 +427,6 @@
                             {
                                 "path": "/\"_etag\"/?"
                             }
-                        ],
-                        "compositeIndexes": [
-                            [
-                                {
-                                    "path": "/ActionDate",
-                                    "order": "descending"
-                                },
-                                {
-                                    "path": "/Priority",
-                                    "order": "descending"
-                                }
-                            ]
                         ]
                     },
                     "partitionKey": {

@@ -12,6 +12,7 @@
 # 4.	If you get a certificate error, then you may need to change the execution policy
 #		Example commands: Set-ExecutionPolicy RemoteSigned  OR Set-ExecutionPolicy Unrestricted
 # 5.	To get a list of Azure server locations, log into your Azure portal, open a PowerShell and run the command Get-AzureRmLocation
+# 6.    Naming and Tagging: https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/naming-and-tagging
 
 $ErrorActionPreference = 'Stop'
 cd $PSScriptRoot
