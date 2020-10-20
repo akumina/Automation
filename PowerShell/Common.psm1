@@ -1,6 +1,6 @@
 ﻿Function Add-AkAppResources([string]$tenantId, [string]$subscriptionId, [string]$resourceGroupName = "", [string]$location, [string]$appName, [string]$aadAppName = ""
     , [string]$storageAccountName = "", [string]$keyVaultName = "", [string]$localAppDirectory = "", [string]$customEmails
-    , [bool]$createAppGw = $false, [bool]$createRedisCache = $false, [string]$redisCacheName = "", [bool]$createTrafficManager = $false
+    , [bool]$createAppGw = $false, [bool]$createRedisCache = $false, [string]$redisCacheName = "", [bool]$createTrafficManager = $false,[string]$trafficManagerProfileName=""
     , [string]$backendHostName = "", [string]$pfxFile = "", [string]$appManagerQueryKey = "", [string]$vnetAddressPrefix , [string]$subnetPrefix , [bool]$createWebApp = $false
     , [bool]$createAzureADApp = $false, [bool]$createStorage = $false, [bool]$createKeyVault = $false, [bool]$createCognitiveSearch = $false, [string]$cognitiveSearchName = ""
     , [bool]$createFuncApp = $false, [string]$funcAppQueues = "", [string]$funcAppName = "", [bool]$createCosmosDb = $false, [string]$databaseAccountName = "", [string]$databaseName = "") {
@@ -25,7 +25,9 @@
     #Login-AzureRmAccount -TenantId $tenantId 
     $credentials = Connect-AzureAD -TenantId $tenantId
     $user = Get-AzureRmADUser -UserPrincipalName $credentials.Account.Id
+    if(($null -ne $aadAppName) -and ($aadAppName -ne "")){
     $appData = Get-AzureRmADApplication -DisplayNameStartWith $aadAppName -ErrorVariable aadAppNotExists -ErrorAction SilentlyContinue
+    }
     if ($createAzureADApp) {
         if ($null -eq $appData) {
             Write-Host "Provisioning Aad App started..." -ForegroundColor Cyan
@@ -117,11 +119,11 @@
     }
 	
     if ($createTrafficManager -and $createAppGw) {
-        Get-AzureRmTrafficManagerEndpoint -ProfileName $appname -Name $backendHostName -ResourceGroupName $resourceGroupName -Type ExternalEndpoints -ErrorVariable tmpNotExists -ErrorAction SilentlyContinue
+        Get-AzureRmTrafficManagerEndpoint -ProfileName $trafficManagerProfileName -Name $backendHostName -ResourceGroupName $resourceGroupName -Type ExternalEndpoints -ErrorVariable tmpNotExists -ErrorAction SilentlyContinue
         if ($tmpNotExists) {
             Write-Host "Provisioning Traffic manager profile started..." -ForegroundColor Cyan
-            New-AzureRmResourceGroupDeployment -TemplateFile trafficmanager.json -ResourceGroupName $resourceGroupName -TrafficManagerProfilesName $appname -HostName $backendHostName 
-            $tmpEp = Get-AzureRmTrafficManagerEndpoint -Name $backendHostName -Type AzureEndpoints -ProfileName $appname -ResourceGroupName $resourceGroupName
+            New-AzureRmResourceGroupDeployment -TemplateFile trafficmanager.json -ResourceGroupName $resourceGroupName -TrafficManagerProfilesName $trafficManagerProfileName -HostName $backendHostName 
+            $tmpEp = Get-AzureRmTrafficManagerEndpoint -Name $backendHostName -Type AzureEndpoints -ProfileName $trafficManagerProfileName -ResourceGroupName $resourceGroupName
             Add-AzureRmTrafficManagerCustomHeaderToEndpoint -TrafficManagerEndpoint $tmpEp -Name "host" -Value $backendHostName
             Set-AzureRmTrafficManagerEndpoint -TrafficManagerEndpoint $tmpEp
             Write-Host "Provisioning Traffic manager profile ended..." -ForegroundColor Cyan
@@ -444,7 +446,7 @@ Function Add-AkWebApp ([string]$subscriptionId, [string]$resourceGroupName, [str
     $wp = Get-AzureRmWebApp -Name $WebAppName
     if ($null -eq $wp) {
         Write-Host "Provisioning webapp started..." -ForegroundColor Cyan
-        New-AzureRmResourceGroupDeployment -Name $WebAppName -TemplateFile webapp.json -ResourceGroupName $resourceGroupName -webAppName $WebAppName
+        New-AzureRmResourceGroupDeployment -Name $WebAppName -TemplateFile webapp.json -ResourceGroupName $resourceGroupName -webSiteName $WebAppName
         $backgroundGuid = [guid]::NewGuid().ToString()
         if ($localAppDirectory -ne "") {
             Set-AkAppManagerSettings -configFilePath "$localAppDirectory\interchange.settings.config" -key "akumina:RemoteStorageConnection" -newValue $secretIdUri.Id

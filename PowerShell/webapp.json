@@ -2,7 +2,7 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "webAppName": {
+    "webSiteName": {
       "type": "string",
       "metadata": {
         "description": "Name of the resource"
@@ -20,8 +20,8 @@
   },
   "variables": {
     "standardPlanMaxAdditionalSlots": 4,
-    "webSiteName": "[parameters('webAppName')]",
-    "appServicePlanName": "[concat('AppServicePlan-', parameters('webAppName'))]"
+    "appInsightName": "[concat('appi-', parameters('webSiteName'))]",
+    "appServicePlanName": "[concat('plan-', parameters('webSiteName'))]"
   },
   "resources": [
     {
@@ -46,7 +46,7 @@
     },
     {
       "apiVersion": "2015-05-01",
-      "name": "[parameters('webAppName')]",
+      "name": "[variables('appInsightName')]",
       "type": "microsoft.insights/components",
       "location": "[resourceGroup().location]",
       "tags": {},
@@ -60,7 +60,7 @@
       "apiVersion": "2018-11-01",
       "type": "Microsoft.Web/sites",
       "kind": "app",
-      "name": "[variables('webSiteName')]",
+      "name": "[parameters('webSiteName')]",
       "location": "[resourceGroup().location]",
       "comments": "This is the web app, also the default 'nameless' slot.",
       "tags": {
@@ -82,11 +82,11 @@
           "appSettings": [
             {
               "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-              "value": "[reference(concat('microsoft.insights/components/',parameters('webAppName')), '2015-05-01').InstrumentationKey]"
+              "value": "[reference(concat('microsoft.insights/components/',variables('appInsightName')), '2015-05-01').InstrumentationKey]"
             },
             {
               "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-              "value": "[reference(concat('microsoft.insights/components/',parameters('webAppName')), '2015-05-01').ConnectionString]"
+              "value": "[reference(concat('microsoft.insights/components/',variables('appInsightName')), '2015-05-01').ConnectionString]"
             },
             {
               "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
@@ -104,7 +104,7 @@
         }
       },
       "dependsOn": [
-        "[concat('microsoft.insights/components/',parameters('webAppName'))]",
+        "[concat('microsoft.insights/components/',variables('appInsightName'))]",
         "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
       ]
     }

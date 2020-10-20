@@ -24,13 +24,14 @@
         }
     },
     "variables": {
-        "serverfarmsPlan": "[concat('ASP-',parameters('funcAppName'))]"
+        "serverfarmsPlan": "[concat('plan-',parameters('funcAppName'))]",
+        "appInsightName": "[concat('appi-',parameters('funcAppName'))]"
     },
     "resources": [
         {
             "type": "microsoft.insights/components",
             "apiVersion": "2015-05-01",
-            "name": "[parameters('funcAppName')]",
+            "name": "[variables('appInsightName')]",
             "location": "[parameters('location')]",
             "kind": "web",
             "properties": {
@@ -72,7 +73,7 @@
                 "type": "SystemAssigned"
             },
             "dependsOn": [
-                "[concat('microsoft.insights/components/', parameters('funcAppName'))]",
+                "[concat('microsoft.insights/components/', variables('appInsightName'))]",
                 "[resourceId('Microsoft.Web/serverfarms', variables('serverfarmsPlan'))]"
             ],
             "properties": {
@@ -89,11 +90,11 @@
                         },
                         {
                             "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-                            "value": "[reference(concat('microsoft.insights/components/', parameters('funcAppName')), '2015-05-01').InstrumentationKey]"
+                            "value": "[reference(concat('microsoft.insights/components/', variables('appInsightName')), '2015-05-01').InstrumentationKey]"
                         },
                         {
                             "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-                            "value": "[reference(concat('microsoft.insights/components/', parameters('funcAppName')), '2015-05-01').ConnectionString]"
+                            "value": "[reference(concat('microsoft.insights/components/', variables('appInsightName')), '2015-05-01').ConnectionString]"
                         },
                         {
                             "name": "AzureWebJobsStorage",
@@ -121,7 +122,7 @@
                         },
                         {
                             "name": "ActivityStreamQueueMaxProcessingTimeMs",
-                            "value": "300000"
+                            "value": "540000"
                         },
                         {
                             "name": "ActivityStreamQueueName",
@@ -153,7 +154,7 @@
                         },
                         {
                             "name": "ProcessingGroupMaxQuerySize",
-                            "value": "300"
+                            "value": "50"
                         },
                         {
                             "name": "ProcessingGroups",
@@ -190,6 +191,26 @@
                         {
                             "name": "ActivityDeliveryQueueName",
                             "value": "activity-delivery"
+                        },
+                        {
+                            "name": "ActivityStreamPoisonQueueName",
+                            "value": "activity-stream-poison"
+                        },
+                        {
+                            "name": "CosmosSdkRetry",
+                            "value": "3"
+                        },
+                        {
+                            "name": "ActivityStreamMaxRetries",
+                            "value": "3"
+                        },
+                        {
+                            "name": "ActivityStreamRetryDelayMinutes",
+                            "value": "3"
+                        },
+                        {
+                            "name": "UsePremiumOption",
+                            "value": "False"
                         }
                     ],
                     "hostNameSslStates": [
@@ -215,7 +236,7 @@
                     "containerSize": 1536,
                     "dailyMemoryTimeQuota": 0,
                     "httpsOnly": false,
-                    "redundancyMode": "None",
+                    "redundancyMode": "None"
                 }
             }
         },

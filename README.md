@@ -4,7 +4,7 @@
 
 ## Akumina AppManager/ServiceHub PowerShell and ARM template based installation.
 
-**Current Version:** v5-preview  (AppManager and PeopleSync)
+**Current Version:** AppManager 5.0; PeopleSync 5.0
 
 **For previous verions (ex., 4.5 or 4.8):**
 

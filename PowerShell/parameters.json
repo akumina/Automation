@@ -146,6 +146,12 @@
         "description": "Do you want to create Traffic Manager (y/n)?"
       }
     },
+    "trafficManagerProfileName": {
+      "value": "",
+      "metadata": {
+        "description": "Enter traffic manager profile name"
+      }
+    },
     "appManagerQueryKey": {
       "value": "",
       "metadata": {
