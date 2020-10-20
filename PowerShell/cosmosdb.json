@@ -395,61 +395,6 @@
             }
         },
         {
-            "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-            "apiVersion": "2020-04-01",
-            "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/userstreamactivities'))]",
-            "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
-            ],
-            "properties": {
-                "resource": {
-                    "id": "userstreamactivities",
-                    "indexingPolicy": {
-                        "indexingMode": "consistent",
-                        "automatic": true,
-                        "includedPaths": [
-                            {
-                                "path": "/ActivitySubscriptionId/?"
-                            },
-                            {
-                                "path": "/Priority/?"
-                            },
-                            {
-                                "path": "/EventSubscriptionId/?"
-                            },
-                            {
-                                "path": "/ActionDate/?"
-                            }
-                        ],
-                        "excludedPaths": [
-                            {
-                                "path": "/*"
-                            },
-                            {
-                                "path": "/\"_etag\"/?"
-                            }
-                        ]
-                    },
-                    "partitionKey": {
-                        "paths": [
-                            "/PartitionKey"
-                        ],
-                        "kind": "Hash"
-                    },
-                    "defaultTtl": -1,
-                    "uniqueKeyPolicy": {
-                        "uniqueKeys": []
-                    },
-                    "conflictResolutionPolicy": {
-                        "mode": "LastWriterWins",
-                        "conflictResolutionPath": "/_ts"
-                    }
-                },
-                "options": {}
-            }
-        },
-        {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/storedProcedures",
             "apiVersion": "2020-04-01",
             "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/other/bulkDeleteSproc'))]",

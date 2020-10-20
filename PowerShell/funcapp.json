@@ -154,7 +154,7 @@
                         },
                         {
                             "name": "ProcessingGroupMaxQuerySize",
-                            "value": "50"
+                            "value": "100"
                         },
                         {
                             "name": "ProcessingGroups",
@@ -166,7 +166,7 @@
                         },
                         {
                             "name": "Ttl",
-                            "value": "7776000"
+                            "value": "2592000"
                         },
                         {
                             "name": "UsersCollection",
@@ -187,10 +187,6 @@
                         {
                             "name": "TasksQueueName",
                             "value": "tasks"
-                        },
-                        {
-                            "name": "ActivityDeliveryQueueName",
-                            "value": "activity-delivery"
                         },
                         {
                             "name": "ActivityStreamPoisonQueueName",
