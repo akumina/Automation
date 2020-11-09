@@ -68,11 +68,11 @@
       "name": "[variables('publicIPAddressName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "Basic",
+        "name": "Standard",
         "tier": "Regional"
       },
       "properties": {
-        "publicIPAllocationMethod": "Dynamic"
+        "publicIPAllocationMethod": "Static"
       }
     },
     {
@@ -107,8 +107,8 @@
       ],
       "properties": {
         "sku": {
-          "name": "WAF_Medium",
-          "tier": "WAF",
+          "name": "WAF_v2",
+          "tier": "WAF_v2",
           "capacity": 2
         },
         "gatewayIPConfigurations": [
