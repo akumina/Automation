@@ -32,7 +32,13 @@
                         }
                     }
                 }
-            ]
+            ],
+            "outputs": {
+                "searchAdminKey": {
+                    "type": "string",
+                    "value": "[listAdminKeys(parameters('serviceName'), '2020-03-13').primaryKey]"
+                }
+            }
         },
         "resourceGroup": "Akumina",
         "parameters": {
