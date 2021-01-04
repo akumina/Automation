@@ -1,0 +1,45 @@
+ {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string"
+        },
+        "cognitiveSearchName": {
+            "type": "string"
+        },
+        "cognitiveSearchSku": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "location": "[parameters('location')]",
+        "apiVersion": "2020-08-01"
+    },
+    "resources": [
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "name": "[parameters('cognitiveSearchName')]",
+            "location": "[variables('location')]",
+            "type": "Microsoft.Search/searchServices",
+            "sku": {
+                "name": "[parameters('cognitiveSearchSku')]"
+            },
+            "properties": {
+                "replicaCount": 1,
+                "partitionCount": 1,
+                "hostingMode": "Default",
+                "publicNetworkAccess": "Enabled",
+                "networkRuleSet": {
+                    "ipRules": []
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "searchAdminKey": {
+            "type": "string",
+            "value": "[listAdminKeys(parameters('cognitiveSearchName'), variables('apiVersion')).primaryKey]"
+        }
+    }
+}
