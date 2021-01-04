@@ -14,6 +14,12 @@
                 "description": "Pricing tier of the Web App."
             }
         },
+        "packageUri": {
+            "value": "",
+            "metadata": {
+                "description": "Web App Package Uri."
+            }
+        },
         "storageAccountName": {
             "value": "",
             "metadata": {
