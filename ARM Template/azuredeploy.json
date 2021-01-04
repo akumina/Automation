@@ -30,7 +30,6 @@
                 "description": "Web App Package Uri."
             }
         },
-
         "storageAccountName": {
             "type": "string",
             "defaultValue": "",
@@ -277,9 +276,9 @@
             "type": "string",
             "value": "[reference('search').outputs.searchAdminKey.value]"
         },
-         "redisConnectionString": {
+        "redisConnectionString": {
             "type": "string",
-            "value":"[if(not(empty(parameters('redisCacheName'))), reference('redis').outputs.connectionString.value, 'Redis is not provisioned')]"
+            "value": "[if(not(empty(parameters('redisCacheName'))), reference('redis').outputs.connectionString.value, 'Redis is not provisioned')]"
         }
     }
 }
