@@ -3,13 +3,13 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "webName": {
-            "value": "app-aktest01",
+            "value": "",
             "metadata": {
                 "description": "Name of the Web App."
             }
         },
         "webSku": {
-            "value": "P2V2",
+            "value": "",
             "metadata": {
                 "description": "Pricing tier of the Web App."
             }
@@ -21,7 +21,7 @@
             }
         },
         "storageAccountName": {
-            "value": "staktest01",
+            "value": "",
             "metadata": {
                 "description": "Name of the Storage Account."
             }
@@ -33,7 +33,7 @@
             }
         },
         "keyVaultName": {
-            "value": "kv-aktest01",
+            "value": "",
             "metadata": {
                 "description": "Name of the Key Vault."
             }
@@ -45,7 +45,7 @@
             }
         },
         "cognitiveSearchName": {
-            "value": "srch-aktest01",
+            "value": "",
             "metadata": {
                 "description": "Name of the Azure Cognitive Search Service."
             }
