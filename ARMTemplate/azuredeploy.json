@@ -107,8 +107,7 @@
     },
     "variables": {
         "apiVersion": "2019-10-01",
-        "webAppInsightName": "[concat('appi-', parameters('webName'))]",
-        "linkTemplate":"https://raw.githubusercontent.com/akumina/Automation/master/ARMTemplate/"
+        "webAppInsightName": "[concat('appi-', parameters('webName'))]"
     },
     "resources": [
         {
@@ -131,7 +130,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(variables('linkTemplate'), 'artifacts/storage.json')]",
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/storage.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -148,7 +147,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(variables('linkTemplate'), 'artifacts/appinsight.json')]",
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/appinsight.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -164,7 +163,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(variables('linkTemplate'), 'artifacts/search.json')]",
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/search.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -185,7 +184,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(variables('linkTemplate'), 'artifacts/webapp.json')]",
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/webapp.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -211,7 +210,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(variables('linkTemplate'), 'artifacts/keyvault.json')]",
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/keyvault.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -235,7 +234,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(variables('linkTemplate'), 'artifacts/redis.json')]",
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/redis.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
