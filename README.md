@@ -11,7 +11,7 @@ We recommend you install our applications from Azure Marketplace
 
 * v4.x: https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web4x?tab=Overview
 
-# ARM Template
+## ARM Template
 ARM Templates can be executed using 
 * Powershell
 * DevOps pipeline
