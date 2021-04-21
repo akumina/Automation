@@ -4,16 +4,15 @@
 ## Akumina AppManager/ServiceHub ARM template based installation.
 
 **Current Version:** AppManager 5.0; PeopleSync 5.0
+
 **Last Version:** AppManager 4.8; PeopleSync 4.8
 
 # Marketplace Offerings
-We recommend you install our application from Azure Marketplace
+We recommend you install our applications from Azure Marketplace
 
-v5.0:
-https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web?tab=Overview
+* v5.0: https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web?tab=Overview
 
-v4.x:
-https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web4x?tab=Overview
+* v4.x: https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web4x?tab=Overview
 
 # ARM Template
 ARM Templates can be executed using 
