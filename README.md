@@ -1,13 +1,10 @@
-# Automation
-
-
-## Akumina AppManager/ServiceHub ARM template based installation.
+# Akumina AppManager/ServiceHub Infrastructure using ARM template.
 
 **Current Version:** AppManager 5.0; PeopleSync 5.0
 
 **Last Version:** AppManager 4.8; PeopleSync 4.8
 
-# Marketplace Offerings
+## Marketplace Offerings
 We recommend you install our applications from Azure Marketplace
 
 * v5.0: https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web?tab=Overview
@@ -22,10 +19,10 @@ ARM Templates can be executed using
 * Service Catalog Managed Application
 * Azure Blueprints (some modification required)
 
-To fully configure the application, you need the Application Packages (Web App and Function App Package), please contact your account administrator to request the downloadable URL.
+To fully configure the application, you need the Application Packages (Web App and Function App Package); please contact your account administrator to request the downloadable URL.
 
-You need to configure Azure AD application including scopes and permissions.
+You need to configure the Azure AD application, including scopes and permissions.
 
-To learn more about PeopleSync please visit https://community.akumina.com/knowledge-base/peoplesync-v5/ 
+To learn more about PeopleSync, please visit https://community.akumina.com/knowledge-base/peoplesync-v5/ 
 
-To learn more please visit https://community.akumina.com/knowledge-base/graph-api-connection-for-azure-ad/
+To learn more about Azure AD application, Scope and Permissions, please visit https://community.akumina.com/knowledge-base/graph-api-connection-for-azure-ad/
