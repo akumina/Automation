@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "eastus2"
+        },
+        "webName": {
+            "value": "app-udai48test1"
+        },
+        "webSku": {
+            "value": "P2V2"
+        },
+        "storageAccountName": {
+            "value": "studai48test1"
+        },
+        "storageAccountSku": {
+            "value": "Standard_GRS"
+        },
+        "keyVaultName": {
+            "value": "kv-udai48test1"
+        },
+        "keyVaultSku": {
+            "value": "Standard"
+        },
+        "cognitiveSearchName": {
+            "value": "srch-udai48test1"
+        },
+        "cognitiveSearchSku": {
+            "value": "standard"
+        }
+    }
+}

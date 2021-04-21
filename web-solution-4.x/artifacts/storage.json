@@ -3,33 +3,34 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "location": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
         },
         "storageAccountName": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Storage Account."
+            }
         },
         "storageAccountSku": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Pricing tier of the Storage Account."
+            }
         }
-    },
-    "variables": {
-        "location": "[parameters('location')]",
-        "apiVersion": "2020-08-01-preview"
     },
     "resources": [
         {
             "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "2020-08-01-preview",
             "name": "[parameters('storageAccountName')]",
-            "location": "[variables('location')]",
-            "dependsOn": [
-            ],
+            "location": "[parameters('location')]",
             "sku": {
                 "name": "[parameters('storageAccountSku')]"
             },
             "kind": "StorageV2",
-            "tags": {
-            },
             "properties": {
                 "azureFilesIdentityBasedAuthentication": {
                     "directoryServiceOptions": "None"
@@ -38,8 +39,6 @@
                 "allowBlobPublicAccess": true,
                 "networkAcls": {
                     "bypass": "AzureServices",
-                    "virtualNetworkRules": [],
-                    "ipRules": [],
                     "defaultAction": "Allow"
                 },
                 "supportsHttpsTrafficOnly": true,
@@ -59,11 +58,5 @@
                 "accessTier": "Hot"
             }
         }
-    ],
-    "outputs": {
-        "connectionString": {
-            "type": "string",
-            "value": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value, ';EndpointSuffix=core.windows.net')]"
-        }
-    }
+    ]
 }

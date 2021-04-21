@@ -1,0 +1,51 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "eastus2"
+        },
+        "webName": {
+            "value": "app-udai50test1"
+        },
+        "webSku": {
+            "value": "P2V2"
+        },
+        "storageAccountName": {
+            "value": "studai50test1"
+        },
+        "storageAccountSku": {
+            "value": "Standard_GRS"
+        },
+        "keyVaultName": {
+            "value": "kv-udai50test1"
+        },
+        "keyVaultSku": {
+            "value": "Standard"
+        },
+        "cognitiveSearchName": {
+            "value": "srch-udai50test1"
+        },
+        "cognitiveSearchSku": {
+            "value": "standard"
+        },
+        "redisCacheName": {
+            "value": "redis-udai50test1"
+        },
+        "redisSkuName": {
+            "value": "Standard"
+        },
+        "redisSkuFamily": {
+            "value": "C"
+        },
+        "redisSkuCapacity": {
+            "value": "1"
+        },
+        "funcAppName": {
+            "value": "func-udai50test1"
+        },
+        "cosmosDBAccountName": {
+            "value": "cosmos-udai50test1"
+        }
+    }
+}

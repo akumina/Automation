@@ -3,19 +3,28 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "location": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "Location for all resources."
+      }
     },
     "keyVaultName": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Key Vault."
+      }
+    },
+    "webName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Web App."
+      }
     },
     "keyVaultSku": {
-      "type": "string"
-    },
-    "objectId": {
-      "type": "string"
-    },
-    "secretValueObject": {
-      "type": "object"
+      "type": "string",
+      "metadata": {
+        "description": "Pricing tier of the Key Vault."
+      }
     },
     "keysPermissions": {
       "type": "array",
@@ -36,24 +45,26 @@
       "metadata": {
         "description": "Permissions to grant user to secrets in the vault. Valid values are: all, get, set, list, and delete."
       }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Storage Account Name."
+      }
     }
   },
   "variables": {
-    "location": "[parameters('location')]",
-    "apiVersion": "2019-09-01",
-    "keyVaultName": "[concat(parameters('keyVaultName'), '')]",
     "secretName": "conn",
-    "secretValue": "[string(parameters('secretValueObject'))]"
+    "secretValueObject": {
+      "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=@AccountKey;EndpointSuffix=core.windows.net')]"
+    }
   },
   "resources": [
     {
       "type": "Microsoft.KeyVault/vaults",
-      "apiVersion": "[variables('apiVersion')]",
-      "name": "[variables('keyVaultName')]",
-      "location": "[variables('location')]",
-      "tags": {
-        "displayName": "KeyVault"
-      },
+      "apiVersion": "2019-09-01",
+      "name": "[parameters('keyVaultName')]",
+      "location": "[parameters('location')]",
       "properties": {
         "enabledForDeployment": false,
         "enabledForTemplateDeployment": false,
@@ -62,7 +73,7 @@
         "accessPolicies": [
           {
             "tenantId": "[subscription().tenantId]",
-            "objectId": "[parameters('objectId')]",
+            "objectId": "[reference(resourceId('Microsoft.Web/sites', parameters('webName')), '2020-06-01', 'full').identity.principalId]",
             "permissions": {
               "keys": "[parameters('keysPermissions')]",
               "secrets": "[parameters('secretsPermissions')]"
@@ -78,15 +89,15 @@
         {
           "type": "secrets",
           "name": "[variables('secretName')]",
-          "apiVersion": "[variables('apiVersion')]",
+          "apiVersion": "2019-09-01",
           "tags": {
             "displayName": "secret"
           },
           "properties": {
-            "value": "[variables('secretValue')]"
+            "value": "[replace(string(variables('secretValueObject')),'@AccountKey',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2020-08-01-preview').keys[0].value)]"
           },
           "dependsOn": [
-            "[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
+            "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
           ]
         }
       ]

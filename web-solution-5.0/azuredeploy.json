@@ -1,0 +1,399 @@
+ {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "webName": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app name."
+            }
+        },
+        "webSku": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app pricing tier."
+            }
+        },
+        "storageAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure storage account name."
+            }
+        },
+        "storageAccountSku": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure storage account replication type (Standard is required for Blob, Queue, Table and Fileshare)."
+            }
+        },
+        "keyVaultName": {
+            "type": "string",
+
+            "metadata": {
+                "description": "Key vault name."
+            }
+        },
+        "keyVaultSku": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Standard",
+                "Premium"
+            ],
+            "metadata": {
+                "description": "Key vault pricing tier (Premium is required for HSM based keys)."
+            }
+        },
+        "cognitiveSearchName": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure cognitive search service name."
+            }
+        },
+        "cognitiveSearchSku": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure cognitive search service name pricing tier."
+            }
+        },
+        "redisCacheName": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure Redis cache name."
+            }
+        },
+        "redisSkuName": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "metadata": {
+                "description": "Azure Redis cache pricing tier (Standard or Premium)."
+            }
+        },
+        "redisSkuFamily": {
+            "type": "string",
+            "defaultValue": "S",
+            "metadata": {
+                "description": "Azure Redis family (C-Standard or P-Premium)."
+            }
+        },
+        "redisSkuCapacity": {
+            "type": "string",
+            "defaultValue": "1",
+            "metadata": {
+                "description": "Azure Redis cache capacity (0 to 6)."
+            }
+        },
+        "funcAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app name."
+            }
+        },
+        "cosmosDBAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "CosmosDB (SQL API) account name."
+            }
+        },
+        "workspacesLogName": {
+            "type": "string",
+            "metadata": {
+                "description": "Log analytics workspace name."
+            }
+        },
+        "webAppPackageUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app deployment package URL."
+            }
+        },
+        "funcAppPackageUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app deployment package URL."
+            }
+        }
+    },
+    "variables": {
+        "webAppInsightName": "[concat('appi-', parameters('webName'))]",
+        "funcAppInsightName": "[concat('appi-', parameters('funcAppName'))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2020-06-01",
+            "name": "pid-aa1e5ee0-d386-4920-bf08-fb47beec36f7",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "storage",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/storage.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "storageAccountName": { "value": "[parameters('storageAccountName')]" },
+                    "storageAccountSku": { "value": "[parameters('storageAccountSku')]" }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "appinsight",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/appinsight.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "webAppInsightName": { "value": "[variables('webAppInsightName')]" },
+                    "funcAppInsightName": { "value": "[variables('funcAppInsightName')]" }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "search",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/search.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "cognitiveSearchName": { "value": "[parameters('cognitiveSearchName')]" },
+                    "cognitiveSearchSku": { "value": "[parameters('cognitiveSearchSku')]" }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "redis",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/redis.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "redisCacheName": { "value": "[parameters('redisCacheName')]" },
+                    "redisSkuName": { "value": "[parameters('redisSkuName')]" },
+                    "redisSkuFamily": { "value": "[parameters('redisSkuFamily')]" },
+                    "redisSkuCapacity": { "value": "[parameters('redisSkuCapacity')]" }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "cosmosdb",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/cosmosdb.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "cosmosDBAccountName": { "value": "[parameters('cosmosDBAccountName')]" }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "funcapp",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'storage')]",
+                "[resourceId('Microsoft.Resources/deployments', 'cosmosdb')]",
+                "[resourceId('Microsoft.Resources/deployments', 'appinsight')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/funcapp.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "funcAppName": { "value": "[parameters('funcAppName')]" },
+                    "funcAppPackageUrl": { "value": "[parameters('funcAppPackageUrl')]" },
+                    "funcAppInstrumentationKey": { "value": "[reference('appinsight').outputs.funcAppInstrumentationKey.value]" },
+                    "funcAppInsightConnectionString": { "value": "[reference('appinsight').outputs.funcAppInsightConnectionString.value]" },
+                    "cosmosDbAccountName": { "value": "[parameters('cosmosDbAccountName')]" },
+                    "storageAccountName": { "value": "[parameters('storageAccountName')]" }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "webapp",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'storage')]",
+                "[resourceId('Microsoft.Resources/deployments', 'appinsight')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/webapp.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "webName": { "value": "[parameters('webName')]" },
+                    "webSku": { "value": "[parameters('webSku')]" },
+                    "webAppPackageUrl": { "value": "[parameters('webAppPackageUrl')]" },
+                    "webAppInstrumentationKey": { "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]" },
+                    "webAppInsightConnectionString": { "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]" }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "keyvault",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'storage')]",
+                "[resourceId('Microsoft.Resources/deployments', 'search')]",
+                "[resourceId('Microsoft.Resources/deployments', 'cosmosdb')]",
+                "[resourceId('Microsoft.Resources/deployments', 'redis')]",
+                "[resourceId('Microsoft.Resources/deployments', 'webapp')]",
+                "[resourceId('Microsoft.Resources/deployments', 'appinsight')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/keyvault.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "keyVaultName": { "value": "[parameters('keyVaultName')]" },
+                    "keyVaultSku": { "value": "[parameters('keyVaultSku')]" },
+                    "cosmosDbAccountName": { "value": "[parameters('cosmosDbAccountName')]" },
+                    "storageAccountName": { "value": "[parameters('storageAccountName')]" },
+                    "cognitiveSearchName": { "value": "[parameters('cognitiveSearchName')]" },
+                    "redisCacheName": { "value": "[parameters('redisCacheName')]" },
+                    "webName": { "value": "[parameters('webName')]" },
+                    "secretValueObject": {
+                        "value": {
+                            "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=@StorageKey;EndpointSuffix=core.windows.net')]",
+                            "ExternalConnection": {
+                                "EndpointUrl": "[concat('AccountEndpoint=https://',parameters('cosmosDbAccountName'),'.documents.azure.com:443/;AccountKey=@DbKey;')]",
+                                "Database": "akcontainers"
+                            },
+                            "AzureSearchServiceName": "[parameters('cognitiveSearchName')]",
+                            "AzureSearchServiceApiKey": "@SearchKey",
+                            "InstrumentationKey": "[reference('appinsight').outputs.webAppInstrumentationKey.value]",
+                            "AppInsightAppId": "[reference('appinsight').outputs.webAppInsightAppId.value]",
+                            "AppInsightApiKey": "",
+                            "FuncAppInsightAppId": "[reference('appinsight').outputs.funcAppInsightAppId.value]",
+                            "FuncAppInsightApiKey": "",
+                            "StoreInSingleContainer": "true",
+                            "PrimaryRedisConnection": "[concat(parameters('redisCacheName'),'.redis.cache.windows.net:6380', ',password=@RedisKey,ssl=true,abortConnect=false')]",
+                            "SecondaryRedisConnectionString": "",
+                            "TokenStoreEntityName": "akcloud",
+                            "BlobStoreContainerName": "akcloud"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "updateweb",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'keyvault')]",
+                "[resourceId('Microsoft.Resources/deployments', 'webapp')]",
+                "[resourceId('Microsoft.Resources/deployments', 'appinsight')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/updateweb.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "webName": { "value": "[parameters('webName')]" },
+                    "keyVaultSecretUri": { "value": "[reference('keyvault').outputs.keyVaultSecretUri.value]" },
+                    "webAppInstrumentationKey": { "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]" },
+                    "webAppInsightConnectionString": { "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]" }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "workspace",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'keyvault')]",
+                "[resourceId('Microsoft.Resources/deployments', 'search')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/workspace.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "workspacesLogName": { "value": "[parameters('workspacesLogName')]" }
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "websiteHostname": {
+            "type": "string",
+            "value": "[concat(parameters('webName'), '.azurewebsites.net')]"
+        },
+        "webAppInstrumentationKey": {
+            "type": "string",
+            "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]"
+        },
+        "webAppInsightAppId": {
+            "type": "string",
+            "value": "[reference('appinsight').outputs.webAppInsightAppId.value]"
+        },
+        "webAppInsightConnectionString": {
+            "type": "string",
+            "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]"
+        },
+        "funcAppInstrumentationKey": {
+            "type": "string",
+            "value": "[reference('appinsight').outputs.funcAppInstrumentationKey.value]"
+        },
+        "funcAppInsightAppId": {
+            "type": "string",
+            "value": "[reference('appinsight').outputs.funcAppInsightAppId.value]"
+        },
+        "keyVaultSecretUri": {
+            "type": "string",
+            "value": "[reference('keyvault').outputs.keyVaultSecretUri.value]"
+        },
+        "searchServiceName": {
+            "type": "string",
+            "value": "[concat(parameters('cognitiveSearchName'), '.search.windows.net')]"
+        }
+    }
+}

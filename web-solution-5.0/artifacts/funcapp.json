@@ -1,47 +1,60 @@
-{
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+ {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "funcAppName": {
-            "defaultValue": "",
-            "type": "string"
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
         },
-        "cosmosDBConnectionString": {
-            "defaultValue": "",
-            "type": "string"
+        "funcAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app name."
+            }
+        },
+        "funcAppPackageUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app deployment package URL."
+            }
+        },
+        "funcAppInstrumentationKey": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app application insight instrumentation key."
+            }
+        },
+        "funcAppInsightConnectionString": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app application insight connection string."
+            }
+        },
+        "cosmosDBAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "CosmosDB (SQL API) account name."
+            }
         },
         "storageAccountName": {
-            "defaultValue": "",
-            "type": "string"
-        },
-        "hostedBlobContainer": {
-            "defaultValue": "",
-            "type": "string"
-        },
-        "location": {
-            "defaultValue": "eastus2",
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Azure storage account name."
+            }
         }
     },
     "variables": {
         "serverfarmsPlan": "[concat('plan-',parameters('funcAppName'))]",
-        "appInsightName": "[concat('appi-',parameters('funcAppName'))]"
+        "hostedBlobContainer": "akcloud",
+        "cosmosDbConnectionString": "[concat('AccountEndpoint=https://',parameters('cosmosDbAccountName'),'.documents.azure.com:443/;AccountKey={0}')]",
+        "storageConnectionString": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey={0};EndpointSuffix=core.windows.net')]"
     },
     "resources": [
         {
-            "type": "microsoft.insights/components",
-            "apiVersion": "2015-05-01",
-            "name": "[variables('appInsightName')]",
-            "location": "[parameters('location')]",
-            "kind": "web",
-            "properties": {
-                "Application_Type": "web",
-                "Request_Source": "IbizaWebAppExtensionCreate"
-            }
-        },
-        {
             "type": "Microsoft.Web/serverfarms",
-            "apiVersion": "2018-02-01",
+            "apiVersion": "2020-06-01",
             "name": "[variables('serverfarmsPlan')]",
             "location": "[parameters('location')]",
             "sku": {
@@ -65,7 +78,7 @@
         },
         {
             "type": "Microsoft.Web/sites",
-            "apiVersion": "2018-11-01",
+            "apiVersion": "2020-06-01",
             "name": "[parameters('funcAppName')]",
             "location": "[parameters('location')]",
             "kind": "functionapp",
@@ -73,7 +86,6 @@
                 "type": "SystemAssigned"
             },
             "dependsOn": [
-                "[concat('microsoft.insights/components/', variables('appInsightName'))]",
                 "[resourceId('Microsoft.Web/serverfarms', variables('serverfarmsPlan'))]"
             ],
             "properties": {
@@ -90,19 +102,19 @@
                         },
                         {
                             "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-                            "value": "[reference(concat('microsoft.insights/components/', variables('appInsightName')), '2015-05-01').InstrumentationKey]"
+                            "value": "[parameters('funcAppInstrumentationKey')]"
                         },
                         {
                             "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-                            "value": "[reference(concat('microsoft.insights/components/', variables('appInsightName')), '2015-05-01').ConnectionString]"
+                            "value": "[parameters('funcAppInsightConnectionString')]"
                         },
                         {
                             "name": "AzureWebJobsStorage",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                            "value": "[format(variables('storageConnectionString'),listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2020-08-01-preview').keys[0].value)]"
                         },
                         {
                             "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                            "value": "[format(variables('storageConnectionString'),listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2020-08-01-preview').keys[0].value)]"
                         },
                         {
                             "name": "WEBSITE_CONTENTSHARE",
@@ -110,7 +122,7 @@
                         },
                         {
                             "name": "ActivityStreamConnection",
-                            "value": "[parameters('cosmosDBConnectionString')]"
+                            "value": "[format(variables('cosmosDbConnectionString'),listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), '2020-04-01').primaryMasterKey)]"
                         },
                         {
                             "name": "Database",
@@ -118,7 +130,7 @@
                         },
                         {
                             "name": "HostedBlobContainer",
-                            "value": "[parameters('hostedBlobContainer')]"
+                            "value": "[variables('hostedBlobContainer')]"
                         },
                         {
                             "name": "ActivityStreamQueueMaxProcessingTimeMs",
@@ -234,11 +246,26 @@
                     "httpsOnly": false,
                     "redundancyMode": "None"
                 }
-            }
+            },
+            "resources": [
+                {
+                    "condition": "[not(empty(parameters('funcAppPackageUrl')))]",
+                    "name": "MSDeploy",
+                    "type": "extensions",
+                    "location": "[parameters('location')]",
+                    "apiVersion": "2020-06-01",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', parameters('funcAppName'))]"
+                    ],
+                    "properties": {
+                        "packageUri": "[parameters('funcAppPackageUrl')]"
+                    }
+                }
+            ]
         },
         {
             "type": "Microsoft.Web/sites/config",
-            "apiVersion": "2018-11-01",
+            "apiVersion": "2020-06-01",
             "name": "[concat(parameters('funcAppName'), '/web')]",
             "location": "[parameters('location')]",
             "dependsOn": [
@@ -271,9 +298,6 @@
                     }
                 ],
                 "loadBalancing": "LeastRequests",
-                "experiments": {
-                    "rampUpRules": []
-                },
                 "autoHealEnabled": false,
                 "cors": {
                     "allowedOrigins": [
@@ -305,13 +329,12 @@
                 "scmIpSecurityRestrictionsUseMain": false,
                 "http20Enabled": true,
                 "minTlsVersion": "1.2",
-                "ftpsState": "AllAllowed",
-                "reservedInstanceCount": 0
+                "ftpsState": "AllAllowed"
             }
         },
         {
             "type": "Microsoft.Web/sites/hostNameBindings",
-            "apiVersion": "2018-11-01",
+            "apiVersion": "2020-06-01",
             "name": "[concat(parameters('funcAppName'), '/', parameters('funcAppName'), '.azurewebsites.net')]",
             "location": "[parameters('location')]",
             "dependsOn": [

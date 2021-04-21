@@ -1,0 +1,127 @@
+ {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "webName": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app name."
+            }
+        },
+        "webSku": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app pricing tier."
+            }
+        },
+        "webAppPackageUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app deployment package URL."
+            }
+        },
+        "webAppInstrumentationKey": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app application insight instrumentation key."
+            }
+        },
+        "webAppInsightConnectionString": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app application insight connection string."
+            }
+        }
+    },
+    "variables": {
+        "appServicePlanName": "[concat('plan-', parameters('webName'))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2020-06-01",
+            "type": "Microsoft.Web/serverfarms",
+            "kind": "app",
+            "name": "[variables('appServicePlanName')]",
+            "location": "[parameters('location')]",
+            "comments": "This app service plan is used for the web app and slots.",
+            "tags": {
+                "displayName": "AppServicePlan"
+            },
+            "sku": {
+                "name": "[parameters('webSku')]"
+            }
+        },
+        {
+            "apiVersion": "2020-06-01",
+            "type": "Microsoft.Web/sites",
+            "kind": "app",
+            "name": "[parameters('webName')]",
+            "location": "[parameters('location')]",
+            "comments": "This is the web app, also the default 'nameless' slot.",
+            "tags": {
+                "displayName": "WebApp"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+                "clientAffinityEnabled": false,
+                "httpsOnly": true,
+                "siteConfig": {
+                    "netFrameworkVersion": "v4.8",
+                    "use32BitWorkerProcess": false,
+                    "alwaysOn": true,
+                    "http20Enabled": true,
+                    "minTlsVersion": "1.2",
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[parameters('webAppInstrumentationKey')]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[parameters('webAppInsightConnectionString')]"
+                        },
+                        {
+                            "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+                            "value": "~2"
+                        },
+                        {
+                            "name": "XDT_MicrosoftApplicationInsights_Mode",
+                            "value": "default"
+                        },
+                        {
+                            "name": "SCM_COMMAND_IDLE_TIMEOUT",
+                            "value": "3600"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "condition": "[not(empty(parameters('webAppPackageUrl')))]",
+                    "name": "MSDeploy",
+                    "type": "extensions",
+                    "location": "[parameters('location')]",
+                    "apiVersion": "2020-06-01",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', parameters('webName'))]"
+                    ],
+                    "properties": {
+                        "packageUri": "[parameters('webAppPackageUrl')]"
+                    }
+                }
+            ],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            ]
+        }
+    ]
+}

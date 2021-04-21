@@ -11,42 +11,36 @@
         },
         "webName": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
                 "description": "Name of the Web App."
             }
         },
         "webSku": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
                 "description": "Pricing tier of the Web App."
             }
         },
-        "packageUri": {
+        "webPackageUri": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
-                "description": "Web App Package Uri."
+                "description": "Pricing tier of the Web App."
             }
         },
         "storageAccountName": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
                 "description": "Name of the Storage Account."
             }
         },
         "storageAccountSku": {
             "type": "string",
-            "defaultValue": "Standard_GRS",
             "metadata": {
                 "description": "Pricing tier of the Storage Account."
             }
         },
         "keyVaultName": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
                 "description": "Name of the Key Vault."
             }
@@ -64,55 +58,24 @@
         },
         "cognitiveSearchName": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
                 "description": "Name of the Azure Cognitive Search Service."
             }
         },
         "cognitiveSearchSku": {
             "type": "string",
-            "defaultValue": "standard",
             "metadata": {
                 "description": "Pricing tier of the Azure Cognitive Search Service."
-            }
-        },
-        "redisCacheName": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Name of the Application Insight."
-            }
-        },
-        "redisSkuName": {
-            "type": "string",
-            "defaultValue": "Standard",
-            "metadata": {
-                "description": "Redis Sku type (Standard or Premium)."
-            }
-        },
-        "redisSkuFamily": {
-            "type": "string",
-            "defaultValue": "C",
-            "metadata": {
-                "description": "Redis Family (C or P)."
-            }
-        },
-        "redisSkuCapacity": {
-            "type": "string",
-            "defaultValue": "1",
-            "metadata": {
-                "description": "Redis Capacity (0 to 6)."
             }
         }
     },
     "variables": {
-        "apiVersion": "2019-10-01",
         "webAppInsightName": "[concat('appi-', parameters('webName'))]"
     },
     "resources": [
         {
             "apiVersion": "2020-06-01",
-            "name": "pid-aa1e5ee0-d386-4920-bf08-fb47beec36f7",
+            "name": "pid-aa1e5ee0-d386-4920-bf08-fb47beec36f75",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "Incremental",
@@ -125,7 +88,7 @@
         },
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "2020-06-01",
             "name": "storage",
             "properties": {
                 "mode": "Incremental",
@@ -142,7 +105,7 @@
         },
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "2020-06-01",
             "name": "appinsight",
             "properties": {
                 "mode": "Incremental",
@@ -158,7 +121,7 @@
         },
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "2020-06-01",
             "name": "search",
             "properties": {
                 "mode": "Incremental",
@@ -175,7 +138,7 @@
         },
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "2020-06-01",
             "name": "webapp",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'storage')]",
@@ -191,15 +154,14 @@
                     "location": { "value": "[parameters('location')]" },
                     "webName": { "value": "[parameters('webName')]" },
                     "webSku": { "value": "[parameters('webSku')]" },
-                    "packageUri": { "value": "[parameters('packageUri')]" },
-                    "webAppInstrumentationKey": { "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]" },
-                    "webAppInsightConnectionString": { "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]" }
+                    "webPackageUri": { "value": "[parameters('webPackageUri')]" },
+                    "webAppInsightName": { "value": "[variables('webAppInsightName')]" }
                 }
             }
         },
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "2020-06-01",
             "name": "keyvault",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'storage')]",
@@ -217,52 +179,16 @@
                     "location": { "value": "[parameters('location')]" },
                     "keyVaultName": { "value": "[parameters('keyVaultName')]" },
                     "keyVaultSku": { "value": "[parameters('keyVaultSku')]" },
-                    "objectId": { "value": "[reference('webapp').outputs.objectId.value]" },
-                    "secretValueObject": {
-                        "value": {
-                            "RemoteStorageConnection": "[reference('storage').outputs.connectionString.value]"
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "condition": "[not(empty(parameters('redisCacheName')))]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
-            "name": "redis",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/redis.json')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "location": { "value": "[parameters('location')]" },
-                    "redisCacheName": { "value": "[parameters('redisCacheName')]" },
-                    "redisSkuName": { "value": "[parameters('redisSkuName')]" },
-                    "redisSkuFamily": { "value": "[parameters('redisSkuFamily')]" },
-                    "redisSkuCapacity": { "value": "[parameters('redisSkuCapacity')]" }
+                    "webName": { "value": "[parameters('webName')]" },
+                    "storageAccountName": { "value": "[parameters('storageAccountName')]" }
                 }
             }
         }
     ],
     "outputs": {
-        "storageAccountConnectionString": {
-            "type": "string",
-            "value": "[reference('storage').outputs.connectionString.value]"
-        },
         "websiteHostname": {
             "type": "string",
             "value": "[concat(parameters('webName'), '.azurewebsites.net')]"
-        },
-        "webAppInstrumentationKey": {
-            "type": "string",
-            "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]"
-        },
-        "webAppInsightConnectionString": {
-            "type": "string",
-            "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]"
         },
         "keyVaultSecretUri": {
             "type": "string",
@@ -271,14 +197,6 @@
         "searchServiceName": {
             "type": "string",
             "value": "[concat(parameters('cognitiveSearchName'), '.search.windows.net')]"
-        },
-        "searchAdminKey": {
-            "type": "string",
-            "value": "[reference('search').outputs.searchAdminKey.value]"
-        },
-        "redisConnectionString": {
-            "type": "string",
-            "value": "[if(not(empty(parameters('redisCacheName'))), reference('redis').outputs.connectionString.value, 'Redis is not provisioned')]"
         }
     }
 }

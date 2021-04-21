@@ -3,24 +3,29 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "location": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
         },
         "cognitiveSearchName": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Azure Cognitive Search Service."
+            }
         },
         "cognitiveSearchSku": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Pricing tier of the Azure Cognitive Search Service."
+            }
         }
-    },
-    "variables": {
-        "location": "[parameters('location')]",
-        "apiVersion": "2020-08-01"
     },
     "resources": [
         {
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "2020-08-01",
             "name": "[parameters('cognitiveSearchName')]",
-            "location": "[variables('location')]",
+            "location": "[parameters('location')]",
             "type": "Microsoft.Search/searchServices",
             "sku": {
                 "name": "[parameters('cognitiveSearchSku')]"
@@ -29,17 +34,8 @@
                 "replicaCount": 1,
                 "partitionCount": 1,
                 "hostingMode": "Default",
-                "publicNetworkAccess": "Enabled",
-                "networkRuleSet": {
-                    "ipRules": []
-                }
+                "publicNetworkAccess": "Enabled"
             }
         }
-    ],
-    "outputs": {
-        "searchAdminKey": {
-            "type": "string",
-            "value": "[listAdminKeys(parameters('cognitiveSearchName'), variables('apiVersion')).primaryKey]"
-        }
-    }
+    ]
 }

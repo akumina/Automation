@@ -1,0 +1,136 @@
+ {
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "keyVaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "Key vault name."
+      }
+    },
+    "webName": {
+      "type": "string",
+      "metadata": {
+        "description": "Web app name."
+      }
+    },
+    "keyVaultSku": {
+      "type": "string",
+      "metadata": {
+        "description": "Key vault pricing tier."
+      }
+    },
+    "keysPermissions": {
+      "type": "array",
+      "defaultValue": [
+        "Get",
+        "List"
+      ],
+      "metadata": {
+        "description": "Permissions to grant user to keys in the vault. Valid values are: all, create, import, update, get, list, delete, backup, restore, encrypt, decrypt, wrapkey, unwrapkey, sign, and verify."
+      }
+    },
+    "secretsPermissions": {
+      "type": "array",
+      "defaultValue": [
+        "Get",
+        "List"
+      ],
+      "metadata": {
+        "description": "Permissions to grant user to secrets in the vault. Valid values are: all, get, set, list, and delete."
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure storage account name."
+      }
+    },
+    "cosmosDbAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "CosmosDB (SQL API) account name."
+      }
+    },
+    "cognitiveSearchName": {
+      "type": "string",
+      "metadata": {
+        "description": "Cognitive search name."
+      }
+    },
+    "redisCacheName": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure Redis cache name."
+      }
+    },
+    "secretValueObject": {
+      "type": "object",
+      "metadata": {
+        "description": "Key vault secret for akumina application."
+      }
+    }
+  },
+  "variables": {
+    "secretName": "conn"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2019-09-01",
+      "name": "[parameters('keyVaultName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "KeyVault"
+      },
+      "properties": {
+        "enabledForDeployment": false,
+        "enabledForTemplateDeployment": false,
+        "enabledForVolumeEncryption": false,
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[reference(resourceId('Microsoft.Web/sites', parameters('webName')), '2020-06-01', 'full').identity.principalId]",
+            "permissions": {
+              "keys": "[parameters('keysPermissions')]",
+              "secrets": "[parameters('secretsPermissions')]"
+            }
+          }
+        ],
+        "sku": {
+          "name": "[parameters('keyVaultSku')]",
+          "family": "A"
+        }
+      },
+      "resources": [
+        {
+          "type": "secrets",
+          "name": "[variables('secretName')]",
+          "apiVersion": "2019-09-01",
+          "tags": {
+            "displayName": "secret"
+          },
+          "properties": {
+            "value": "[replace(replace(replace(replace(string(parameters('secretValueObject')),'@StorageKey',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2020-08-01-preview').keys[0].value),'@DbKey',listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), '2020-04-01').primaryMasterKey),'@SearchKey',listAdminKeys(resourceId('Microsoft.Search/searchServices', parameters('cognitiveSearchName')), '2020-08-01').primaryKey),'@RedisKey',listKeys(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName')), '2015-08-01').primaryKey)]"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
+          ]
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "keyVaultSecretUri": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyVaultName'), variables('secretName'))).secretUriWithVersion]"
+    }
+  }
+}

@@ -1,35 +1,36 @@
-{
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+ {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "databaseAccountName": {
-            "defaultValue": "",
-            "type": "string"
-        },
-        "databaseName": {
-            "defaultValue": "",
-            "type": "string"
-        },
         "location": {
-            "defaultValue": "eastus2",
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "cosmosDbAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "CosmosDB (SQL API) account name."
+            }
         }
     },
     "variables": {
-        "throughputName": "[concat('/',concat(parameters('databaseName'),'/default'))]"
+        "maxThroughput": "4000",
+        "databaseName": "akcontainers"
     },
     "resources": [
         {
             "type": "Microsoft.DocumentDB/databaseAccounts",
+            "name": "[parameters('cosmosDbAccountName')]",
             "apiVersion": "2020-04-01",
-            "name": "[parameters('databaseAccountName')]",
+            "kind": "GlobalDocumentDB",
             "location": "[parameters('location')]",
             "tags": {
                 "defaultExperience": "Core (SQL)",
                 "hidden-cosmos-mmspecial": "",
                 "CosmosAccountType": "Production"
             },
-            "kind": "GlobalDocumentDB",
             "properties": {
                 "publicNetworkAccess": "Enabled",
                 "enableAutomaticFailover": false,
@@ -50,36 +51,34 @@
                         "failoverPriority": 0,
                         "isZoneRedundant": false
                     }
-                ],
-                "capabilities": [],
-                "ipRules": []
+                ]
             }
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+            "name": "[concat(parameters('cosmosDbAccountName'), '/', variables('databaseName'))]",
             "apiVersion": "2020-04-01",
-            "name": "[concat(parameters('databaseAccountName'), concat('/',parameters('databaseName')))]",
             "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
             ],
             "properties": {
                 "options": {
                     "autoscaleSettings": {
-                        "maxThroughput": 4000
+                        "maxThroughput": "[variables('maxThroughput')]"
                     }
                 },
                 "resource": {
-                    "id": "[parameters('databaseName')]"
+                    "id": "[variables('databaseName')]"
                 }
             }
         },
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
             "apiVersion": "2020-04-01",
-            "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/activitysubscriptions'))]",
+            "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/activitysubscriptions'))]",
             "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
             ],
             "properties": {
                 "resource": {
@@ -118,10 +117,10 @@
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
             "apiVersion": "2020-04-01",
-            "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/comments'))]",
+            "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/comments'))]",
             "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
             ],
             "properties": {
                 "resource": {
@@ -170,10 +169,10 @@
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
             "apiVersion": "2020-04-01",
-            "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/eventsubscriptions'))]",
+            "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/eventsubscriptions'))]",
             "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
             ],
             "properties": {
                 "resource": {
@@ -223,10 +222,10 @@
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
             "apiVersion": "2020-04-01",
-            "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/leases'))]",
+            "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/leases'))]",
             "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
             ],
             "properties": {
                 "resource": {
@@ -265,10 +264,10 @@
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
             "apiVersion": "2020-04-01",
-            "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/other'))]",
+            "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/other'))]",
             "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
             ],
             "properties": {
                 "resource": {
@@ -311,10 +310,10 @@
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
             "apiVersion": "2020-04-01",
-            "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/streamactivities'))]",
+            "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/streamactivities'))]",
             "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
             ],
             "properties": {
                 "resource": {
@@ -326,8 +325,8 @@
                             { "path": "/Priority/?" },
                             { "path": "/EventSubscriptionId/?" },
                             { "path": "/Uac/?" },
-		                    { "path": "/Activity/Object/LanguageId/?" },
-		                    { "path": "/ActionDate/?" }
+                            { "path": "/Activity/Object/LanguageId/?" },
+                            { "path": "/ActionDate/?" }
                         ],
                         "excludedPaths": [
                             { "path": "/*" },
@@ -355,10 +354,10 @@
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
             "apiVersion": "2020-04-01",
-            "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/users'))]",
+            "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/users'))]",
             "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
             ],
             "properties": {
                 "resource": {
@@ -397,11 +396,11 @@
         {
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/storedProcedures",
             "apiVersion": "2020-04-01",
-            "name": "[concat(parameters('databaseAccountName'), concat(concat('/',parameters('databaseName')),'/other/bulkDeleteSproc'))]",
+            "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/other/bulkDeleteSproc'))]",
             "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', parameters('databaseAccountName'), parameters('databaseName'), 'other')]",
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseAccountName'), parameters('databaseName'))]",
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName'))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', parameters('cosmosDbAccountName'), variables('databaseName'), 'other')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
             ],
             "properties": {
                 "resource": {
@@ -411,11 +410,5 @@
                 "options": {}
             }
         }
-    ],
-    "outputs": {
-        "connectionString": {
-            "type": "string",
-            "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccountName')), '2020-04-01').primaryMasterKey]"
-        }
-    }
+    ]
 }
