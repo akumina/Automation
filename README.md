@@ -23,6 +23,8 @@ To fully configure the application, you need the Application Packages (Web App a
 
 You need to configure the Azure AD application, including scopes and permissions.
 
+Some functionality such as Activity Streams requires certificate-based authentication Azure AD; you may use common/cert.ps1 to generate a test certificate.
+
 To learn more about PeopleSync, please visit https://community.akumina.com/knowledge-base/peoplesync-v5/ 
 
 To learn more about Azure AD application, Scope and Permissions, please visit https://community.akumina.com/knowledge-base/graph-api-connection-for-azure-ad/
