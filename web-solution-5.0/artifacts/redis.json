@@ -23,7 +23,7 @@
         },
         "redisSkuFamily": {
             "type": "string",
-            "defaultValue": "S",
+            "defaultValue": "C",
             "metadata": {
                 "description": "Redis Family (C for Standard or P for premium)."
             }
