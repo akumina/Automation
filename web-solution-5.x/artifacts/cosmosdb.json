@@ -22,9 +22,9 @@
         }
     },
     "variables": {
-        "maxThroughput": "4000",
         "databaseName": "akcontainers",
-        "capabilities": "[if(equals(parameters('cosmosDbCapacityMode'), 'Serverless'), json('[{ \"name\":\"EnableServerless\"}]'), json('[]'))]"
+        "capabilities": "[if(equals(parameters('cosmosDbCapacityMode'), 'Serverless'), json('[{ \"name\":\"EnableServerless\"}]'), json('[]'))]",
+        "dbOptions": "[if(equals(parameters('cosmosDbCapacityMode'), 'Serverless'), json('[]'),json('{\"autoscaleSettings\": {\"maxThroughput\": 4000}'))]"
     },
     "resources": [
         {
@@ -63,7 +63,6 @@
             }
         },
         {
-            "condition": "[equals(parameters('cosmosDbCapacityMode'), 'Serverless')]",
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
             "name": "[concat(parameters('cosmosDbAccountName'), '/', variables('databaseName'))]",
             "apiVersion": "2021-10-15",
@@ -73,26 +72,8 @@
             "properties": {
                 "resource": {
                     "id": "[variables('databaseName')]"
-                }
-            }
-        },
-         {
-            "condition": "[equals(parameters('cosmosDbCapacityMode'), 'Throughput')]",
-            "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
-            "name": "[concat(parameters('cosmosDbAccountName'), '/', variables('databaseName'))]",
-            "apiVersion": "2021-10-15",
-            "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
-            ],
-            "properties": {
-                "options": {
-                    "autoscaleSettings": {
-                        "maxThroughput": "[variables('maxThroughput')]"
-                    }
                 },
-                "resource": {
-                    "id": "[variables('databaseName')]"
-                }
+                "options": "[variables('dbOptions')]"
             }
         },
         {
@@ -407,38 +388,38 @@
                         "indexingMode": "consistent",
                         "automatic": true,
                         "includedPaths": [
-                            {"path":"/AuthorizedActor/Id/?"},
-                            {"path":"/AuthorizedActor/Other/?"},
-                            {"path":"/IsHttpRequest/?"},
-                            {"path":"/StartRoleId/?"},
-                            {"path":"/RoleIds/[]/?"},
-                            {"path":"/Metadata/ProcessType/?"},
-                            {"path":"/Metadata/HasEverBeenActive/?"},
-                            {"path":"/Metadata/IsActive/?"},
-                            {"path":"/Metadata/Owners/[]/Id/?"},
-                            {"path":"/ProcessId/?"},
-                            {"path":"/CurrentSiteIdWebId/?"},
-                            {"path":"/Status/?"},
-                            {"path":"/CreatedBy/Id/?"},
-                            {"path":"/CreatedDate/?"},
-                            {"path":"/ClosedDate/?"},
-                            {"path":"/DueDate/?"},
-                            {"path":"/PropertyValues/*"},
-                            {"path":"/QueryProperties/*"},
-                            {"path":"/ChoiceProperties/[]/K/?"},
-                            {"path":"/ChoiceProperties/[]/V/?"},
-                            {"path":"/CreatedById/?"},
-                            {"path":"/InstanceOwners/[]/?"},
-                            {"path":"/TaskMetrics/[]/TaskId/?"},
-                            {"path":"/TaskMetrics/[]/AssigneeId/?"},
-                            {"path":"/TaskMetrics/[]/RoleId/?"},
-                            {"path":"/Tasks/[]/Assignee/Id/?"},
-                            {"path":"/Tasks/[]/RoleId/?"},
-                            {"path":"/Tasks/[]/Status/?"},
-                            {"path":"/Tasks/[]/StatusDate/?"},
-                            {"path":"/Tasks/[]/ActualDueDate/?"},
-                            {"path":"/Tasks/[]/IsAssignable/?"},
-                            {"path":"/Tasks/[]/IsOverdue/?"}
+                            { "path": "/AuthorizedActor/Id/?" },
+                            { "path": "/AuthorizedActor/Other/?" },
+                            { "path": "/IsHttpRequest/?" },
+                            { "path": "/StartRoleId/?" },
+                            { "path": "/RoleIds/[]/?" },
+                            { "path": "/Metadata/ProcessType/?" },
+                            { "path": "/Metadata/HasEverBeenActive/?" },
+                            { "path": "/Metadata/IsActive/?" },
+                            { "path": "/Metadata/Owners/[]/Id/?" },
+                            { "path": "/ProcessId/?" },
+                            { "path": "/CurrentSiteIdWebId/?" },
+                            { "path": "/Status/?" },
+                            { "path": "/CreatedBy/Id/?" },
+                            { "path": "/CreatedDate/?" },
+                            { "path": "/ClosedDate/?" },
+                            { "path": "/DueDate/?" },
+                            { "path": "/PropertyValues/*" },
+                            { "path": "/QueryProperties/*" },
+                            { "path": "/ChoiceProperties/[]/K/?" },
+                            { "path": "/ChoiceProperties/[]/V/?" },
+                            { "path": "/CreatedById/?" },
+                            { "path": "/InstanceOwners/[]/?" },
+                            { "path": "/TaskMetrics/[]/TaskId/?" },
+                            { "path": "/TaskMetrics/[]/AssigneeId/?" },
+                            { "path": "/TaskMetrics/[]/RoleId/?" },
+                            { "path": "/Tasks/[]/Assignee/Id/?" },
+                            { "path": "/Tasks/[]/RoleId/?" },
+                            { "path": "/Tasks/[]/Status/?" },
+                            { "path": "/Tasks/[]/StatusDate/?" },
+                            { "path": "/Tasks/[]/ActualDueDate/?" },
+                            { "path": "/Tasks/[]/IsAssignable/?" },
+                            { "path": "/Tasks/[]/IsOverdue/?" }
                         ],
                         "excludedPaths": [
                             {

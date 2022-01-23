@@ -6,31 +6,31 @@
             "value": "eastus2"
         },
         "webName": {
-            "value": "app-udai50test1"
+            "value": "app-aktest01"
         },
         "webSku": {
             "value": "P2V2"
         },
         "storageAccountName": {
-            "value": "studai50test1"
+            "value": "staktest01"
         },
         "storageAccountSku": {
             "value": "Standard_GRS"
         },
         "keyVaultName": {
-            "value": "kv-udai50test1"
+            "value": "kv-aktest01"
         },
         "keyVaultSku": {
             "value": "Standard"
         },
         "cognitiveSearchName": {
-            "value": "srch-udai50test1"
+            "value": "srch-aktest01"
         },
         "cognitiveSearchSku": {
             "value": "standard"
         },
         "redisCacheName": {
-            "value": "redis-udai50test1"
+            "value": "redis-aktest01"
         },
         "redisSkuName": {
             "value": "Standard"
@@ -42,13 +42,25 @@
             "value": "1"
         },
         "funcAppName": {
-            "value": "func-udai50test1"
+            "value": "func-aktest01"
         },
         "cosmosDBAccountName": {
-            "value": "cosmos-udai50test1"
+            "value": "cosmos-aktest01"
         },
-        "capacityMode":{
+        "cosmosDbCapacityMode":{
             "value":"Throughput"
+        },
+        "packageVersion": {
+            "value": ""
+        },
+        "workspacesLogName": {
+            "value": "log-aktest01"
+        },
+        "webAppPackageUrl": {
+            "value": ""
+        },
+        "funcAppPackageUrl":{
+            "value":""
         }
     }
 }

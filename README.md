@@ -7,7 +7,7 @@
 ## Marketplace Offerings
 We recommend you install our applications from Azure Marketplace
 
-* v5.x: https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web?tab=Overview
+* Latest (5.x): https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web?tab=Overview
 
 * v4.x: https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web4x?tab=Overview
 
@@ -19,7 +19,16 @@ ARM Templates can be executed using
 * Service Catalog Managed Application
 * Azure Blueprints (some modification required)
 
-To fully configure the application, you need the Application Packages (Web App and Function App Package); please contact your account administrator to request the downloadable URL.
+
+To fully configure the application, you need the Application Packages (Web App and Function App Package); please contact your account administrator to request the package URL.
+
+
+
+For latest version, Cosmos DB Scale can be set in Throughput or Serverless, use the parameter -cosmosDbCapacityMode "[Throughput or Serverless]"  and set packageVersion as empty -packageVersion ""
+
+For 5.0, pass the package version as 5.0  using parameter file or using parameter option as -packageVersion "5.0"
+
+
 
 You need to configure the Azure AD application, including scopes and permissions.
 

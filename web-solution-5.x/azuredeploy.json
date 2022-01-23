@@ -120,6 +120,12 @@
                 "description": "Web app deployment package URL."
             }
         },
+        "packageVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app package version."
+            }
+        },
         "funcAppPackageUrl": {
             "type": "string",
             "metadata": {
@@ -129,7 +135,10 @@
     },
     "variables": {
         "webAppInsightName": "[concat('appi-', parameters('webName'))]",
-        "funcAppInsightName": "[concat('appi-', parameters('funcAppName'))]"
+        "funcAppInsightName": "[concat('appi-', parameters('funcAppName'))]",
+        "cosmosArtifact": "[if(equals(parameters('packageVersion'), ''), 'artifacts/cosmosdb.json', concat('artifacts/cosmosdb',parameters('packageVersion'),'.json'))]",
+        "tenantDirectory": "[if(equals(parameters('packageVersion'), ''), 'tenants', '')]"
+
     },
     "resources": [
         {
@@ -219,7 +228,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/cosmosdb.json')]"
+                    "uri": "[uri(deployment().properties.templateLink.uri, variables('cosmosArtifact'))]"
                 },
                 "parameters": {
                     "location": { "value": "[parameters('location')]" },
@@ -323,7 +332,7 @@
                             "SecondaryRedisConnection": "",
                             "TokenStoreEntityName": "akcloud",
                             "BlobStoreContainerName": "akcloud",
-                            "TenantsDirectoryName": "tenants"
+                            "TenantsDirectoryName": "[variables('tenantDirectory')]"
                         }
                     }
                 }
