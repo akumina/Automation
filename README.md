@@ -24,9 +24,14 @@ To fully configure the application, you need the Application Packages (Web App a
 
 
 ```
-For latest version, Cosmos DB Scale can be set in Throughput or Serverless, use the parameter -cosmosDbCapacityMode "[Throughput or Serverless]"
+For Cosmos DB Scale, latest version (5.5) suppors Cosmos DB Scale as Throughput (default) or Serverless, 
+to set use parameter file or using parameter option as -cosmosDbCapacityMode "[Throughput or Serverless]"
+```
 
-For 5.0, pass the package version as 5.0  using parameter file or using parameter option as -packageVersion "5.0", please note packageVersion is not supported for latest version hence set packageVersion as empty -packageVersion ""
+```
+Package Version:
+For latest version (5.5): set packageVersion as empty (default) using parameter file or using parameter option as -packageVersion "" 
+For 5.0: set the package version as 5.0  using parameter file or using parameter option as -packageVersion "5.0"
 ```
 
 
