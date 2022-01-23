@@ -23,11 +23,11 @@ ARM Templates can be executed using
 To fully configure the application, you need the Application Packages (Web App and Function App Package); please contact your account administrator to request the package URL.
 
 
+```
+For latest version, Cosmos DB Scale can be set in Throughput or Serverless, use the parameter -cosmosDbCapacityMode "[Throughput or Serverless]"
 
-For latest version, Cosmos DB Scale can be set in Throughput or Serverless, use the parameter -cosmosDbCapacityMode "[Throughput or Serverless]"  and set packageVersion as empty -packageVersion ""
-
-For 5.0, pass the package version as 5.0  using parameter file or using parameter option as -packageVersion "5.0"
-
+For 5.0, pass the package version as 5.0  using parameter file or using parameter option as -packageVersion "5.0", please note packageVersion is not supported for latest version hence set packageVersion as empty -packageVersion ""
+```
 
 
 You need to configure the Azure AD application, including scopes and permissions.
