@@ -83,7 +83,7 @@
   "resources": [
     {
       "type": "Microsoft.KeyVault/vaults",
-      "apiVersion": "2019-09-01",
+      "apiVersion": "2021-06-01-preview",
       "name": "[parameters('keyVaultName')]",
       "location": "[parameters('location')]",
       "tags": {
@@ -93,11 +93,14 @@
         "enabledForDeployment": false,
         "enabledForTemplateDeployment": false,
         "enabledForVolumeEncryption": false,
+        "enableSoftDelete": true,
+        "softDeleteRetentionInDays": 90,
+        "enablePurgeProtection": true,
         "tenantId": "[subscription().tenantId]",
         "accessPolicies": [
           {
             "tenantId": "[subscription().tenantId]",
-            "objectId": "[reference(resourceId('Microsoft.Web/sites', parameters('webName')), '2020-06-01', 'full').identity.principalId]",
+            "objectId": "[reference(resourceId('Microsoft.Web/sites', parameters('webName')), '2021-02-01', 'full').identity.principalId]",
             "permissions": {
               "keys": "[parameters('keysPermissions')]",
               "secrets": "[parameters('secretsPermissions')]"
@@ -113,7 +116,7 @@
         {
           "type": "secrets",
           "name": "[variables('secretName')]",
-          "apiVersion": "2019-09-01",
+          "apiVersion": "2021-06-01-preview",
           "tags": {
             "displayName": "secret"
           },

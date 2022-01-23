@@ -78,7 +78,7 @@
         },
         "redisSkuFamily": {
             "type": "string",
-            "defaultValue": "S",
+            "defaultValue": "C",
             "metadata": {
                 "description": "Azure Redis family (C-Standard or P-Premium)."
             }
@@ -100,6 +100,12 @@
             "type": "string",
             "metadata": {
                 "description": "CosmosDB (SQL API) account name."
+            }
+        },
+        "cosmosDbCapacityMode": {
+            "type": "string",
+            "metadata": {
+                "description": "CosmosDB (SQL API) Capacity mode (Serverless or Throughput)."
             }
         },
         "workspacesLogName": {
@@ -217,7 +223,8 @@
                 },
                 "parameters": {
                     "location": { "value": "[parameters('location')]" },
-                    "cosmosDBAccountName": { "value": "[parameters('cosmosDBAccountName')]" }
+                    "cosmosDBAccountName": { "value": "[parameters('cosmosDBAccountName')]" },
+                    "cosmosDbCapacityMode": { "value": "[parameters('cosmosDbCapacityMode')]" }
                 }
             }
         },
@@ -298,6 +305,8 @@
                     "secretValueObject": {
                         "value": {
                             "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=@StorageKey;EndpointSuffix=core.windows.net')]",
+                            "SecondaryRemoteStorageConnection": "",
+                            "EnableWriteToSecondaryStorage": "false",
                             "ExternalConnection": {
                                 "EndpointUrl": "[concat('AccountEndpoint=https://',parameters('cosmosDbAccountName'),'.documents.azure.com:443/;AccountKey=@DbKey;')]",
                                 "Database": "akcontainers"
@@ -311,9 +320,10 @@
                             "FuncAppInsightApiKey": "",
                             "StoreInSingleContainer": "true",
                             "PrimaryRedisConnection": "[concat(parameters('redisCacheName'),'.redis.cache.windows.net:6380', ',password=@RedisKey,ssl=true,abortConnect=false')]",
-                            "SecondaryRedisConnectionString": "",
+                            "SecondaryRedisConnection": "",
                             "TokenStoreEntityName": "akcloud",
-                            "BlobStoreContainerName": "akcloud"
+                            "BlobStoreContainerName": "akcloud",
+                            "TenantsDirectoryName": "tenants"
                         }
                     }
                 }

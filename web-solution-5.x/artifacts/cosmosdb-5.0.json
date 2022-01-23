@@ -103,6 +103,7 @@
                         ],
                         "kind": "Hash"
                     },
+                    "defaultTtl": -1,
                     "uniqueKeyPolicy": {
                         "uniqueKeys": []
                     },
@@ -197,6 +198,7 @@
                         ],
                         "kind": "Hash"
                     },
+                    "defaultTtl": -1,
                     "uniqueKeyPolicy": {
                         "uniqueKeys": [
                             {
@@ -382,6 +384,7 @@
                         ],
                         "kind": "Hash"
                     },
+                    "defaultTtl": -1,
                     "uniqueKeyPolicy": {
                         "uniqueKeys": []
                     },

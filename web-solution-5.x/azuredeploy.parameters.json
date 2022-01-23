@@ -46,6 +46,9 @@
         },
         "cosmosDBAccountName": {
             "value": "cosmos-udai50test1"
+        },
+        "capacityMode":{
+            "value":"Throughput"
         }
     }
 }

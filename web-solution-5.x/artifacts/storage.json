@@ -24,7 +24,7 @@
     "resources": [
         {
             "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2020-08-01-preview",
+            "apiVersion": "2021-06-01",
             "name": "[parameters('storageAccountName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
@@ -38,7 +38,7 @@
                     "directoryServiceOptions": "None"
                 },
                 "minimumTlsVersion": "TLS1_2",
-                "allowBlobPublicAccess": true,
+                "allowBlobPublicAccess": false,
                 "networkAcls": {
                     "bypass": "AzureServices",
                     "virtualNetworkRules": [],
@@ -64,7 +64,7 @@
         },
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices",
-            "apiVersion": "2020-08-01-preview",
+            "apiVersion": "2021-06-01",
             "name": "[concat(parameters('storageAccountName'), '/default')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
@@ -72,7 +72,7 @@
         },
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
-            "apiVersion": "2020-08-01-preview",
+            "apiVersion": "2021-06-01",
             "name": "[concat(parameters('storageAccountName'), '/default/contentdistribution')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('storageAccountName'), 'default')]",
@@ -81,7 +81,7 @@
         },
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
-            "apiVersion": "2020-08-01-preview",
+            "apiVersion": "2021-06-01",
             "name": "[concat(parameters('storageAccountName'), '/default/activity-stream')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('storageAccountName'), 'default')]",
@@ -90,7 +90,7 @@
         },
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
-            "apiVersion": "2020-08-01-preview",
+            "apiVersion": "2021-06-01",
             "name": "[concat(parameters('storageAccountName'), '/default/calendar-events')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('storageAccountName'), 'default')]",
@@ -99,7 +99,7 @@
         },
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
-            "apiVersion": "2020-08-01-preview",
+            "apiVersion": "2021-06-01",
             "name": "[concat(parameters('storageAccountName'), '/default/sharepoint-events')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('storageAccountName'), 'default')]",
@@ -108,7 +108,7 @@
         },
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
-            "apiVersion": "2020-08-01-preview",
+            "apiVersion": "2021-06-01",
             "name": "[concat(parameters('storageAccountName'), '/default/notification-digest')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('storageAccountName'), 'default')]",
@@ -117,7 +117,7 @@
         },
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
-            "apiVersion": "2020-08-01-preview",
+            "apiVersion": "2021-06-01",
             "name": "[concat(parameters('storageAccountName'), '/default/user-changes')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('storageAccountName'), 'default')]",
@@ -126,7 +126,7 @@
         },
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
-            "apiVersion": "2020-08-01-preview",
+            "apiVersion": "2021-06-01",
             "name": "[concat(parameters('storageAccountName'), '/default/tasks')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('storageAccountName'), 'default')]",
@@ -135,7 +135,7 @@
         },
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
-            "apiVersion": "2020-08-01-preview",
+            "apiVersion": "2021-06-01",
             "name": "[concat(parameters('storageAccountName'), '/default/form-events')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('storageAccountName'), 'default')]",

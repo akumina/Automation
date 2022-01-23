@@ -27,7 +27,7 @@
     },
     "resources": [
         {
-            "apiVersion": "2020-02-02-preview",
+            "apiVersion": "2020-02-02",
             "name": "[parameters('webAppInsightName')]",
             "type": "microsoft.insights/components",
             "location": "[parameters('location')]",
@@ -37,7 +37,7 @@
             }
         },
         {
-            "apiVersion": "2020-02-02-preview",
+            "apiVersion": "2020-02-02",
             "name": "[parameters('funcAppInsightName')]",
             "type": "microsoft.insights/components",
             "location": "[parameters('location')]",
@@ -50,27 +50,27 @@
     "outputs": {
         "webAppInstrumentationKey": {
             "type": "string",
-            "value": "[reference(variables('webAppInsight'), '2020-02-02-preview').InstrumentationKey]"
+            "value": "[reference(variables('webAppInsight'), '2020-02-02').InstrumentationKey]"
         },
         "webAppInsightAppId": {
             "type": "string",
-            "value": "[reference(variables('webAppInsight'), '2020-02-02-preview').AppId]"
+            "value": "[reference(variables('webAppInsight'), '2020-02-02').AppId]"
         },
         "webAppInsightConnectionString": {
             "type": "string",
-            "value": "[reference(variables('webAppInsight'), '2020-02-02-preview').ConnectionString]"
+            "value": "[reference(variables('webAppInsight'), '2020-02-02').ConnectionString]"
         },
         "funcAppInstrumentationKey": {
             "type": "string",
-            "value": "[reference(variables('funcAppInsight'), '2020-02-02-preview').InstrumentationKey]"
+            "value": "[reference(variables('funcAppInsight'), '2020-02-02').InstrumentationKey]"
         },
         "funcAppInsightAppId": {
             "type": "string",
-            "value": "[reference(variables('funcAppInsight'), '2020-02-02-preview').AppId]"
+            "value": "[reference(variables('funcAppInsight'), '2020-02-02').AppId]"
         },
         "funcAppInsightConnectionString": {
             "type": "string",
-            "value": "[reference(variables('funcAppInsight'), '2020-02-02-preview').ConnectionString]"
+            "value": "[reference(variables('funcAppInsight'), '2020-02-02').ConnectionString]"
         }
     }
 }

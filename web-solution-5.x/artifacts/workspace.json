@@ -18,7 +18,7 @@
     "resources": [
         {
             "type": "microsoft.operationalinsights/workspaces",
-            "apiVersion": "2020-08-01",
+            "apiVersion": "2021-06-01",
             "name": "[parameters('workspacesLogName')]",
             "location": "[parameters('location')]",
             "properties": {
