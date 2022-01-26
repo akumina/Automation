@@ -19,6 +19,12 @@
             "metadata": {
                 "description": "Capacity mode"
             }
+        },
+        "packageVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "Package version"
+            }
         }
     },
     "variables": {
@@ -374,6 +380,7 @@
             }
         },
         {
+            "condition": "[equals(parameters('packageVersion'),'')]",
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
             "apiVersion": "2021-10-15",
             "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/teamprocess'))]",
