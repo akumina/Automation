@@ -243,9 +243,9 @@
                     "hostNamesDisabled": false,
                     "containerSize": 1536,
                     "dailyMemoryTimeQuota": 0,
-                    "httpsOnly": false,
                     "redundancyMode": "None"
-                }
+                },
+                "httpsOnly": true
             },
             "resources": [
                 {
@@ -269,7 +269,8 @@
             "name": "[concat(parameters('funcAppName'), '/web')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('funcAppName'))]"
+                "[resourceId('Microsoft.Web/sites', parameters('funcAppName'))]",
+                "[concat('Microsoft.Web/Sites/',parameters('funcAppName'),'/Extensions/MSDeploy')]"
             ],
             "properties": {
                 "numberOfWorkers": 1,
@@ -329,7 +330,7 @@
                 "scmIpSecurityRestrictionsUseMain": false,
                 "http20Enabled": true,
                 "minTlsVersion": "1.2",
-                "ftpsState": "AllAllowed"
+                "ftpsState": "Disabled"
             }
         },
         {
@@ -338,7 +339,8 @@
             "name": "[concat(parameters('funcAppName'), '/', parameters('funcAppName'), '.azurewebsites.net')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('funcAppName'))]"
+                "[resourceId('Microsoft.Web/sites', parameters('funcAppName'))]",
+                "[concat('Microsoft.Web/Sites/',parameters('funcAppName'),'/Extensions/MSDeploy')]"
             ],
             "properties": {
                 "siteName": "[parameters('funcAppName')]",

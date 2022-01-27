@@ -53,6 +53,7 @@
                     "capacity": "[parameters('redisSkuCapacity')]"
                 },
                 "enableNonSslPort": false,
+                "minimumTlsVersion": "1.2",
                 "redisConfiguration": {
                     "maxclients": "1000",
                     "maxmemory-reserved": "50",

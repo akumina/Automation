@@ -114,20 +114,23 @@
                 "description": "Log analytics workspace name."
             }
         },
-        "webAppPackageUrl": {
-            "type": "string",
-            "metadata": {
-                "description": "Web app deployment package URL."
-            }
-        },
         "packageVersion": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "Web app package version."
             }
         },
+        "webAppPackageUrl": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Web app deployment package URL."
+            }
+        },
         "funcAppPackageUrl": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "Function app deployment package URL."
             }
