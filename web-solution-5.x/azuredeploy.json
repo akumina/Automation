@@ -140,7 +140,6 @@
         "webAppInsightName": "[concat('appi-', parameters('webName'))]",
         "funcAppInsightName": "[concat('appi-', parameters('funcAppName'))]",
         "tenantDirectory": "[if(equals(parameters('packageVersion'), ''), 'tenants', '')]"
-
     },
     "resources": [
         {
@@ -153,6 +152,21 @@
                     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
                     "contentVersion": "1.0.0.0",
                     "resources": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "workspace",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/workspace.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "workspacesLogName": { "value": "[parameters('workspacesLogName')]" }
                 }
             }
         },
@@ -181,10 +195,14 @@
                 "templateLink": {
                     "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/appinsight.json')]"
                 },
+                "dependsOn": [
+                    "[resourceId('microsoft.operationalinsights/workspaces',parameters('workspacesLogName'))]"
+                ],
                 "parameters": {
                     "location": { "value": "[parameters('location')]" },
                     "webAppInsightName": { "value": "[variables('webAppInsightName')]" },
-                    "funcAppInsightName": { "value": "[variables('funcAppInsightName')]" }
+                    "funcAppInsightName": { "value": "[variables('funcAppInsightName')]" },
+                    "workspaceName": { "value": "[parameters('workspacesLogName')]" }
                 }
             }
         },
@@ -361,25 +379,6 @@
                     "keyVaultSecretUri": { "value": "[reference('keyvault').outputs.keyVaultSecretUri.value]" },
                     "webAppInstrumentationKey": { "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]" },
                     "webAppInsightConnectionString": { "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]" }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2020-06-01",
-            "name": "workspace",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'keyvault')]",
-                "[resourceId('Microsoft.Resources/deployments', 'search')]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/workspace.json')]"
-                },
-                "parameters": {
-                    "location": { "value": "[parameters('location')]" },
-                    "workspacesLogName": { "value": "[parameters('workspacesLogName')]" }
                 }
             }
         }
