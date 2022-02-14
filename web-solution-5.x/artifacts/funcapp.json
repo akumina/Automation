@@ -49,7 +49,7 @@
         "serverfarmsPlan": "[concat('plan-',parameters('funcAppName'))]",
         "hostedBlobContainer": "akcloud",
         "cosmosDbConnectionString": "[concat('AccountEndpoint=https://',parameters('cosmosDbAccountName'),'.documents.azure.com:443/;AccountKey={0}')]",
-        "storageConnectionString": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey={0};EndpointSuffix=core.windows.net')]"
+        "storageConnectionString": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey={0}')]"
     },
     "resources": [
         {
@@ -255,97 +255,13 @@
                     "location": "[parameters('location')]",
                     "apiVersion": "2020-06-01",
                     "dependsOn": [
-                        "[concat('Microsoft.Web/sites/', parameters('funcAppName'))]"
+                        "[resourceId('Microsoft.Web/sites', parameters('funcAppName'))]"
                     ],
                     "properties": {
                         "packageUri": "[parameters('funcAppPackageUrl')]"
                     }
                 }
             ]
-        },
-        {
-            "type": "Microsoft.Web/sites/config",
-            "apiVersion": "2020-06-01",
-            "name": "[concat(parameters('funcAppName'), '/web')]",
-            "location": "[parameters('location')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('funcAppName'))]",
-                "[concat('Microsoft.Web/Sites/',parameters('funcAppName'),'/Extensions/MSDeploy')]"
-            ],
-            "properties": {
-                "numberOfWorkers": 1,
-                "defaultDocuments": [
-                    "Default.htm",
-                    "Default.html"
-                ],
-                "netFrameworkVersion": "v4.0",
-                "phpVersion": "5.6",
-                "requestTracingEnabled": false,
-                "remoteDebuggingEnabled": false,
-                "remoteDebuggingVersion": "VS2019",
-                "httpLoggingEnabled": false,
-                "logsDirectorySizeLimit": 35,
-                "detailedErrorLoggingEnabled": false,
-                "scmType": "None",
-                "use32BitWorkerProcess": true,
-                "webSocketsEnabled": false,
-                "alwaysOn": false,
-                "managedPipelineMode": "Integrated",
-                "virtualApplications": [
-                    {
-                        "virtualPath": "/",
-                        "physicalPath": "site\\wwwroot",
-                        "preloadEnabled": false
-                    }
-                ],
-                "loadBalancing": "LeastRequests",
-                "autoHealEnabled": false,
-                "cors": {
-                    "allowedOrigins": [
-                        "https://functions.azure.com",
-                        "https://functions-staging.azure.com",
-                        "https://functions-next.azure.com"
-                    ],
-                    "supportCredentials": false
-                },
-                "localMySqlEnabled": false,
-                "ipSecurityRestrictions": [
-                    {
-                        "ipAddress": "Any",
-                        "action": "Allow",
-                        "priority": 1,
-                        "name": "Allow all",
-                        "description": "Allow all access"
-                    }
-                ],
-                "scmIpSecurityRestrictions": [
-                    {
-                        "ipAddress": "Any",
-                        "action": "Allow",
-                        "priority": 1,
-                        "name": "Allow all",
-                        "description": "Allow all access"
-                    }
-                ],
-                "scmIpSecurityRestrictionsUseMain": false,
-                "http20Enabled": true,
-                "minTlsVersion": "1.2",
-                "ftpsState": "Disabled"
-            }
-        },
-        {
-            "type": "Microsoft.Web/sites/hostNameBindings",
-            "apiVersion": "2020-06-01",
-            "name": "[concat(parameters('funcAppName'), '/', parameters('funcAppName'), '.azurewebsites.net')]",
-            "location": "[parameters('location')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('funcAppName'))]",
-                "[concat('Microsoft.Web/Sites/',parameters('funcAppName'),'/Extensions/MSDeploy')]"
-            ],
-            "properties": {
-                "siteName": "[parameters('funcAppName')]",
-                "hostNameType": "Verified"
-            }
         }
     ]
 }

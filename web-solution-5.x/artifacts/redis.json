@@ -45,7 +45,6 @@
             "tags": {
                 "displayName": "RedisCache"
             },
-            "scale": null,
             "properties": {
                 "sku": {
                     "name": "[parameters('redisSkuName')]",

@@ -113,7 +113,7 @@
                     "location": "[parameters('location')]",
                     "apiVersion": "2021-02-01",
                     "dependsOn": [
-                        "[concat('Microsoft.Web/sites/', parameters('webName'))]"
+                        "[resourceId('Microsoft.Web/sites', parameters('webName'))]"
                     ],
                     "properties": {
                         "packageUri": "[parameters('webAppPackageUrl')]"

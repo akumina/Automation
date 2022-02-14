@@ -41,7 +41,6 @@
             "location": "[parameters('location')]",
             "tags": {
                 "defaultExperience": "Core (SQL)",
-                "hidden-cosmos-mmspecial": "",
                 "CosmosAccountType": "Production"
             },
             "properties": {
@@ -49,7 +48,6 @@
                 "enableAutomaticFailover": false,
                 "enableMultipleWriteLocations": false,
                 "isVirtualNetworkFilterEnabled": false,
-                "virtualNetworkRules": [],
                 "disableKeyBasedMetadataWriteAccess": false,
                 "databaseAccountOfferType": "Standard",
                 "consistencyPolicy": {
@@ -113,15 +111,11 @@
                         ],
                         "kind": "Hash"
                     },
-                    "uniqueKeyPolicy": {
-                        "uniqueKeys": []
-                    },
                     "conflictResolutionPolicy": {
                         "mode": "LastWriterWins",
                         "conflictResolutionPath": "/_ts"
                     }
-                },
-                "options": {}
+                }
             }
         },
         {
@@ -165,15 +159,11 @@
                         "kind": "Hash"
                     },
                     "defaultTtl": -1,
-                    "uniqueKeyPolicy": {
-                        "uniqueKeys": []
-                    },
                     "conflictResolutionPolicy": {
                         "mode": "LastWriterWins",
                         "conflictResolutionPath": "/_ts"
                     }
-                },
-                "options": {}
+                }
             }
         },
         {
@@ -226,8 +216,7 @@
                         "mode": "LastWriterWins",
                         "conflictResolutionPath": "/_ts"
                     }
-                },
-                "options": {}
+                }
             }
         },
         {
@@ -261,15 +250,11 @@
                         ],
                         "kind": "Hash"
                     },
-                    "uniqueKeyPolicy": {
-                        "uniqueKeys": []
-                    },
                     "conflictResolutionPolicy": {
                         "mode": "LastWriterWins",
                         "conflictResolutionPath": "/_ts"
                     }
-                },
-                "options": {}
+                }
             }
         },
         {
@@ -307,15 +292,11 @@
                         "kind": "Hash"
                     },
                     "defaultTtl": -1,
-                    "uniqueKeyPolicy": {
-                        "uniqueKeys": []
-                    },
                     "conflictResolutionPolicy": {
                         "mode": "LastWriterWins",
                         "conflictResolutionPath": "/_ts"
                     }
-                },
-                "options": {}
+                }
             }
         },
         {
@@ -368,19 +349,15 @@
                         "kind": "Hash"
                     },
                     "defaultTtl": -1,
-                    "uniqueKeyPolicy": {
-                        "uniqueKeys": []
-                    },
                     "conflictResolutionPolicy": {
                         "mode": "LastWriterWins",
                         "conflictResolutionPath": "/_ts"
                     }
-                },
-                "options": {}
+                }
             }
         },
         {
-            "condition": "[equals(parameters('packageVersion'),'')]",
+            "condition": "[equals(parameters('packageVersion'),'latest')]",
             "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
             "apiVersion": "2021-10-15",
             "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/teamprocess'))]",
@@ -444,15 +421,11 @@
                         "kind": "Hash"
                     },
                     "defaultTtl": -1,
-                    "uniqueKeyPolicy": {
-                        "uniqueKeys": []
-                    },
                     "conflictResolutionPolicy": {
                         "mode": "LastWriterWins",
                         "conflictResolutionPath": "/_ts"
                     }
-                },
-                "options": {}
+                }
             }
         },
         {
@@ -487,15 +460,11 @@
                         "kind": "Hash"
                     },
                     "defaultTtl": -1,
-                    "uniqueKeyPolicy": {
-                        "uniqueKeys": []
-                    },
                     "conflictResolutionPolicy": {
                         "mode": "LastWriterWins",
                         "conflictResolutionPath": "/_ts"
                     }
-                },
-                "options": {}
+                }
             }
         },
         {
@@ -511,8 +480,7 @@
                 "resource": {
                     "id": "bulkDeleteSproc",
                     "body": "/**\n * From https://github.com/Azure/azure-cosmosdb-js-server/blob/master/samples/stored-procedures/bulkDelete.js\n * A Cosmos DB stored procedure that bulk deletes documents for a given query.<br/>\n * Note: You may need to execute this sproc multiple times (depending whether the sproc is able to delete every document within the execution timeout limit).\n *\n * @function\n * @param {string} query - A query that provides the documents to be deleted (e.g. \"SELECT c._self FROM c WHERE c.founded_year = 2008\"). Note: For best performance, reduce the # of properties returned per document in the query to only what's required (e.g. prefer SELECT c._self over SELECT * )\n * @returns {Object.<number, boolean>} Returns an object with the two properties:<br/>\n *   deleted - contains a count of documents deleted<br/>\n *   continuation - a boolean whether you should execute the sproc again (true if there are more documents to delete; false otherwise).\n */\nfunction bulkDeleteSproc(query) {\n    var collection = getContext().getCollection();\n    var collectionLink = collection.getSelfLink();\n    var response = getContext().getResponse();\n    var responseBody = {\n        deleted: 0,\n        continuation: true\n    };\n\n    // Validate input.\n    if (!query) throw new Error(\"The query is undefined or null.\");\n\n    tryQueryAndDelete();\n\n    // Recursively runs the query w/ support for continuation tokens.\n    // Calls tryDelete(documents) as soon as the query returns documents.\n    function tryQueryAndDelete(continuation) {\n        var requestOptions = {continuation: continuation};\n\n        var isAccepted = collection.queryDocuments(collectionLink, query, requestOptions, function (err, retrievedDocs, responseOptions) {\n            if (err) throw err;\n\n            if (retrievedDocs.length > 0) {\n                // Begin deleting documents as soon as documents are returned form the query results.\n                // tryDelete() resumes querying after deleting; no need to page through continuation tokens.\n                //  - this is to prioritize writes over reads given timeout constraints.\n                tryDelete(retrievedDocs);\n            } else if (responseOptions.continuation) {\n                // Else if the query came back empty, but with a continuation token; repeat the query w/ the token.\n                tryQueryAndDelete(responseOptions.continuation);\n            } else {\n                // Else if there are no more documents and no continuation token - we are finished deleting documents.\n                responseBody.continuation = false;\n                response.setBody(responseBody);\n            }\n        });\n\n        // If we hit execution bounds - return continuation: true.\n        if (!isAccepted) {\n            response.setBody(responseBody);\n        }\n    }\n\n    // Recursively deletes documents passed in as an array argument.\n    // Attempts to query for more on empty array.\n    function tryDelete(documents) {\n        if (documents.length > 0) {\n            // Delete the first document in the array.\n            var isAccepted = collection.deleteDocument(documents[0]._self, {}, function (err, responseOptions) {\n                if (err) throw err;\n\n                responseBody.deleted++;\n                documents.shift();\n                // Delete the next document in the array.\n                tryDelete(documents);\n            });\n\n            // If we hit execution bounds - return continuation: true.\n            if (!isAccepted) {\n                response.setBody(responseBody);\n            }\n        } else {\n            // If the document array is empty, query for more documents.\n            tryQueryAndDelete();\n        }\n    }\n}\n"
-                },
-                "options": {}
+                }
             }
         }
     ]

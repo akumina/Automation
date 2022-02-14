@@ -116,7 +116,7 @@
         },
         "packageVersion": {
             "type": "string",
-            "defaultValue": "",
+            "defaultValue": "latest",
             "metadata": {
                 "description": "Web app package version."
             }
@@ -139,7 +139,7 @@
     "variables": {
         "webAppInsightName": "[concat('appi-', parameters('webName'))]",
         "funcAppInsightName": "[concat('appi-', parameters('funcAppName'))]",
-        "tenantDirectory": "[if(equals(parameters('packageVersion'), ''), 'tenants', '')]"
+        "tenantDirectory": "[if(equals(parameters('packageVersion'), 'latest'), 'tenants', '')]"
     },
     "resources": [
         {
@@ -179,30 +179,13 @@
                 "templateLink": {
                     "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/storage.json')]"
                 },
+                "dependsOn": [
+                    "[resourceId('Microsoft.Resources/deployments', 'workspace')]"
+                ],
                 "parameters": {
                     "location": { "value": "[parameters('location')]" },
                     "storageAccountName": { "value": "[parameters('storageAccountName')]" },
                     "storageAccountSku": { "value": "[parameters('storageAccountSku')]" }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2020-06-01",
-            "name": "appinsight",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/appinsight.json')]"
-                },
-                "dependsOn": [
-                    "[resourceId('microsoft.operationalinsights/workspaces',parameters('workspacesLogName'))]"
-                ],
-                "parameters": {
-                    "location": { "value": "[parameters('location')]" },
-                    "webAppInsightName": { "value": "[variables('webAppInsightName')]" },
-                    "funcAppInsightName": { "value": "[variables('funcAppInsightName')]" },
-                    "workspaceName": { "value": "[parameters('workspacesLogName')]" }
                 }
             }
         },
@@ -216,10 +199,36 @@
                     "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/search.json')]",
                     "contentVersion": "1.0.0.0"
                 },
+                "dependsOn": [
+                    "[resourceId('Microsoft.Resources/deployments', 'workspace')]",
+                    "[resourceId('Microsoft.Resources/deployments', 'storage')]"
+                ],
                 "parameters": {
                     "location": { "value": "[parameters('location')]" },
                     "cognitiveSearchName": { "value": "[parameters('cognitiveSearchName')]" },
                     "cognitiveSearchSku": { "value": "[parameters('cognitiveSearchSku')]" }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "appinsight",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/appinsight.json')]"
+                },
+                "dependsOn": [
+                    "[resourceId('Microsoft.Resources/deployments', 'workspace')]",
+                    "[resourceId('Microsoft.Resources/deployments', 'storage')]",
+                    "[resourceId('Microsoft.Resources/deployments', 'search')]"
+                ],
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "webAppInsightName": { "value": "[variables('webAppInsightName')]" },
+                    "funcAppInsightName": { "value": "[variables('funcAppInsightName')]" },
+                    "workspaceName": { "value": "[parameters('workspacesLogName')]" }
                 }
             }
         },
@@ -261,6 +270,29 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
+            "name": "webapp",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'storage')]",
+                "[resourceId('Microsoft.Resources/deployments', 'appinsight')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/webapp.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "webName": { "value": "[parameters('webName')]" },
+                    "webSku": { "value": "[parameters('webSku')]" },
+                    "webAppPackageUrl": { "value": "[parameters('webAppPackageUrl')]" },
+                    "webAppInstrumentationKey": { "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]" },
+                    "webAppInsightConnectionString": { "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]" }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
             "name": "funcapp",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'storage')]",
@@ -286,29 +318,6 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
-            "name": "webapp",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'storage')]",
-                "[resourceId('Microsoft.Resources/deployments', 'appinsight')]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/webapp.json')]"
-                },
-                "parameters": {
-                    "location": { "value": "[parameters('location')]" },
-                    "webName": { "value": "[parameters('webName')]" },
-                    "webSku": { "value": "[parameters('webSku')]" },
-                    "webAppPackageUrl": { "value": "[parameters('webAppPackageUrl')]" },
-                    "webAppInstrumentationKey": { "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]" },
-                    "webAppInsightConnectionString": { "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]" }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2020-06-01",
             "name": "keyvault",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'storage')]",
@@ -316,6 +325,7 @@
                 "[resourceId('Microsoft.Resources/deployments', 'cosmosdb')]",
                 "[resourceId('Microsoft.Resources/deployments', 'redis')]",
                 "[resourceId('Microsoft.Resources/deployments', 'webapp')]",
+                "[resourceId('Microsoft.Resources/deployments', 'funcapp')]",
                 "[resourceId('Microsoft.Resources/deployments', 'appinsight')]"
             ],
             "properties": {
@@ -334,7 +344,7 @@
                     "webName": { "value": "[parameters('webName')]" },
                     "secretValueObject": {
                         "value": {
-                            "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=@StorageKey;EndpointSuffix=core.windows.net')]",
+                            "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=@StorageKey')]",
                             "SecondaryRemoteStorageConnection": "",
                             "EnableWriteToSecondaryStorage": "false",
                             "ExternalConnection": {
@@ -379,6 +389,26 @@
                     "keyVaultSecretUri": { "value": "[reference('keyvault').outputs.keyVaultSecretUri.value]" },
                     "webAppInstrumentationKey": { "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]" },
                     "webAppInsightConnectionString": { "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]" }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "name": "updatefunc",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'keyvault')]",
+                "[resourceId('Microsoft.Resources/deployments', 'funcapp')]",
+                "[resourceId('Microsoft.Resources/deployments', 'appinsight')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/updatefunc.json')]"
+                },
+                "parameters": {
+                    "location": { "value": "[parameters('location')]" },
+                    "funcAppName": { "value": "[parameters('funcAppName')]" }
                 }
             }
         }

@@ -27,8 +27,6 @@
             "apiVersion": "2021-06-01",
             "name": "[parameters('storageAccountName')]",
             "location": "[parameters('location')]",
-            "dependsOn": [
-            ],
             "sku": {
                 "name": "[parameters('storageAccountSku')]"
             },
@@ -41,8 +39,6 @@
                 "allowBlobPublicAccess": false,
                 "networkAcls": {
                     "bypass": "AzureServices",
-                    "virtualNetworkRules": [],
-                    "ipRules": [],
                     "defaultAction": "Allow"
                 },
                 "supportsHttpsTrafficOnly": true,

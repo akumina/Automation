@@ -124,7 +124,7 @@
             "value": "[replace(replace(replace(replace(string(parameters('secretValueObject')),'@StorageKey',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2020-08-01-preview').keys[0].value),'@DbKey',listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), '2020-04-01').primaryMasterKey),'@SearchKey',listAdminKeys(resourceId('Microsoft.Search/searchServices', parameters('cognitiveSearchName')), '2020-08-01').primaryKey),'@RedisKey',listKeys(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName')), '2015-08-01').primaryKey)]"
           },
           "dependsOn": [
-            "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
+            "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
           ]
         }
       ]

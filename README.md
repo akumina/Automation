@@ -30,7 +30,7 @@ to set desired value please use parameter file or parameter option as -cosmosDbC
 
 ```
 Package Version:
-For latest version (5.5): set packageVersion as empty (default) using parameter file or parameter option as -packageVersion "" 
+For latest version (5.5): set packageVersion as empty (default) using parameter file or parameter option as -packageVersion "latest" 
 For 5.0: set the package version as 5.0  using parameter file or parameter option as -packageVersion "5.0"
 ```
 
