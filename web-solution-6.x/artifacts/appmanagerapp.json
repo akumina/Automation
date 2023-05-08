@@ -1,0 +1,158 @@
+ {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "webName": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app name."
+            }
+        },
+        "webSku": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app pricing tier."
+            }
+        },
+        "webAppPackageUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app deployment package URL."
+            }
+        },
+        "webAppInstrumentationKey": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app application insight instrumentation key."
+            }
+        },
+        "webAppInsightConnectionString": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app application insight connection string."
+            }
+        },
+        "vnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Virtual network name."
+            }
+        },
+        "snetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app subnet name."
+            }
+        },
+        "keyVaultName": {
+            "type": "string",
+            "metadata": {
+                "description": "Key vault name."
+            }
+        }
+    },
+    "variables": {
+        "appServicePlanName": "[concat('plan-', parameters('webName'))]",
+        "keyVaultSecretUri": "[concat('https://', parameters('keyVaultName'),'.vault.azure.net/secrets/appmanager')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2022-09-01",
+            "name": "[variables('appServicePlanName')]",
+            "location": "[parameters('location')]",
+            "kind": "app",
+
+            "comments": "This app service plan is used for the web app and slots.",
+            "tags": {
+                "displayName": "AppServicePlan"
+            },
+            "sku": {
+                "name": "[parameters('webSku')]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('webName')]",
+            "location": "[parameters('location')]",
+            "kind": "app",
+
+            "comments": "This is the web app, also the default 'nameless' slot.",
+            "tags": {
+                "displayName": "WebApp"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+                "clientAffinityEnabled": false,
+                "httpsOnly": true,
+                "vnetRouteAllEnabled": true,
+                "vnetImagePullEnabled": false,
+                "vnetContentShareEnabled": false,
+                "publicNetworkAccess": "Enabled",
+                "siteConfig": {
+                    "netFrameworkVersion": "v4.8",
+                    "use32BitWorkerProcess": false,
+                    "alwaysOn": true,
+                    "http20Enabled": true,
+                    "minTlsVersion": "1.2",
+                    "ftpsState": "Disabled",
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[parameters('webAppInstrumentationKey')]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[parameters('webAppInsightConnectionString')]"
+                        },
+                        {
+                            "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+                            "value": "~2"
+                        },
+                        {
+                            "name": "XDT_MicrosoftApplicationInsights_Mode",
+                            "value": "default"
+                        },
+                        {
+                            "name": "SCM_COMMAND_IDLE_TIMEOUT",
+                            "value": "3600"
+                        },
+                        {
+                            "name": "AkuminaConnectionString",
+                            "value": "[variables('keyVaultSecretUri')]"
+                        }
+                    ]
+                },
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetName'))]"
+            },
+            "resources": [
+                {
+                    "condition": "[not(empty(parameters('webAppPackageUrl')))]",
+                    "type": "extensions",
+                    "apiVersion": "2022-09-01",
+                    "name": "MSDeploy",
+                    "location": "[parameters('location')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', parameters('webName'))]"
+                    ],
+                    "properties": {
+                        "packageUri": "[parameters('webAppPackageUrl')]"
+                    }
+                }
+            ],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            ]
+        }
+    ]
+}

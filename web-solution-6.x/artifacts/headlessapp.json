@@ -1,0 +1,154 @@
+ {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "webName": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app name."
+            }
+        },
+        "webSku": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app pricing tier."
+            }
+        },
+        "webAppPackageUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app deployment package URL."
+            }
+        },
+        "webAppInstrumentationKey": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app application insight instrumentation key."
+            }
+        },
+        "webAppInsightConnectionString": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app application insight connection string."
+            }
+        },
+        "vnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Virtual network name."
+            }
+        },
+        "snetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Headless app subnet name."
+            }
+        },
+        "keyVaultName": {
+            "type": "string",
+            "metadata": {
+                "description": "Key vault name."
+            }
+        }
+    },
+    "variables": {
+        "appServicePlanName": "[concat('plan-', parameters('webName'))]",
+        "keyVaultSecretUri": "[concat('https://', parameters('keyVaultName'),'.vault.azure.net/secrets/headless')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2022-09-01",
+            "name": "[variables('appServicePlanName')]",
+            "location": "[parameters('location')]",
+            "kind": "app,linux",
+            "properties": {
+                "reserved": true
+            },
+
+            "comments": "This app service plan is used for the web app and slots.",
+            "tags": {
+                "displayName": "AppServicePlan"
+            },
+            "sku": {
+                "name": "[parameters('webSku')]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('webName')]",
+            "location": "[parameters('location')]",
+            "comments": "This is the web app, also the default 'nameless' slot.",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            ],
+            "kind": "app,linux",
+            "tags": {
+                "displayName": "HeadlessWebApp"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "enabled": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+                "clientAffinityEnabled": false,
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "vnetRouteAllEnabled": true,
+                "vnetImagePullEnabled": false,
+                "vnetContentShareEnabled": false,
+                "publicNetworkAccess": "Enabled",
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetName'))]",
+                "siteConfig": {
+                    "numberOfWorkers": 1,
+                    "netFrameworkVersion": "v4.0",
+                    "linuxFxVersion": "DOTNETCORE|6.0",
+                    "acrUseManagedIdentityCreds": false,
+                    "alwaysOn": true,
+                    "http20Enabled": true,
+                    "use32BitWorkerProcess": false,
+                    "functionAppScaleLimit": 0,
+                    "minTlsVersion": "1.2",
+                    "ftpsState": "Disabled",
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[parameters('webAppInstrumentationKey')]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[parameters('webAppInsightConnectionString')]"
+                        },
+                        {
+                            "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+                            "value": "~2"
+                        },
+                        {
+                            "name": "XDT_MicrosoftApplicationInsights_Mode",
+                            "value": "default"
+                        },
+                        {
+                            "name": "SCM_COMMAND_IDLE_TIMEOUT",
+                            "value": "3600"
+                        },
+                        {
+                            "name": "AppSettingsSecretUri",
+                            "value": "[variables('keyVaultSecretUri')]"
+                        }
+                    ]
+                },
+                "httpsOnly": true,
+                "keyVaultReferenceIdentity": "SystemAssigned"
+            }
+        }
+    ]
+}

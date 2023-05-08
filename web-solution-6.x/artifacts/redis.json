@@ -1,0 +1,160 @@
+ {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "redisCacheName": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure Redis cache name."
+            }
+        },
+        "redisSkuName": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "metadata": {
+                "description": "Redis Sku type (Standard or Premium)."
+            }
+        },
+        "redisSkuFamily": {
+            "type": "string",
+            "defaultValue": "C",
+            "metadata": {
+                "description": "Redis Family (C for Standard or P for premium)."
+            }
+        },
+        "redisSkuCapacity": {
+            "type": "string",
+            "defaultValue": "1",
+            "metadata": {
+                "description": "Azure Redis cache capacity (0 to 6)."
+            }
+        },
+        "vnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Virtual network name."
+            }
+        },
+        "snetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Data subnet name."
+            }
+        }
+    },
+    "variables": {
+        "privateDnsZonesName": "privatelink.redis.cache.windows.net",
+        "privateEnpointsName": "[concat('p-', parameters('redisCacheName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Cache/Redis",
+            "name": "[parameters('redisCacheName')]",
+            "apiVersion": "2022-06-01",
+            "location": "[parameters('location')]",
+            "tags": {
+                "displayName": "RedisCache"
+            },
+            "properties": {
+                "sku": {
+                    "name": "[parameters('redisSkuName')]",
+                    "family": "[parameters('redisSkuFamily')]",
+                    "capacity": "[parameters('redisSkuCapacity')]"
+                },
+                "enableNonSslPort": false,
+                "minimumTlsVersion": "1.2",
+                "publicNetworkAccess": "Disabled",
+                "redisConfiguration": {
+                    "maxclients": "1000",
+                    "maxmemory-reserved": "50",
+                    "maxfragmentationmemory-reserved": "50",
+                    "maxmemory-delta": "50"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones",
+            "apiVersion": "2018-09-01",
+            "name": "[variables('privateDnsZonesName')]",
+            "location": "global"
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+            "apiVersion": "2018-09-01",
+            "name": "[format('{0}/{1}', variables('privateDnsZonesName'), format('{0}-link', variables('privateDnsZonesName')))]",
+            "location": "global",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+            ],
+            "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2022-09-01",
+            "name": "[variables('privateEnpointsName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))]"
+            ],
+            "properties": {
+                "privateLinkServiceConnections": [
+                    {
+                        "name": "[variables('privateEnpointsName')]",
+                        "id": "[concat(resourceId('Microsoft.Network/privateEndpoints', variables('privateEnpointsName')), concat('/privateLinkServiceConnections/', variables('privateEnpointsName')))]",
+                        "properties": {
+                            "privateLinkServiceId": "[resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))]",
+                            "groupIds": [
+                                "redisCache"
+                            ],
+                            "privateLinkServiceConnectionState": {
+                                "status": "Approved",
+                                "description": "Auto-Approved",
+                                "actionsRequired": "None"
+                            }
+                        }
+                    }
+                ],
+                "customNetworkInterfaceName": "[concat(variables('privateEnpointsName'), '-nic')]",
+                "subnet": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetName'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(variables('privateEnpointsName'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateEndpoints', variables('privateEnpointsName'))]",
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+            ],
+            "properties": {
+                "privateDnsZoneConfigs": [
+                    {
+                        "name": "privatelink-redis-cache-windows-net",
+                        "properties": {
+                            "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "redisAccountKey": {
+            "type": "string",
+            "value": "[listKeys(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName')), '2022-06-01').primaryKey]"
+        }
+    }
+}

@@ -1,8 +1,8 @@
 # Akumina AppManager/ServiceHub Infrastructure using ARM template.
 
-**Current Version:** AppManager 5.5; PeopleSync 5.5
+**Current Version:** AppManager 6.0; PeopleSync 6.0
 
-**Last Version:** AppManager 5.0/4.8; PeopleSync 5.0/4.8
+**Last Version:** AppManager 5.5/5.0/4.8; PeopleSync 5.5/5.0/4.8
 
 ## Marketplace Offerings
 We recommend you install our applications from Azure Marketplace
