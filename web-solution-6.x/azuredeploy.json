@@ -519,8 +519,6 @@
           "webName": { "value": "[parameters('webName')]" },
           "webSku": { "value": "[parameters('webSku')]" },
           "webAppPackageUrl": { "value": "[parameters('webAppPackageUrl')]" },
-          "vnetName": { "value": "[parameters('vnetName')]" },
-          "snetName": { "value": "[parameters('snetAppManagerName')]" },
           "webAppInstrumentationKey": {
             "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]"
           },
@@ -550,8 +548,6 @@
           "webName": { "value": "[parameters('headlessName')]" },
           "webSku": { "value": "[parameters('headlessSku')]" },
           "webAppPackageUrl": { "value": "[parameters('headlessAppPackageUrl')]" },
-          "vnetName": { "value": "[parameters('vnetName')]" },
-          "snetName": { "value": "[parameters('snetHeadlessName')]" },
           "webAppInstrumentationKey": {
             "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]"
           },
@@ -581,8 +577,6 @@
           "location": { "value": "[parameters('location')]" },
           "funcAppName": { "value": "[parameters('funcAppName')]" },
           "funcAppPackageUrl": { "value": "[parameters('funcAppPackageUrl')]" },
-          "vnetName": { "value": "[parameters('vnetName')]" },
-          "snetName": { "value": "[parameters('snetWorkerName')]" },
           "funcAppInstrumentationKey": {
             "value": "[reference('appinsight').outputs.funcAppInstrumentationKey.value]"
           },
@@ -594,12 +588,6 @@
           },
           "storageAccountName": {
             "value": "[parameters('storageAccountName')]"
-          },
-          "storageAccountKey": {
-            "value": "[reference('storage').outputs.storageAccountKey.value]"
-          },
-          "cosmosAccountKey": {
-            "value": "[reference('cosmosdb').outputs.cosmosAccountKey.value]"
           }
         }
       }
@@ -631,36 +619,36 @@
           "snetName": { "value": "[parameters('snetDataName')]" },
           "webName": { "value": "[parameters('webName')]" },
           "headlessWebName": { "value": "[parameters('headlessName')]" },
-          "storageAccountKey": {
-            "value": "[reference('storage').outputs.storageAccountKey.value]"
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
           },
-          "cosmosAccountKey": {
-            "value": "[reference('cosmosdb').outputs.cosmosAccountKey.value]"
+          "cosmosDbAccountName": {
+            "value": "[parameters('cosmosDbAccountName')]"
           },
-          "redisAccountKey": {
-            "value": "[reference('redis').outputs.redisAccountKey.value]"
+          "redisCacheName": {
+            "value": "[parameters('redisCacheName')]"
           },
-          "searchAccountKey": {
-            "value": "[reference('search').outputs.searchAccountKey.value]"
+          "cognitiveSearchName": {
+            "value": "[parameters('cognitiveSearchName')]"
           },
           "secretValueObject": {
             "value": {
-              "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=@StorageKey')]",
+              "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey={0}')]",
               "SecondaryRemoteStorageConnection": "",
               "EnableWriteToSecondaryStorage": "false",
               "ExternalConnection": {
-                "EndpointUrl": "[concat('AccountEndpoint=https://',parameters('cosmosDbAccountName'),'.documents.azure.com:443/;AccountKey=@DbKey;')]",
+                "EndpointUrl": "[concat('AccountEndpoint=https://',parameters('cosmosDbAccountName'),'.documents.azure.com:443/;AccountKey={1}')]",
                 "Database": "akcontainers"
               },
               "AzureSearchServiceName": "[parameters('cognitiveSearchName')]",
-              "AzureSearchServiceApiKey": "@SearchKey",
+              "AzureSearchServiceApiKey": "{2}",
               "InstrumentationKey": "[reference('appinsight').outputs.webAppInstrumentationKey.value]",
               "AppInsightAppId": "[reference('appinsight').outputs.webAppInsightAppId.value]",
               "AppInsightApiKey": "",
               "FuncAppInsightAppId": "[reference('appinsight').outputs.funcAppInsightAppId.value]",
               "FuncAppInsightApiKey": "",
               "StoreInSingleContainer": "true",
-              "PrimaryRedisConnection": "[concat(parameters('redisCacheName'),'.redis.cache.windows.net:6380', ',password=@RedisKey,ssl=true,abortConnect=false')]",
+              "PrimaryRedisConnection": "[concat(parameters('redisCacheName'),'.redis.cache.windows.net:6380', ',password={3},ssl=true,abortConnect=false')]",
               "SecondaryRedisConnection": "",
               "TokenStoreEntityName": "akcloud",
               "BlobStoreContainerName": "akcloud",
@@ -684,14 +672,44 @@
               "AkAppSettings": {
                 "MinWorkerThreads": "150",
                 "LogListener": "AppInsight",
-                "PrimaryRedisConnection": "[concat(parameters('redisCacheName'),'.redis.cache.windows.net:6380', ',password=@RedisKey,ssl=true,abortConnect=false')]",
+                "PrimaryRedisConnection": "[concat(parameters('redisCacheName'),'.redis.cache.windows.net:6380', ',password={1},ssl=true,abortConnect=false')]",
                 "ConnectionConfig": {
-                  "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=@StorageKey')]"
+                  "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey={0}')]"
                 }
               }
             }
-
           }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "name": "update",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'keyvault')]",
+        "[resourceId('Microsoft.Resources/deployments', 'webapp')]",
+        "[resourceId('Microsoft.Resources/deployments', 'headlessapp')]",
+        "[resourceId('Microsoft.Resources/deployments', 'funcapp')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/update.json')]"
+        },
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "webName": { "value": "[parameters('webName')]" },
+          "headlessName": { "value": "[parameters('headlessName')]" },
+          "funcAppName": { "value": "[parameters('funcAppName')]" },
+          "vnetName": { "value": "[parameters('vnetName')]" },
+          "snetAppManagerName": { "value": "[parameters('snetAppManagerName')]" },
+          "snetWorkerName": { "value": "[parameters('snetWorkerName')]" },
+          "snetHeadlessName": { "value": "[parameters('snetHeadlessName')]" },
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          },
+          "storageAccountSku": { "value": "[parameters('storageAccountSku')]" }
         }
       }
     }
@@ -724,6 +742,10 @@
     "keyVaultSecretUri": {
       "type": "string",
       "value": "[reference('keyvault').outputs.keyVaultSecretUri.value]"
+    },
+    "headlessKeyVaultSecretUri": {
+      "type": "string",
+      "value": "[reference('keyvault').outputs.headlessKeyVaultSecretUri.value]"
     },
     "searchServiceName": {
       "type": "string",

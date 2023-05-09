@@ -16,16 +16,14 @@
         },
         "redisSkuName": {
             "type": "string",
-            "defaultValue": "Standard",
             "metadata": {
-                "description": "Redis Sku type (Standard or Premium)."
+                "description": "Redis Sku type (Premium)."
             }
         },
         "redisSkuFamily": {
             "type": "string",
-            "defaultValue": "C",
             "metadata": {
-                "description": "Redis Family (C for Standard or P for premium)."
+                "description": "Redis Family (P for premium)."
             }
         },
         "redisSkuCapacity": {
@@ -150,11 +148,5 @@
                 ]
             }
         }
-    ],
-    "outputs": {
-        "redisAccountKey": {
-            "type": "string",
-            "value": "[listKeys(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName')), '2022-06-01').primaryKey]"
-        }
-    }
+    ]
 }

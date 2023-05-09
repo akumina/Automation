@@ -504,11 +504,5 @@
                 "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
             ]
         }
-    ],
-    "outputs": {
-        "storageAccountKey": {
-            "type": "string",
-            "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2022-09-01').keys[0].value]"
-        }
-    }
+    ]
 }

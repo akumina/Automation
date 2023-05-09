@@ -38,18 +38,6 @@
                 "description": "Web app application insight connection string."
             }
         },
-        "vnetName": {
-            "type": "string",
-            "metadata": {
-                "description": "Virtual network name."
-            }
-        },
-        "snetName": {
-            "type": "string",
-            "metadata": {
-                "description": "Headless app subnet name."
-            }
-        },
         "keyVaultName": {
             "type": "string",
             "metadata": {
@@ -103,11 +91,9 @@
                 "reserved": true,
                 "isXenon": false,
                 "hyperV": false,
-                "vnetRouteAllEnabled": true,
                 "vnetImagePullEnabled": false,
                 "vnetContentShareEnabled": false,
                 "publicNetworkAccess": "Enabled",
-                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetName'))]",
                 "siteConfig": {
                     "numberOfWorkers": 1,
                     "netFrameworkVersion": "v4.0",

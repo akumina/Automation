@@ -38,18 +38,6 @@
                 "description": "Web app application insight connection string."
             }
         },
-        "vnetName": {
-            "type": "string",
-            "metadata": {
-                "description": "Virtual network name."
-            }
-        },
-        "snetName": {
-            "type": "string",
-            "metadata": {
-                "description": "Web app subnet name."
-            }
-        },
         "keyVaultName": {
             "type": "string",
             "metadata": {
@@ -95,7 +83,6 @@
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
                 "clientAffinityEnabled": false,
                 "httpsOnly": true,
-                "vnetRouteAllEnabled": true,
                 "vnetImagePullEnabled": false,
                 "vnetContentShareEnabled": false,
                 "publicNetworkAccess": "Enabled",
@@ -132,8 +119,7 @@
                             "value": "[variables('keyVaultSecretUri')]"
                         }
                     ]
-                },
-                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetName'))]"
+                }
             },
             "resources": [
                 {

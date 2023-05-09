@@ -597,11 +597,5 @@
         }
       }
     }
-  ],
-  "outputs": {
-    "cosmosAccountKey": {
-      "type": "string",
-      "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), '2022-11-15').primaryMasterKey]"
-    }
-  }
+  ]
 }

@@ -125,11 +125,5 @@
                 ]
             }
         }
-    ],
-    "outputs": {
-        "searchAccountKey": {
-            "type": "string",
-            "value": "[listAdminKeys(resourceId('Microsoft.Search/searchServices', parameters('cognitiveSearchName')), '2022-09-01').primaryKey]"
-        }
-    }
+    ]
 }

@@ -70,28 +70,28 @@
         "description": "Data subnet name."
       }
     },
-    "storageAccountKey": {
+    "storageAccountName": {
       "type": "string",
       "metadata": {
-        "description": "Azure storage account key."
+        "description": "Azure Storage account anme."
       }
     },
-    "cosmosAccountKey": {
+    "cosmosDbAccountName": {
       "type": "string",
       "metadata": {
-        "description": "CosmosDB (SQL API) account key."
+        "description": "CosmosDB (SQL API) account name."
       }
     },
-    "redisAccountKey": {
+    "cognitiveSearchName": {
       "type": "string",
       "metadata": {
-        "description": "Azure Redis cache key."
+        "description": "Azure cognitive search service name."
       }
     },
-    "searchAccountKey": {
+    "redisCacheName": {
       "type": "string",
       "metadata": {
-        "description": "Cognitive search key."
+        "description": "Azure Redis cache name."
       }
     }
   },
@@ -151,7 +151,7 @@
             "displayName": "secret"
           },
           "properties": {
-            "value": "[replace(replace(replace(replace(string(parameters('secretValueObject')),'@StorageKey',parameters('storageAccountKey')),'@DbKey',parameters('cosmosAccountKey')),'@SearchKey',parameters('searchAccountKey')),'@RedisKey',parameters('redisAccountKey'))]"
+            "value": "[replace(replace(replace(replace(string(parameters('secretValueObject')),'{0}',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')),'2022-09-01').keys[0].value),'{1}',listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), '2022-11-15').primaryMasterKey),'{2}',listAdminKeys(resourceId('Microsoft.Search/searchServices', parameters('cognitiveSearchName')), '2022-09-01').primaryKey),'{3}',listKeys(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName')), '2022-06-01').primaryKey)]"
           },
           "dependsOn": [
             "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
@@ -165,7 +165,7 @@
             "displayName": "secret"
           },
           "properties": {
-            "value": "[replace(replace(replace(replace(string(parameters('headlessSecretValueObject')),'@StorageKey',parameters('storageAccountKey')),'@DbKey',parameters('cosmosAccountKey')),'@SearchKey',parameters('searchAccountKey')),'@RedisKey',parameters('redisAccountKey'))]"
+            "value": "[replace(replace(replace(replace(string(parameters('headlessSecretValueObject')),'{0}',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')),'2022-09-01').keys[0].value),'{1}',listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), '2022-11-15').primaryMasterKey),'{2}',listAdminKeys(resourceId('Microsoft.Search/searchServices', parameters('cognitiveSearchName')), '2022-09-01').primaryKey),'{3}',listKeys(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName')), '2022-06-01').primaryKey)]"
           },
           "dependsOn": [
             "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
