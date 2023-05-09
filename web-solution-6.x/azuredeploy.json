@@ -1,0 +1,755 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "webName": {
+      "type": "string",
+      "metadata": {
+        "description": "AppManager Web app name."
+      }
+    },
+    "webSku": {
+      "type": "string",
+      "metadata": {
+        "description": "AppManager Web app pricing tier."
+      }
+    },
+    "headlessName": {
+      "type": "string",
+      "metadata": {
+        "description": "Headless Web app name."
+      }
+    },
+    "headlessSku": {
+      "type": "string",
+      "metadata": {
+        "description": "Headless Web app pricing tier."
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure storage account name."
+      }
+    },
+    "storageAccountSku": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure storage account replication type (Standard is required for Blob, Queue, Table and Fileshare)."
+      }
+    },
+    "keyVaultName": {
+      "type": "string",
+
+      "metadata": {
+        "description": "Key vault name."
+      }
+    },
+    "keyVaultSku": {
+      "type": "string",
+      "defaultValue": "Standard",
+      "allowedValues": [ "Standard", "Premium" ],
+      "metadata": {
+        "description": "Key vault pricing tier (Premium is required for HSM based keys)."
+      }
+    },
+    "cognitiveSearchName": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure cognitive search service name."
+      }
+    },
+    "cognitiveSearchSku": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure cognitive search service name pricing tier."
+      }
+    },
+    "redisCacheName": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure Redis cache name."
+      }
+    },
+    "redisSkuName": {
+      "type": "string",
+      "defaultValue": "Standard",
+      "metadata": {
+        "description": "Azure Redis cache pricing tier (Standard or Premium)."
+      }
+    },
+    "redisSkuFamily": {
+      "type": "string",
+      "defaultValue": "C",
+      "metadata": {
+        "description": "Azure Redis family (C-Standard or P-Premium)."
+      }
+    },
+    "redisSkuCapacity": {
+      "type": "string",
+      "defaultValue": "1",
+      "metadata": {
+        "description": "Azure Redis cache capacity (0 to 6)."
+      }
+    },
+    "funcAppName": {
+      "type": "string",
+      "metadata": {
+        "description": "Function app name."
+      }
+    },
+    "cosmosDBAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "CosmosDB (SQL API) account name."
+      }
+    },
+    "cosmosDbCapacityMode": {
+      "type": "string",
+      "metadata": {
+        "description": "CosmosDB (SQL API) Capacity mode (Throughput or Serverless)."
+      }
+    },
+    "workspacesLogName": {
+      "type": "string",
+      "metadata": {
+        "description": "Log analytics workspace name."
+      }
+    },
+    "webAppPackageUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Web app deployment package URL."
+      }
+    },
+    "funcAppPackageUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Function app deployment package URL."
+      }
+    },
+    "headlessAppPackageUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Headless app deployment package URL."
+      }
+    },
+    "vnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual network name."
+      }
+    },
+    "vnetPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual network address prefix."
+      }
+    },
+    "snetAppManagerName": {
+      "type": "string",
+      "metadata": {
+        "description": "AppManager subnet name."
+      }
+    },
+    "snetAppManagerPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "AppManager subnet address prefix."
+      }
+    },
+    "snetHeadlessName": {
+      "type": "string",
+      "metadata": {
+        "description": "Headless subnet name."
+      }
+    },
+    "snetHeadlessPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Headless subnet address prefix."
+      }
+    },
+    "snetDataName": {
+      "type": "string",
+      "metadata": {
+        "description": "Data subnet name."
+      }
+    },
+    "snetDataPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Data subnet address prerix."
+      }
+    },
+    "snetWorkerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Function subnet name."
+      }
+    },
+    "snetWorkerPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Function subnet worker address prefix."
+      }
+    },
+    "snetVmName": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual machine subnet name."
+      }
+    },
+    "snetVmPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual machine subnet address prefix."
+      }
+    },
+    "vmName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Virtual machine name."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D2_v3",
+      "metadata": {
+        "description": "Virtual machine size."
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtuam machine Username."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "minLength": 12,
+      "metadata": {
+        "description": "Virtual machine password."
+      }
+    },
+    "dnsLabelPrefix": {
+      "type": "string",
+      "defaultValue": "[toLower(concat(parameters('vmName'),'-', uniqueString(resourceGroup().id, parameters('vmName'))))]",
+      "metadata": {
+        "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
+      }
+    },
+    "publicIpName": {
+      "type": "string",
+      "defaultValue": "myPublicIP",
+      "metadata": {
+        "description": "Name for the Public IP used to access the Virtual Machine."
+      }
+    },
+    "publicIPAllocationMethod": {
+      "type": "string",
+      "defaultValue": "Dynamic",
+      "allowedValues": [ "Dynamic", "Static" ],
+      "metadata": {
+        "description": "Allocation method for the Public IP used to access the Virtual Machine."
+      }
+    },
+    "publicIpSku": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [ "Basic", "Standard" ],
+      "metadata": {
+        "description": "SKU for the Public IP used to access the Virtual Machine."
+      }
+    }
+  },
+  "variables": {
+    "webAppInsightName": "[concat('appi-', parameters('webName'))]",
+    "funcAppInsightName": "[concat('appi-', parameters('funcAppName'))]",
+    "headlessAppInsightName": "[concat('appi-', parameters('headlessName'))]",
+    "tenantDirectory": "tenants"
+  },
+  "resources": [
+    {
+      "apiVersion": "2022-09-01",
+      "name": "pid-a8001980-7e52-4a10-90e5-4f2670b9e086-partnercenter",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": []
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "vnet",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/vnet.json')]"
+        },
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
+          },
+          "vnetPrefix": {
+            "value": "[parameters('vnetPrefix')]"
+          },
+          "snetAppManagerName": { "value": "[parameters('snetAppManagerName')]" },
+          "snetAppManagerPrefix": {
+            "value": "[parameters('snetAppManagerPrefix')]"
+          },
+          "snetHeadlessName": { "value": "[parameters('snetHeadlessName')]" },
+          "snetHeadlessPrefix": {
+            "value": "[parameters('snetHeadlessPrefix')]"
+          },
+          "snetDataName": { "value": "[parameters('snetDataName')]" },
+          "snetDataPrefix": { "value": "[parameters('snetDataPrefix')]" },
+          "snetWorkerName": { "value": "[parameters('snetWorkerName')]" },
+          "snetWorkerPrefix": {
+            "value": "[parameters('snetWorkerPrefix')]"
+          },
+          "snetVmName": { "value": "[parameters('snetVmName')]" },
+          "snetVmPrefix": { "value": "[parameters('snetVmPrefix')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "vm",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/vm.json')]"
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+        ],
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
+          },
+          "snetName": { "value": "[parameters('snetVmName')]" },
+          "vmName": { "value": "[parameters('vmName')]" },
+          "vmSize": { "value": "[parameters('vmSize')]" },
+          "publicIPName": { "value": "[parameters('publicIPName')]" },
+          "publicIpSku": { "value": "[parameters('publicIpSku')]" },
+          "publicIPAllocationMethod": {
+            "value": "[parameters('publicIPAllocationMethod')]"
+          },
+          "dnsLabelPrefix": { "value": "[parameters('dnsLabelPrefix')]" },
+          "adminUsername": { "value": "[parameters('adminUsername')]" },
+          "adminPassword": { "value": "[parameters('adminPassword')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "workspace",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/workspace.json')]"
+        },
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "workspacesLogName": { "value": "[parameters('workspacesLogName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "storage",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/storage.json')]"
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.Resources/deployments', 'workspace')]",
+          "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+        ],
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          },
+          "storageAccountSku": { "value": "[parameters('storageAccountSku')]" },
+          "fileShareName": { "value": "[concat(parameters('funcAppName'),'cs')]" },
+          "vnetName": { "value": "[parameters('vnetName')]" },
+          "snetName": { "value": "[parameters('snetDataName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "search",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/search.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.Resources/deployments', 'workspace')]",
+          "[resourceId('Microsoft.Resources/deployments', 'storage')]",
+          "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+        ],
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "cognitiveSearchName": {
+            "value": "[parameters('cognitiveSearchName')]"
+          },
+          "cognitiveSearchSku": {
+            "value": "[parameters('cognitiveSearchSku')]"
+          },
+          "vnetName": { "value": "[parameters('vnetName')]" },
+          "snetName": { "value": "[parameters('snetDataName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "appinsight",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/appinsight.json')]"
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.Resources/deployments', 'workspace')]",
+          "[resourceId('Microsoft.Resources/deployments', 'storage')]",
+          "[resourceId('Microsoft.Resources/deployments', 'search')]",
+          "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+        ],
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "webAppInsightName": { "value": "[variables('webAppInsightName')]" },
+          "funcAppInsightName": {
+            "value": "[variables('funcAppInsightName')]"
+          },
+          "headlessAppInsightName": { "value": "[variables('headlessAppInsightName')]" },
+          "workspaceName": { "value": "[parameters('workspacesLogName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "redis",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/redis.json')]"
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+        ],
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "redisCacheName": { "value": "[parameters('redisCacheName')]" },
+          "redisSkuName": { "value": "[parameters('redisSkuName')]" },
+          "redisSkuFamily": { "value": "[parameters('redisSkuFamily')]" },
+          "redisSkuCapacity": { "value": "[parameters('redisSkuCapacity')]" },
+          "vnetName": { "value": "[parameters('vnetName')]" },
+          "snetName": { "value": "[parameters('snetDataName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "cosmosdb",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/cosmosdb.json')]"
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+        ],
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "cosmosDBAccountName": {
+            "value": "[parameters('cosmosDBAccountName')]"
+          },
+          "cosmosDbCapacityMode": {
+            "value": "[parameters('cosmosDbCapacityMode')]"
+          },
+          "vnetName": { "value": "[parameters('vnetName')]" },
+          "snetName": { "value": "[parameters('snetDataName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "webapp",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'storage')]",
+        "[resourceId('Microsoft.Resources/deployments', 'appinsight')]",
+        "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/appmanagerapp.json')]"
+        },
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "webName": { "value": "[parameters('webName')]" },
+          "webSku": { "value": "[parameters('webSku')]" },
+          "webAppPackageUrl": { "value": "[parameters('webAppPackageUrl')]" },
+          "webAppInstrumentationKey": {
+            "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]"
+          },
+          "webAppInsightConnectionString": {
+            "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]"
+          },
+          "keyVaultName": { "value": "[parameters('keyVaultName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "headlessapp",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'storage')]",
+        "[resourceId('Microsoft.Resources/deployments', 'appinsight')]",
+        "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/headlessapp.json')]"
+        },
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "webName": { "value": "[parameters('headlessName')]" },
+          "webSku": { "value": "[parameters('headlessSku')]" },
+          "webAppPackageUrl": { "value": "[parameters('headlessAppPackageUrl')]" },
+          "webAppInstrumentationKey": {
+            "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]"
+          },
+          "webAppInsightConnectionString": {
+            "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]"
+          },
+          "keyVaultName": { "value": "[parameters('keyVaultName')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "funcapp",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'storage')]",
+        "[resourceId('Microsoft.Resources/deployments', 'cosmosdb')]",
+        "[resourceId('Microsoft.Resources/deployments', 'appinsight')]",
+        "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/funcapp.json')]"
+        },
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "funcAppName": { "value": "[parameters('funcAppName')]" },
+          "funcAppPackageUrl": { "value": "[parameters('funcAppPackageUrl')]" },
+          "funcAppInstrumentationKey": {
+            "value": "[reference('appinsight').outputs.funcAppInstrumentationKey.value]"
+          },
+          "funcAppInsightConnectionString": {
+            "value": "[reference('appinsight').outputs.funcAppInsightConnectionString.value]"
+          },
+          "cosmosDbAccountName": {
+            "value": "[parameters('cosmosDbAccountName')]"
+          },
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "keyvault",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'storage')]",
+        "[resourceId('Microsoft.Resources/deployments', 'search')]",
+        "[resourceId('Microsoft.Resources/deployments', 'cosmosdb')]",
+        "[resourceId('Microsoft.Resources/deployments', 'redis')]",
+        "[resourceId('Microsoft.Resources/deployments', 'webapp')]",
+        "[resourceId('Microsoft.Resources/deployments', 'funcapp')]",
+        "[resourceId('Microsoft.Resources/deployments', 'appinsight')]",
+        "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/keyvault.json')]"
+        },
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "keyVaultName": { "value": "[parameters('keyVaultName')]" },
+          "keyVaultSku": { "value": "[parameters('keyVaultSku')]" },
+          "vnetName": { "value": "[parameters('vnetName')]" },
+          "snetName": { "value": "[parameters('snetDataName')]" },
+          "webName": { "value": "[parameters('webName')]" },
+          "headlessWebName": { "value": "[parameters('headlessName')]" },
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          },
+          "cosmosDbAccountName": {
+            "value": "[parameters('cosmosDbAccountName')]"
+          },
+          "redisCacheName": {
+            "value": "[parameters('redisCacheName')]"
+          },
+          "cognitiveSearchName": {
+            "value": "[parameters('cognitiveSearchName')]"
+          },
+          "secretValueObject": {
+            "value": {
+              "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey={0}')]",
+              "SecondaryRemoteStorageConnection": "",
+              "EnableWriteToSecondaryStorage": "false",
+              "ExternalConnection": {
+                "EndpointUrl": "[concat('AccountEndpoint=https://',parameters('cosmosDbAccountName'),'.documents.azure.com:443/;AccountKey={1}')]",
+                "Database": "akcontainers"
+              },
+              "AzureSearchServiceName": "[parameters('cognitiveSearchName')]",
+              "AzureSearchServiceApiKey": "{2}",
+              "InstrumentationKey": "[reference('appinsight').outputs.webAppInstrumentationKey.value]",
+              "AppInsightAppId": "[reference('appinsight').outputs.webAppInsightAppId.value]",
+              "AppInsightApiKey": "",
+              "FuncAppInsightAppId": "[reference('appinsight').outputs.funcAppInsightAppId.value]",
+              "FuncAppInsightApiKey": "",
+              "StoreInSingleContainer": "true",
+              "PrimaryRedisConnection": "[concat(parameters('redisCacheName'),'.redis.cache.windows.net:6380', ',password={3},ssl=true,abortConnect=false')]",
+              "SecondaryRedisConnection": "",
+              "TokenStoreEntityName": "akcloud",
+              "BlobStoreContainerName": "akcloud",
+              "TenantsDirectoryName": "[variables('tenantDirectory')]"
+            }
+          },
+          "headlessSecretValueObject": {
+            "value": {
+              "Logging": {
+                "LogLevel": {
+                  "Default": "Error",
+                  "Akumina": "Error",
+                  "Microsoft.AspNetCore": "Error"
+                }
+              },
+              "AllowedHosts": "*",
+              "ApplicationInsights": {
+                "InstrumentationKey": "[reference('appinsight').outputs.webAppInsightAppId.value]",
+                "ConnectionString": "[reference('appinsight').outputs.webAppInsightConnectionString.value]"
+              },
+              "AkAppSettings": {
+                "MinWorkerThreads": "150",
+                "LogListener": "AppInsight",
+                "PrimaryRedisConnection": "[concat(parameters('redisCacheName'),'.redis.cache.windows.net:6380', ',password={1},ssl=true,abortConnect=false')]",
+                "ConnectionConfig": {
+                  "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey={0}')]"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "name": "update",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'keyvault')]",
+        "[resourceId('Microsoft.Resources/deployments', 'webapp')]",
+        "[resourceId('Microsoft.Resources/deployments', 'headlessapp')]",
+        "[resourceId('Microsoft.Resources/deployments', 'funcapp')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/update.json')]"
+        },
+        "parameters": {
+          "location": { "value": "[parameters('location')]" },
+          "webName": { "value": "[parameters('webName')]" },
+          "headlessName": { "value": "[parameters('headlessName')]" },
+          "funcAppName": { "value": "[parameters('funcAppName')]" },
+          "vnetName": { "value": "[parameters('vnetName')]" },
+          "snetAppManagerName": { "value": "[parameters('snetAppManagerName')]" },
+          "snetWorkerName": { "value": "[parameters('snetWorkerName')]" },
+          "snetHeadlessName": { "value": "[parameters('snetHeadlessName')]" },
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          },
+          "storageAccountSku": { "value": "[parameters('storageAccountSku')]" }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "websiteHostname": {
+      "type": "string",
+      "value": "[concat(parameters('webName'), '.azurewebsites.net')]"
+    },
+    "webAppInstrumentationKey": {
+      "type": "string",
+      "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]"
+    },
+    "webAppInsightAppId": {
+      "type": "string",
+      "value": "[reference('appinsight').outputs.webAppInsightAppId.value]"
+    },
+    "webAppInsightConnectionString": {
+      "type": "string",
+      "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]"
+    },
+    "funcAppInstrumentationKey": {
+      "type": "string",
+      "value": "[reference('appinsight').outputs.funcAppInstrumentationKey.value]"
+    },
+    "funcAppInsightAppId": {
+      "type": "string",
+      "value": "[reference('appinsight').outputs.funcAppInsightAppId.value]"
+    },
+    "keyVaultSecretUri": {
+      "type": "string",
+      "value": "[reference('keyvault').outputs.keyVaultSecretUri.value]"
+    },
+    "headlessKeyVaultSecretUri": {
+      "type": "string",
+      "value": "[reference('keyvault').outputs.headlessKeyVaultSecretUri.value]"
+    },
+    "searchServiceName": {
+      "type": "string",
+      "value": "[concat(parameters('cognitiveSearchName'), '.search.windows.net')]"
+    }
+  }
+}

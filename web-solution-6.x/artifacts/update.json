@@ -1,0 +1,121 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "webName": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app name."
+            }
+        },
+        "headlessName": {
+            "type": "string",
+            "metadata": {
+                "description": "Headless Web app name."
+            }
+        },
+        "funcAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app name."
+            }
+        },
+        "vnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Virtual network name."
+            }
+        },
+        "snetAppManagerName": {
+            "type": "string",
+            "metadata": {
+                "description": "AppManager subnet name."
+            }
+        },
+        "snetWorkerName": {
+            "type": "string",
+            "metadata": {
+                "description": "Function subnet name."
+            }
+        },
+        "snetHeadlessName": {
+            "type": "string",
+            "metadata": {
+                "description": "Headless subnet name."
+            }
+        },
+        "storageAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure storage account name."
+            }
+        },
+        "storageAccountSku": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure storage account replication type (Standard is required for Blob, Queue, Table and Fileshare)."
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('webName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "vnetRouteAllEnabled": true,
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetAppManagerName'))]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('funcAppName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "vnetRouteAllEnabled": true,
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetWorkerName'))]",
+                "appSettings": [
+                    {
+                        "name": "WEBSITE_CONTENTOVERVNET",
+                        "value": "1"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('headlessName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "vnetRouteAllEnabled": true,
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetHeadlessName'))]"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('storageAccountName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('storageAccountSku')]"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "publicNetworkAccess": "Disabled",
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "defaultAction": "Deny"
+                }
+            }
+        }
+    ]
+}
