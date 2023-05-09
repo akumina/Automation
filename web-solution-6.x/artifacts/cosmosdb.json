@@ -1,0 +1,601 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "cosmosDbAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "CosmosDB (SQL API) account name."
+      }
+    },
+    "cosmosDbCapacityMode": {
+      "type": "string",
+      "metadata": {
+        "description": "Capacity mode"
+      }
+    },
+    "vnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual network name."
+      }
+    },
+    "snetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Data subnet name."
+      }
+    }
+  },
+  "variables": {
+    "databaseName": "akcontainers",
+    "capabilities": "[if(equals(parameters('cosmosDbCapacityMode'), 'Serverless'), json('[{ \"name\":\"EnableServerless\"}]'), json('[]'))]",
+    "dbOptions": "[if(equals(parameters('cosmosDbCapacityMode'), 'Serverless'), json('[]'),json('{\"autoscaleSettings\": {\"maxThroughput\": 4000}'))]",
+    "privateDnsZonesName": "privatelink.documents.azure.com",
+    "privateEnpointsName": "[concat('p-', parameters('cosmosDbAccountName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2022-11-15",
+      "name": "[parameters('cosmosDbAccountName')]",
+      "location": "[parameters('location')]",
+      "kind": "GlobalDocumentDB",
+      "tags": {
+        "defaultExperience": "Core (SQL)",
+        "CosmosAccountType": "Production"
+      },
+      "properties": {
+        "publicNetworkAccess": "Disabled",
+        "enableAutomaticFailover": false,
+        "enableMultipleWriteLocations": false,
+        "isVirtualNetworkFilterEnabled": false,
+        "disableKeyBasedMetadataWriteAccess": false,
+        "disableLocalAuth": false,
+        "minimalTlsVersion": "Tls12",
+        "databaseAccountOfferType": "Standard",
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session",
+          "maxIntervalInSeconds": 5,
+          "maxStalenessPrefix": 100
+        },
+        "capabilities": "[variables('capabilities')]",
+        "locations": [
+          {
+            "locationName": "[parameters('location')]",
+            "failoverPriority": 0,
+            "isZoneRedundant": false
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2018-09-01",
+      "name": "[variables('privateDnsZonesName')]",
+      "location": "global"
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2018-09-01",
+      "name": "[format('{0}/{1}', variables('privateDnsZonesName'), format('{0}-link', variables('privateDnsZonesName')))]",
+      "location": "global",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('privateEnpointsName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "privateLinkServiceConnections": [
+          {
+            "name": "[variables('privateEnpointsName')]",
+            "id": "[concat(resourceId('Microsoft.Network/privateEndpoints', variables('privateEnpointsName')), concat('/privateLinkServiceConnections/', variables('privateEnpointsName')))]",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]",
+              "groupIds": [
+                "Sql"
+              ],
+              "privateLinkServiceConnectionState": {
+                "status": "Approved",
+                "description": "Auto-Approved",
+                "actionsRequired": "None"
+              }
+            }
+          }
+        ],
+        "customNetworkInterfaceName": "[concat(variables('privateEnpointsName'), '-nic')]",
+        "subnet": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetName'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2022-09-01",
+      "name": "[concat(variables('privateEnpointsName'), '/default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateEndpoints', variables('privateEnpointsName'))]",
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "privatelink-documents-azure-com",
+            "properties": {
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+      "name": "[concat(parameters('cosmosDbAccountName'), '/', variables('databaseName'))]",
+      "apiVersion": "2022-11-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[variables('databaseName')]"
+        },
+        "options": "[variables('dbOptions')]"
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2022-11-15",
+      "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/activitysubscriptions'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "activitysubscriptions",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/_etag/?"
+              }
+            ]
+          },
+          "partitionKey": {
+            "paths": [ "/PartitionKey" ],
+            "kind": "Hash"
+          },
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2022-11-15",
+      "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/comments'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "comments",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/_etag/?"
+              },
+              {
+                "path": "/Message/?"
+              },
+              {
+                "path": "/TranslatedMessage/?"
+              },
+              {
+                "path": "/Concern/?"
+              }
+            ]
+          },
+          "partitionKey": {
+            "paths": [ "/PartitionKey" ],
+            "kind": "Hash"
+          },
+          "defaultTtl": -1,
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2022-11-15",
+      "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/eventsubscriptions'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "eventsubscriptions",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/_etag/?"
+              }
+            ]
+          },
+          "partitionKey": {
+            "paths": [ "/PartitionKey" ],
+            "kind": "Hash"
+          },
+          "defaultTtl": -1,
+          "uniqueKeyPolicy": {
+            "uniqueKeys": [
+              {
+                "paths": [ "/MonitoredResource/Id" ]
+              },
+              {
+                "paths": [ "/Name" ]
+              }
+            ]
+          },
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2022-11-15",
+      "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/leases'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "leases",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
+            ]
+          },
+          "partitionKey": {
+            "paths": [ "/id" ],
+            "kind": "Hash"
+          },
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2022-11-15",
+      "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/other'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "other",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/_etag/?"
+              },
+              {
+                "path": "/Message/?"
+              }
+            ]
+          },
+          "partitionKey": {
+            "paths": [ "/PartitionKey" ],
+            "kind": "Hash"
+          },
+          "defaultTtl": -1,
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2022-11-15",
+      "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/settings'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "settings",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/_etag/?"
+              }
+            ]
+          },
+          "partitionKey": {
+            "paths": [ "/PartitionKey" ],
+            "kind": "Hash"
+          },
+          "uniqueKeyPolicy": {
+            "uniqueKeys": [
+              {
+                "paths": [ "/SiteUrl" ]
+              }
+            ]
+          },
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2022-11-15",
+      "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/streamactivities'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "streamactivities",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/Priority/?"
+              },
+              {
+                "path": "/EventSubscriptionId/?"
+              },
+              {
+                "path": "/Uac/?"
+              },
+              {
+                "path": "/Activity/Object/LanguageId/?"
+              },
+              {
+                "path": "/ActionDate/?"
+              },
+              {
+                "path": "/Tags/[]/?"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/*"
+              },
+              {
+                "path": "/_etag/?"
+              }
+            ]
+          },
+          "partitionKey": {
+            "paths": [ "/PartitionKey" ],
+            "kind": "Hash"
+          },
+          "defaultTtl": -1,
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2022-11-15",
+      "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/teamprocess'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "teamprocess",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              { "path": "/AuthorizedActor/Id/?" },
+              { "path": "/AuthorizedActor/Other/?" },
+              { "path": "/ChoiceProperties/[]/K/?" },
+              { "path": "/ChoiceProperties/[]/V/?" },
+              { "path": "/ClosedDate/?" },
+              { "path": "/CreatedBy/Id/?" },
+              { "path": "/CreatedById/?" },
+              { "path": "/CreatedDate/?" },
+              { "path": "/CurrentSiteIdWebId/?" },
+              { "path": "/DueDate/?" },
+              { "path": "/ForProcessTypes/[]/?" },
+              { "path": "/InstanceOwners/[]/?" },
+              { "path": "/IsApproved/?" },
+              { "path": "/IsHttpRequest/?" },
+              { "path": "/IsLatest/?" },
+              { "path": "/ItemId/?" },
+              { "path": "/LanguageId/?" },
+              { "path": "/ListId/?" },
+              { "path": "/Metadata/ProcessType/?" },
+              { "path": "/Metadata/HasEverBeenActive/?" },
+              { "path": "/Metadata/IsActive/?" },
+              { "path": "/Metadata/Owners/[]/Id/?" },
+              { "path": "/ProcessId/?" },
+              { "path": "/ProcessInstanceId/?" },
+              { "path": "/ProcessType/?" },
+              { "path": "/PropertyValues/*" },
+              { "path": "/QueryProperties/*" },
+              { "path": "/ReviewedDate/?" },
+              { "path": "/Reviewer/Id/?" },
+              { "path": "/RoleIds/[]/?" },
+              { "path": "/Scope/Id/?" },
+              { "path": "/StartRoleId/?" },
+              { "path": "/Status/?" },
+              { "path": "/TaskMetrics/[]/TaskId/?" },
+              { "path": "/TaskMetrics/[]/AssigneeId/?" },
+              { "path": "/TaskMetrics/[]/RoleId/?" },
+              { "path": "/Tasks/[]/Assignee/Id/?" },
+              { "path": "/Tasks/[]/RoleId/?" },
+              { "path": "/Tasks/[]/Status/?" },
+              { "path": "/Tasks/[]/StatusDate/?" },
+              { "path": "/Tasks/[]/ActualDueDate/?" },
+              { "path": "/Tasks/[]/IsAssignable/?" },
+              { "path": "/Tasks/[]/IsOverdue/?" }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/*"
+              },
+              {
+                "path": "/_etag/?"
+              }
+            ]
+          },
+          "partitionKey": {
+            "paths": [ "/PartitionKey" ],
+            "kind": "Hash"
+          },
+          "defaultTtl": -1,
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2022-11-15",
+      "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/users'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "users",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/_etag/?"
+              }
+            ]
+          },
+          "partitionKey": {
+            "paths": [ "/PartitionKey" ],
+            "kind": "Hash"
+          },
+          "defaultTtl": -1,
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/storedProcedures",
+      "apiVersion": "2022-11-15",
+      "name": "[concat(parameters('cosmosDbAccountName'), concat(concat('/',variables('databaseName')),'/other/bulkDeleteSproc'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', parameters('cosmosDbAccountName'), variables('databaseName'), 'other')]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), variables('databaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "bulkDeleteSproc",
+          "body": "/**\n * From https://github.com/Azure/azure-cosmosdb-js-server/blob/master/samples/stored-procedures/bulkDelete.js\n * A Cosmos DB stored procedure that bulk deletes documents for a given query.<br/>\n * Note: You may need to execute this sproc multiple times (depending whether the sproc is able to delete every document within the execution timeout limit).\n *\n * @function\n * @param {string} query - A query that provides the documents to be deleted (e.g. \"SELECT c._self FROM c WHERE c.founded_year = 2008\"). Note: For best performance, reduce the # of properties returned per document in the query to only what's required (e.g. prefer SELECT c._self over SELECT * )\n * @returns {Object.<number, boolean>} Returns an object with the two properties:<br/>\n *   deleted - contains a count of documents deleted<br/>\n *   continuation - a boolean whether you should execute the sproc again (true if there are more documents to delete; false otherwise).\n */\nfunction bulkDeleteSproc(query) {\n    var collection = getContext().getCollection();\n    var collectionLink = collection.getSelfLink();\n    var response = getContext().getResponse();\n    var responseBody = {\n        deleted: 0,\n        continuation: true\n    };\n\n    // Validate input.\n    if (!query) throw new Error(\"The query is undefined or null.\");\n\n    tryQueryAndDelete();\n\n    // Recursively runs the query w/ support for continuation tokens.\n    // Calls tryDelete(documents) as soon as the query returns documents.\n    function tryQueryAndDelete(continuation) {\n        var requestOptions = {continuation: continuation};\n\n        var isAccepted = collection.queryDocuments(collectionLink, query, requestOptions, function (err, retrievedDocs, responseOptions) {\n            if (err) throw err;\n\n            if (retrievedDocs.length > 0) {\n                // Begin deleting documents as soon as documents are returned form the query results.\n                // tryDelete() resumes querying after deleting; no need to page through continuation tokens.\n                //  - this is to prioritize writes over reads given timeout constraints.\n                tryDelete(retrievedDocs);\n            } else if (responseOptions.continuation) {\n                // Else if the query came back empty, but with a continuation token; repeat the query w/ the token.\n                tryQueryAndDelete(responseOptions.continuation);\n            } else {\n                // Else if there are no more documents and no continuation token - we are finished deleting documents.\n                responseBody.continuation = false;\n                response.setBody(responseBody);\n            }\n        });\n\n        // If we hit execution bounds - return continuation: true.\n        if (!isAccepted) {\n            response.setBody(responseBody);\n        }\n    }\n\n    // Recursively deletes documents passed in as an array argument.\n    // Attempts to query for more on empty array.\n    function tryDelete(documents) {\n        if (documents.length > 0) {\n            // Delete the first document in the array.\n            var isAccepted = collection.deleteDocument(documents[0]._self, {}, function (err, responseOptions) {\n                if (err) throw err;\n\n                responseBody.deleted++;\n                documents.shift();\n                // Delete the next document in the array.\n                tryDelete(documents);\n            });\n\n            // If we hit execution bounds - return continuation: true.\n            if (!isAccepted) {\n                response.setBody(responseBody);\n            }\n        } else {\n            // If the document array is empty, query for more documents.\n            tryQueryAndDelete();\n        }\n    }\n}\n"
+        }
+      }
+    }
+  ]
+}

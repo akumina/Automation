@@ -1,0 +1,194 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "vnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Web app name."
+      }
+    },
+    "vnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/16",
+      "metadata": {
+        "description": "CIDR prefix for the VNET."
+      }
+    },
+    "snetAppManagerName": {
+      "type": "string",
+      "metadata": {
+        "description": "AppManager subnet name."
+      }
+    },
+    "snetAppManagerPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "AppManager subnet address prefix."
+      }
+    },
+    "snetHeadlessName": {
+      "type": "string",
+      "metadata": {
+        "description": "Headless subnet name."
+      }
+    },
+    "snetHeadlessPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Headless subnet address prefix."
+      }
+    },
+    "snetDataName": {
+      "type": "string",
+      "metadata": {
+        "description": "Data subnet name."
+      }
+    },
+    "snetDataPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Data subnet address prerix."
+      }
+    },
+    "snetWorkerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Function subnet name."
+      }
+    },
+    "snetWorkerPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Function subnet worker address prefix."
+      }
+    },
+    "snetVmName": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual machine subnet name."
+      }
+    },
+    "snetVmPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual machine subnet address prefix."
+      }
+    }
+  },
+  "variables": {
+    "networkSecurityGroupName": "[concat('nsg-', parameters('vnetName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('networkSecurityGroupName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-rdp-3389",
+            "properties": {
+              "priority": 1000,
+              "access": "Allow",
+              "direction": "Inbound",
+              "destinationPortRange": "3389",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2022-09-01",
+      "name": "[parameters('vnetName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('snetVmName')]",
+            "properties": {
+              "addressPrefix": "[parameters('snetVmPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('snetDataName')]",
+            "properties": {
+              "addressPrefix": "[parameters('snetDataPrefix')]"
+            }
+          },
+          {
+            "name": "[parameters('snetAppManagerName')]",
+            "properties": {
+              "addressPrefix": "[parameters('snetAppManagerPrefix')]",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Enabled",
+              "delegations": [
+                {
+                  "name": "appmanagerDelegation",
+                  "properties": {
+                    "serviceName": "Microsoft.Web/serverfarms"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "[parameters('snetHeadlessName')]",
+            "properties": {
+              "addressPrefix": "[parameters('snetHeadlessPrefix')]",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Enabled",
+              "delegations": [
+                {
+                  "name": "headlessDelegation",
+                  "properties": {
+                    "serviceName": "Microsoft.Web/serverfarms"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "[parameters('snetWorkerName')]",
+            "properties": {
+              "addressPrefix": "[parameters('snetWorkerPrefix')]",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Enabled",
+              "delegations": [
+                {
+                  "name": "funcappDelegation",
+                  "properties": {
+                    "serviceName": "Microsoft.Web/serverfarms"
+                  }
+                }
+              ]
+            }
+          },
+        ]
+      }
+    }
+  ]
+}
