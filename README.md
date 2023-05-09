@@ -1,4 +1,4 @@
-# Akumina AppManager/ServiceHub Infrastructure using ARM template.
+# Akumina AppManager / ServiceHub Infrastructure / Headless using ARM template.
 
 **Current Version:** AppManager 6.0; PeopleSync 6.0
 
@@ -7,9 +7,7 @@
 ## Marketplace Offerings
 We recommend you install our applications from Azure Marketplace
 
-* Latest (5.x): https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web?tab=Overview
-
-* v4.x: https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web4x?tab=Overview
+* Latest (6.x): https://azuremarketplace.microsoft.com/en-us/marketplace/apps/akumina.akumina-appmanager-web?tab=Overview
 
 ## ARM Template
 ARM Templates can be executed using 
@@ -30,8 +28,9 @@ to set desired value please use parameter file or parameter option as -cosmosDbC
 
 ```
 Package Version:
-For latest version (5.5): set packageVersion as empty (default) using parameter file or parameter option as -packageVersion "latest" 
-For 5.0: set the package version as 5.0  using parameter file or parameter option as -packageVersion "5.0"
+For version 6.0: run files under 6.x
+For version 5.5: set packageVersion as empty (default) using parameter file or parameter option as -packageVersion "latest" 
+For 5.0: set the package version as latest/ 5.0  using parameter file or parameter option as -packageVersion "5.0"
 ```
 
 
