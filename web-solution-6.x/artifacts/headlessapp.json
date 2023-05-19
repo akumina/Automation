@@ -104,7 +104,7 @@
                     "use32BitWorkerProcess": false,
                     "functionAppScaleLimit": 0,
                     "minTlsVersion": "1.2",
-                    "ftpsState": "Disabled",
+                    "ftpsState": "FtpsOnly",
                     "appSettings": [
                         {
                             "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
@@ -134,7 +134,21 @@
                 },
                 "httpsOnly": true,
                 "keyVaultReferenceIdentity": "SystemAssigned"
-            }
+            },
+            "resources": [
+                {
+                    "condition": "[not(empty(parameters('webAppPackageUrl')))]",
+                    "name": "[concat(parameters('webName'), '/ZipDeploy')]",
+                    "type": "Microsoft.Web/sites/extensions",
+                    "apiVersion": "2015-08-01",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', parameters('webName'))]"
+                    ],
+                    "properties": {
+                        "packageUri": "[parameters('webAppPackageUrl')]"
+                    }
+                }
+            ]
         }
     ]
 }

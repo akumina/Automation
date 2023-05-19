@@ -37,18 +37,23 @@
             "metadata": {
                 "description": "Data subnet name."
             }
+        },
+        "storagePublicDomainSuffixName": {
+            "type": "string",
+            "metadata": {
+                "description": "Storage public domain suffix name."
+            }
         }
     },
     "variables": {
         "privateEnpointsBlobName": "[concat('p-', parameters('storageAccountName'),'-blob')]",
-        "privateDnsZonesBlobName": "privatelink.blob.core.windows.net",
+        "privateDnsZonesBlobName": "[concat('privatelink.blob.', parameters('storagePublicDomainSuffixName'))]",
         "privateEnpointsTableName": "[concat('p-', parameters('storageAccountName'),'-table')]",
-        "privateDnsZonesTableName": "privatelink.table.core.windows.net",
+        "privateDnsZonesTableName": "[concat('privatelink.table.', parameters('storagePublicDomainSuffixName'))]",
         "privateEnpointsQueueName": "[concat('p-', parameters('storageAccountName'),'-queue')]",
-        "privateDnsZonesQueueName": "privatelink.queue.core.windows.net",
+        "privateDnsZonesQueueName": "[concat('privatelink.queue.', parameters('storagePublicDomainSuffixName'))]",
         "privateEnpointsFileName": "[concat('p-', parameters('storageAccountName'),'-file')]",
-        "privateDnsZonesFileName": "privatelink.file.core.windows.net",
-        "headlessStorageAccountName": "[concat(parameters('storageAccountName'),'web')]"
+        "privateDnsZonesFileName": "[concat('privatelink.file.', parameters('storagePublicDomainSuffixName'))]"
     },
     "resources": [
         {
@@ -88,33 +93,6 @@
                             "enabled": true
                         },
                         "queue": {
-                            "keyType": "Account",
-                            "enabled": true
-                        }
-                    },
-                    "keySource": "Microsoft.Storage"
-                },
-                "accessTier": "Hot"
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2022-09-01",
-            "name": "[variables('headlessStorageAccountName')]",
-            "location": "[parameters('location')]",
-            "sku": {
-                "name": "[parameters('storageAccountSku')]"
-            },
-            "kind": "StorageV2",
-            "properties": {
-                "minimumTlsVersion": "TLS1_2",
-                "allowBlobPublicAccess": true,
-                "publicNetworkAccess": "Enabled",
-                "allowCrossTenantReplication": false,
-                "supportsHttpsTrafficOnly": true,
-                "encryption": {
-                    "services": {
-                        "blob": {
                             "keyType": "Account",
                             "enabled": true
                         }
@@ -220,7 +198,7 @@
             "properties": {
                 "privateDnsZoneConfigs": [
                     {
-                        "name": "privatelink-blob-core-windows-net",
+                        "name": "[replace(variables('privateDnsZonesBlobName'),'-','.')]",
                         "properties": {
                             "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesBlobName'))]"
                         }
@@ -239,7 +217,7 @@
             "properties": {
                 "privateDnsZoneConfigs": [
                     {
-                        "name": "privatelink-table-core-windows-net",
+                        "name": "[replace(variables('privateDnsZonesTableName'),'-','.')]",
                         "properties": {
                             "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesTableName'))]"
                         }
@@ -259,7 +237,7 @@
             "properties": {
                 "privateDnsZoneConfigs": [
                     {
-                        "name": "privatelink-queue-core-windows-net",
+                        "name": "[replace(variables('privateDnsZonesQueueName'),'-','.')]",
                         "properties": {
                             "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesQueueName'))]"
                         }
@@ -278,7 +256,7 @@
             "properties": {
                 "privateDnsZoneConfigs": [
                     {
-                        "name": "privatelink-table-core-windows-net",
+                        "name": "[replace(variables('privateDnsZonesFileName'),'-','.')]",
                         "properties": {
                             "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesFileName'))]"
                         }

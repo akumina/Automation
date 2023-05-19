@@ -275,7 +275,8 @@
     "webAppInsightName": "[concat('appi-', parameters('webName'))]",
     "funcAppInsightName": "[concat('appi-', parameters('funcAppName'))]",
     "headlessAppInsightName": "[concat('appi-', parameters('headlessName'))]",
-    "tenantDirectory": "tenants"
+    "tenantDirectory": "tenants",
+    "headlessStorageAccountName": "[concat(parameters('storageAccountName'),'web')]"
   },
   "resources": [
     {
@@ -290,6 +291,69 @@
           "resources": []
         }
       }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('headlessStorageAccountName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('storageAccountSku')]"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": true,
+        "publicNetworkAccess": "Enabled",
+        "allowCrossTenantReplication": false,
+        "supportsHttpsTrafficOnly": true,
+        "encryption": {
+          "services": {
+            "blob": {
+              "keyType": "Account",
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        },
+        "accessTier": "Hot"
+      },
+      "resources": [
+        {
+          "type": "Microsoft.Storage/storageAccounts/blobServices",
+          "apiVersion": "2022-09-01",
+          "name": "[concat(variables('headlessStorageAccountName'), '/default')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('headlessStorageAccountName'))]"
+          ],
+          "properties": {
+
+            "cors": {
+              "corsRules": [
+                {
+                  "allowedOrigins": [
+                    "*"
+                  ],
+                  "allowedMethods": [
+                    "GET",
+                    "HEAD",
+                    "OPTIONS",
+                    "PATCH",
+                    "PUT"
+                  ],
+                  "maxAgeInSeconds": 1800,
+                  "exposedHeaders": [
+                    "*"
+                  ],
+                  "allowedHeaders": [
+                    "*"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     {
       "type": "Microsoft.Resources/deployments",
@@ -383,7 +447,7 @@
           "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/storage.json')]"
         },
         "dependsOn": [
-          "[resourceId('Microsoft.Resources/deployments', 'workspace')]",
+          "[resourceId('Microsoft.Storage/storageAccounts', variables('headlessStorageAccountName'))]",
           "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
         ],
         "parameters": {
@@ -394,7 +458,10 @@
           "storageAccountSku": { "value": "[parameters('storageAccountSku')]" },
           "fileShareName": { "value": "[concat(parameters('funcAppName'),'cs')]" },
           "vnetName": { "value": "[parameters('vnetName')]" },
-          "snetName": { "value": "[parameters('snetDataName')]" }
+          "snetName": { "value": "[parameters('snetDataName')]" },
+          "storagePublicDomainSuffixName": {
+            "value": "[replace(replace(reference(resourceId('Microsoft.Storage/storageAccounts', variables('headlessStorageAccountName'))).primaryEndpoints.blob,concat('https://',variables('headlessStorageAccountName'),'.blob.'),''),'/','')]"
+          }
         }
       }
     },
@@ -631,7 +698,7 @@
           "cognitiveSearchName": {
             "value": "[parameters('cognitiveSearchName')]"
           },
-          "secretValueObject": {
+          "appVal": {
             "value": {
               "RemoteStorageConnection": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey={0}')]",
               "SecondaryRemoteStorageConnection": "",
@@ -655,7 +722,7 @@
               "TenantsDirectoryName": "[variables('tenantDirectory')]"
             }
           },
-          "headlessSecretValueObject": {
+          "headlessVal": {
             "value": {
               "Logging": {
                 "LogLevel": {
