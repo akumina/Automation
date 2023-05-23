@@ -96,7 +96,7 @@
     }
   },
   "variables": {
-    "secretName": "appmanger",
+    "secretName": "appmanager",
     "headlessSecretName": "headless",
     "privateDnsZonesName": "privatelink.vaultcore.azure.net",
     "privateEnpointsName": "[concat('p-', parameters('keyVaultName'))]"

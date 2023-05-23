@@ -37,17 +37,10 @@
             "metadata": {
                 "description": "Web app application insight connection string."
             }
-        },
-        "keyVaultName": {
-            "type": "string",
-            "metadata": {
-                "description": "Key vault name."
-            }
         }
     },
     "variables": {
-        "appServicePlanName": "[concat('plan-', parameters('webName'))]",
-        "keyVaultSecretUri": "[concat('https://', parameters('keyVaultName'),'.vault.azure.net/secrets/appmanager')]"
+        "appServicePlanName": "[concat('plan-', parameters('webName'))]"
     },
     "resources": [
         {
@@ -56,7 +49,6 @@
             "name": "[variables('appServicePlanName')]",
             "location": "[parameters('location')]",
             "kind": "app",
-
             "comments": "This app service plan is used for the web app and slots.",
             "tags": {
                 "displayName": "AppServicePlan"
@@ -71,7 +63,6 @@
             "name": "[parameters('webName')]",
             "location": "[parameters('location')]",
             "kind": "app",
-
             "comments": "This is the web app, also the default 'nameless' slot.",
             "tags": {
                 "displayName": "WebApp"
@@ -109,14 +100,6 @@
                         {
                             "name": "XDT_MicrosoftApplicationInsights_Mode",
                             "value": "default"
-                        },
-                        {
-                            "name": "SCM_COMMAND_IDLE_TIMEOUT",
-                            "value": "3600"
-                        },
-                        {
-                            "name": "AkuminaConnectionString",
-                            "value": "[variables('keyVaultSecretUri')]"
                         }
                     ]
                 }

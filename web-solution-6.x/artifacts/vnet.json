@@ -14,9 +14,24 @@
         "description": "Web app name."
       }
     },
+    "vnetNewOrExisting": {
+      "type": "string",
+      "allowedValues": [
+        "new",
+        "existing"
+      ],
+      "metadata": {
+        "description": "Create a new VNET or use an existing one."
+      }
+    },
+    "vnetResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource group name for the VNET."
+      }
+    },
     "vnetPrefix": {
       "type": "string",
-      "defaultValue": "10.0.0.0/16",
       "metadata": {
         "description": "CIDR prefix for the VNET."
       }
@@ -186,9 +201,19 @@
                 }
               ]
             }
-          },
+          }
         ]
       }
     }
-  ]
+  ],
+  "outputs": {
+    "vnetNewOrExisting": {
+      "type": "string",
+      "value": "[ parameters('vnetNewOrExisting')]"
+    },
+    "vnetResourceGroup": {
+      "type": "string",
+      "value": "[ parameters('vnetResourceGroup')]"
+    }
+  }
 }

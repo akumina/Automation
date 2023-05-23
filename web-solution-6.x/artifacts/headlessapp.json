@@ -37,17 +37,10 @@
             "metadata": {
                 "description": "Web app application insight connection string."
             }
-        },
-        "keyVaultName": {
-            "type": "string",
-            "metadata": {
-                "description": "Key vault name."
-            }
         }
     },
     "variables": {
-        "appServicePlanName": "[concat('plan-', parameters('webName'))]",
-        "keyVaultSecretUri": "[concat('https://', parameters('keyVaultName'),'.vault.azure.net/secrets/headless')]"
+        "appServicePlanName": "[concat('plan-', parameters('webName'))]"
     },
     "resources": [
         {
@@ -121,14 +114,6 @@
                         {
                             "name": "XDT_MicrosoftApplicationInsights_Mode",
                             "value": "default"
-                        },
-                        {
-                            "name": "SCM_COMMAND_IDLE_TIMEOUT",
-                            "value": "3600"
-                        },
-                        {
-                            "name": "AppSettingsSecretUri",
-                            "value": "[variables('keyVaultSecretUri')]"
                         }
                     ]
                 },

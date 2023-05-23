@@ -47,7 +47,6 @@
     },
     "variables": {
         "serverfarmsPlan": "[concat('plan-',parameters('funcAppName'))]",
-        "hostedBlobContainer": "akcloud",
         "cosmosDbConnectionString": "[concat('AccountEndpoint=https://',parameters('cosmosDbAccountName'),'.documents.azure.com:443/;AccountKey={0}')]",
         "storageConnectionString": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey={0}')]"
     },
@@ -119,110 +118,6 @@
                         {
                             "name": "ActivityStreamConnection",
                             "value": "[format(variables('cosmosDbConnectionString'),listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), '2022-11-15').primaryMasterKey)]"
-                        },
-                        {
-                            "name": "Database",
-                            "value": "akcontainers"
-                        },
-                        {
-                            "name": "HostedBlobContainer",
-                            "value": "[variables('hostedBlobContainer')]"
-                        },
-                        {
-                            "name": "ActivityStreamQueueMaxProcessingTimeMs",
-                            "value": "540000"
-                        },
-                        {
-                            "name": "ActivityStreamQueueName",
-                            "value": "activity-stream"
-                        },
-                        {
-                            "name": "ActivitySubscriptionsCollection",
-                            "value": "activitysubscriptions"
-                        },
-                        {
-                            "name": "CalendarQueueName",
-                            "value": "calendar-events"
-                        },
-                        {
-                            "name": "CommentsCollection",
-                            "value": "comments"
-                        },
-                        {
-                            "name": "EventSubscriptionsCollection",
-                            "value": "eventsubscriptions"
-                        },
-                        {
-                            "name": "NotificationDigestQueueName",
-                            "value": "notification-digest"
-                        },
-                        {
-                            "name": "OtherCollection",
-                            "value": "other"
-                        },
-                        {
-                            "name": "ProcessingGroupMaxQuerySize",
-                            "value": "100"
-                        },
-                        {
-                            "name": "ProcessingGroups",
-                            "value": "0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f"
-                        },
-                        {
-                            "name": "StreamActivitiesCollection",
-                            "value": "streamactivities"
-                        },
-                        {
-                            "name": "Ttl",
-                            "value": "2592000"
-                        },
-                        {
-                            "name": "UsersCollection",
-                            "value": "users"
-                        },
-                        {
-                            "name": "UserStreamActivitiesCollection",
-                            "value": "userstreamactivities"
-                        },
-                        {
-                            "name": "CosmosTriggerMaxTries",
-                            "value": "3"
-                        },
-                        {
-                            "name": "SharePointQueueName",
-                            "value": "sharepoint-events"
-                        },
-                        {
-                            "name": "TasksQueueName",
-                            "value": "tasks"
-                        },
-                        {
-                            "name": "ActivityStreamPoisonQueueName",
-                            "value": "activity-stream-poison"
-                        },
-                        {
-                            "name": "UserChangesQueueName",
-                            "value": "user-changes"
-                        },
-                        {
-                            "name": "NotificationEventsQueueName",
-                            "value": "notification-events"
-                        },
-                        {
-                            "name": "CosmosSdkRetry",
-                            "value": "3"
-                        },
-                        {
-                            "name": "ActivityStreamMaxRetries",
-                            "value": "3"
-                        },
-                        {
-                            "name": "ActivityStreamRetryDelayMinutes",
-                            "value": "3"
-                        },
-                        {
-                            "name": "UsePremiumOption",
-                            "value": "False"
                         }
                     ]
                 }

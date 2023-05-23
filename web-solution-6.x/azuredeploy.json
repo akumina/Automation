@@ -80,21 +80,18 @@
     },
     "redisSkuName": {
       "type": "string",
-      "defaultValue": "Standard",
       "metadata": {
-        "description": "Azure Redis cache pricing tier (Standard or Premium)."
+        "description": "Azure Redis cache pricing tier (Premium)."
       }
     },
     "redisSkuFamily": {
       "type": "string",
-      "defaultValue": "C",
       "metadata": {
-        "description": "Azure Redis family (C-Standard or P-Premium)."
+        "description": "Azure Redis family (P-Premium)."
       }
     },
     "redisSkuCapacity": {
       "type": "string",
-      "defaultValue": "1",
       "metadata": {
         "description": "Azure Redis cache capacity (0 to 6)."
       }
@@ -145,6 +142,19 @@
       "type": "string",
       "metadata": {
         "description": "Virtual network name."
+      }
+    },
+    "vnetNewOrExisting": {
+      "type": "string",
+      "allowedValues": [ "new", "existing" ],
+      "metadata": {
+        "description": "Virtual network new or existing."
+      }
+    },
+    "vnetResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual network resource group name."
       }
     },
     "vnetPrefix": {
@@ -369,6 +379,12 @@
           "vnetName": {
             "value": "[parameters('vnetName')]"
           },
+          "vnetNewOrExisting": {
+            "value": "[parameters('vnetNewOrExisting')]"
+          },
+          "vnetResourceGroup": {
+            "value": "[parameters('vnetResourceGroup')]"
+          },
           "vnetPrefix": {
             "value": "[parameters('vnetPrefix')]"
           },
@@ -395,14 +411,14 @@
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
       "name": "vm",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+      ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
           "uri": "[uri(deployment().properties.templateLink.uri, 'artifacts/vm.json')]"
         },
-        "dependsOn": [
-          "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
-        ],
         "parameters": {
           "location": { "value": "[parameters('location')]" },
           "vnetName": {
@@ -591,8 +607,7 @@
           },
           "webAppInsightConnectionString": {
             "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]"
-          },
-          "keyVaultName": { "value": "[parameters('keyVaultName')]" }
+          }
         }
       }
     },
@@ -620,8 +635,7 @@
           },
           "webAppInsightConnectionString": {
             "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]"
-          },
-          "keyVaultName": { "value": "[parameters('keyVaultName')]" }
+          }
         }
       }
     },
@@ -776,7 +790,23 @@
           "storageAccountName": {
             "value": "[parameters('storageAccountName')]"
           },
-          "storageAccountSku": { "value": "[parameters('storageAccountSku')]" }
+          "storageAccountSku": { "value": "[parameters('storageAccountSku')]" },
+          "keyVaultSecretUri": { "value": "[reference('keyvault').outputs.keyVaultSecretUri.value]" },
+          "webAppInstrumentationKey": {
+            "value": "[reference('appinsight').outputs.webAppInstrumentationKey.value]"
+          },
+          "webAppInsightConnectionString": {
+            "value": "[reference('appinsight').outputs.webAppInsightConnectionString.value]"
+          },
+          "funcAppInstrumentationKey": {
+            "value": "[reference('appinsight').outputs.funcAppInstrumentationKey.value]"
+          },
+          "funcAppInsightConnectionString": {
+            "value": "[reference('appinsight').outputs.funcAppInsightConnectionString.value]"
+          },
+          "cosmosDbAccountName": {
+            "value": "[parameters('cosmosDbAccountName')]"
+          }
         }
       }
     }
