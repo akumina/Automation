@@ -1,0 +1,166 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "centralus"
+    },
+    "webName": {
+      "value": "app-akudai04268"
+    },
+    "webSku": {
+      "value": "P2V2"
+    },
+    "headlessName": {
+      "value": "app-hl-akudai04268"
+    },
+    "headlessSku": {
+      "value": "P2V2"
+    },
+    "storageAccountName": {
+      "value": "stakudai04268"
+    },
+    "storageAccountSku": {
+      "value": "Standard_GRS"
+    },
+    "keyVaultName": {
+      "value": "kv-akudai04268"
+    },
+    "keyVaultSku": {
+      "value": "Standard"
+    },
+    "aiSearchName": {
+      "value": "srch-akudai04268"
+    },
+    "aiSearchSku": {
+      "value": "standard"
+    },
+    "redisCacheName": {
+      "value": "redis-akudai04268"
+    },
+    "redisSku": {
+      "value": "Balanced_B5"
+    },
+    "funcAppName": {
+      "value": "func-akudai04268"
+    },
+    "funcAppSku": {
+      "value": "P1V3"
+    },
+    "cosmosDBAccountName": {
+      "value": "cosmos-akudai04268"
+    },
+    "cosmosDbCapacityMode": {
+      "value": "Throughput"
+    },
+
+    "workspacesLogName": {
+      "value": "log-akudai04268"
+    },
+    "webAppPackageUrl": {
+      "value": ""
+    },
+    "funcAppPackageUrl": {
+      "value": ""
+    },
+    "headlessAppPackageUrl": {
+      "value": ""
+    },
+    "aiName": {
+      "value": "app-ai-akudai04268"
+    },
+    "aiSku": {
+      "value": "P2V2"
+    },
+    "aiAppPackageUrl": {
+      "value": ""
+    },
+    "peoplesyncFuncAppName": {
+      "value": "func-peoplesync-akudai04268"
+    },
+    "peoplesyncFuncAppSku": {
+      "value": "P1V3"
+    },
+    "peoplesyncFuncPackageUrl": {
+      "value": ""
+    },
+    "vnetName": {
+      "value": "vnet-akudai04268"
+    },
+    "vnetNewOrExisting": {
+      "value": "new"
+    },
+    "vnetResourceGroup": {
+      "value": "rg-akudai04268"
+    },
+    "vnetPrefix": {
+      "value": "10.2.0.0/16"
+    },
+    "snetAppManagerName": {
+      "value": "snet-appmanager"
+    },
+    "snetAppManagerPrefix": {
+      "value": "10.2.1.0/24"
+    },
+    "snetHeadlessName": {
+      "value": "snet-headless"
+    },
+    "snetHeadlessPrefix": {
+      "value": "10.2.2.0/24"
+    },
+    "snetDataName": {
+      "value": "snet-data"
+    },
+    "snetDataPrefix": {
+      "value": "10.2.3.0/24"
+    },
+    "snetAppManagerFuncName": {
+      "value": "snet-appmanager-func"
+    },
+    "snetAppManagerFuncPrefix": {
+      "value": "10.2.4.0/24"
+    },
+    "snetVmName": {
+      "value": "snet-vm"
+    },
+    "snetVmPrefix": {
+      "value": "10.2.5.0/24"
+    },
+    "snetAiName": {
+      "value": "snet-ai"
+    },
+    "snetAiPrefix": {
+      "value": "10.2.6.0/24"
+    },
+    "snetPeopleSyncName": {
+      "value": "snet-peoplesync"
+    },
+    "snetPeopleSyncPrefix": {
+      "value": "10.2.7.0/24"
+    },
+    "vmName": {
+      "value": "vm-akudai04268"
+    },
+    "adminUsername": {
+      "value": "akadmin"
+    },
+    "adminPassword": {
+      "value": "@Kumina@Nashua2026"
+    },
+    "vmSize": {
+      "value": "Standard_D2s_v6"
+    },
+    "publicIpName": {
+      "value": "pip-akudai04268"
+    },
+    "dnsLabelPrefix": {
+      "value": "akudai04268"
+    },
+    "publicIPAllocationMethod": {
+      "value": "Static"
+    },
+    "publicIpSku": {
+      "value": "Standard"
+    }
+  }
+}

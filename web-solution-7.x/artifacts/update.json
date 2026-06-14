@@ -1,0 +1,806 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "webName": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app name."
+            }
+        },
+        "headlessName": {
+            "type": "string",
+            "metadata": {
+                "description": "Headless Web app name."
+            }
+        },
+        "funcAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app name."
+            }
+        },
+        "vnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Virtual network name."
+            }
+        },
+        "snetAppManagerName": {
+            "type": "string",
+            "metadata": {
+                "description": "AppManager subnet name."
+            }
+        },
+        "snetAppManagerFuncName": {
+            "type": "string",
+            "metadata": {
+                "description": "AppManager Function subnet name."
+            }
+        },
+        "snetHeadlessName": {
+            "type": "string",
+            "metadata": {
+                "description": "Headless subnet name."
+            }
+        },
+        "aiName": {
+            "type": "string",
+            "metadata": {
+                "description": "AI web app name."
+            }
+        },
+        "snetAiName": {
+            "type": "string",
+            "metadata": {
+                "description": "AI app subnet name."
+            }
+        },
+        "aiKeyVaultSecretUri": {
+            "type": "string",
+            "metadata": {
+                "description": "Key vault secret URI for the AI app."
+            }
+        },
+        "aiAppInstrumentationKey": {
+            "type": "string",
+            "metadata": {
+                "description": "AI app application insight instrumentation key."
+            }
+        },
+        "aiAppInsightConnectionString": {
+            "type": "string",
+            "metadata": {
+                "description": "AI app application insight connection string."
+            }
+        },
+        "peoplesyncFuncAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "PeopleSync function app name."
+            }
+        },
+        "snetPeopleSyncName": {
+            "type": "string",
+            "metadata": {
+                "description": "PeopleSync function app subnet name."
+            }
+        },
+        "peoplesyncFuncInstrumentationKey": {
+            "type": "string",
+            "metadata": {
+                "description": "PeopleSync function app application insight instrumentation key."
+            }
+        },
+        "peoplesyncFuncInsightConnectionString": {
+            "type": "string",
+            "metadata": {
+                "description": "PeopleSync function app application insight connection string."
+            }
+        },
+        "storageAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure storage account name."
+            }
+        },
+        "storageAccountSku": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure storage account replication type (Standard is required for Blob, Queue, Table and Fileshare)."
+            }
+        },
+        "keyVaultSecretUri": {
+            "type": "string",
+            "metadata": {
+                "description": "Key vault secret uri."
+            }
+        },
+        "webAppInstrumentationKey": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app application insight instrumentation key."
+            }
+        },
+        "webAppInsightConnectionString": {
+            "type": "string",
+            "metadata": {
+                "description": "Web app application insight connection string."
+            }
+        },
+        "funcAppInstrumentationKey": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app application insight instrumentation key."
+            }
+        },
+        "funcAppInsightConnectionString": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app application insight connection string."
+            }
+        },
+        "cosmosDbAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Cosmos DB account name."
+            }
+        }
+    },
+    "variables": {
+        "hostedBlobContainer": "akcloud",
+        "cosmosDbConnectionString": "[concat('AccountEndpoint=https://',parameters('cosmosDbAccountName'),'.documents.azure.com:443/;AccountKey={0}')]",
+        "storageConnectionString": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey={0}')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2023-12-01",
+            "name": "[parameters('webName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "vnetRouteAllEnabled": true,
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetAppManagerName'))]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[parameters('webAppInstrumentationKey')]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[parameters('webAppInsightConnectionString')]"
+                        },
+                        {
+                            "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+                            "value": "~2"
+                        },
+                        {
+                            "name": "XDT_MicrosoftApplicationInsights_Mode",
+                            "value": "default"
+                        },
+                        {
+                            "name": "SCM_COMMAND_IDLE_TIMEOUT",
+                            "value": "3600"
+                        },
+                        {
+                            "name": "AkuminaConnectionString",
+                            "value": "[parameters('keyVaultSecretUri')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2023-12-01",
+            "name": "[parameters('funcAppName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "vnetRouteAllEnabled": true,
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetAppManagerFuncName'))]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[parameters('funcAppInstrumentationKey')]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[parameters('funcAppInsightConnectionString')]"
+                        },
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[format(variables('storageConnectionString'),listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-05-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                            "value": "[format(variables('storageConnectionString'),listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-05-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTSHARE",
+                            "value": "[concat(toLower(parameters('funcAppName')), 'cs')]"
+                        },
+                        {
+                            "name": "ActivityStreamConnection",
+                            "value": "[format(variables('cosmosDbConnectionString'),listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), '2024-05-15').primaryMasterKey)]"
+                        },
+                        {
+                            "name": "Database",
+                            "value": "akcontainers"
+                        },
+                        {
+                            "name": "HostedBlobContainer",
+                            "value": "[variables('hostedBlobContainer')]"
+                        },
+                        {
+                            "name": "ActivityStreamQueueMaxProcessingTimeMs",
+                            "value": "540000"
+                        },
+                        {
+                            "name": "ActivityStreamQueueName",
+                            "value": "activity-stream"
+                        },
+                        {
+                            "name": "ActivitySubscriptionsCollection",
+                            "value": "activitysubscriptions"
+                        },
+                        {
+                            "name": "CalendarQueueName",
+                            "value": "calendar-events"
+                        },
+                        {
+                            "name": "CommentsCollection",
+                            "value": "comments"
+                        },
+                        {
+                            "name": "EventSubscriptionsCollection",
+                            "value": "eventsubscriptions"
+                        },
+                        {
+                            "name": "NotificationDigestQueueName",
+                            "value": "notification-digest"
+                        },
+                        {
+                            "name": "OtherCollection",
+                            "value": "other"
+                        },
+                        {
+                            "name": "ProcessingGroupMaxQuerySize",
+                            "value": "100"
+                        },
+                        {
+                            "name": "ProcessingGroups",
+                            "value": "0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f"
+                        },
+                        {
+                            "name": "StreamActivitiesCollection",
+                            "value": "streamactivities"
+                        },
+                        {
+                            "name": "Ttl",
+                            "value": "7776000"
+                        },
+                        {
+                            "name": "UsersCollection",
+                            "value": "users"
+                        },
+                        {
+                            "name": "UserStreamActivitiesCollection",
+                            "value": "userstreamactivities"
+                        },
+                        {
+                            "name": "CosmosTriggerMaxTries",
+                            "value": "3"
+                        },
+                        {
+                            "name": "SharePointQueueName",
+                            "value": "sharepoint-events"
+                        },
+                        {
+                            "name": "TasksQueueName",
+                            "value": "tasks"
+                        },
+                        {
+                            "name": "ActivityStreamPoisonQueueName",
+                            "value": "activity-stream-poison"
+                        },
+                        {
+                            "name": "UserChangesQueueName",
+                            "value": "user-changes"
+                        },
+                        {
+                            "name": "NotificationEventsQueueName",
+                            "value": "notification-events"
+                        },
+                        {
+                            "name": "CosmosSdkRetry",
+                            "value": "3"
+                        },
+                        {
+                            "name": "ActivityStreamMaxRetries",
+                            "value": "3"
+                        },
+                        {
+                            "name": "ActivityStreamRetryDelayMinutes",
+                            "value": "3"
+                        },
+                        {
+                            "name": "UsePremiumOption",
+                            "value": "False"
+                        },
+                        {
+                            "name": "ActivityDeliveryQueueName",
+                            "value": "activity-delivery"
+                        },
+                        {
+                            "name": "AzureWebJobs.ActivityStreamQueueTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "AzureWebJobs.CalendarEventsQueueTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.ContentDistributionQueueTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.FormEventsQueueTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.NotificationDigestQueueTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.NotificationEventsQueueTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.SchedulerQueueTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "AzureWebJobs.SendEmailsQueueTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.SendPushNotificationQueueTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.SendSmsQueueTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.SendTeamsQueueTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.SharePointEventsQueueTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "AzureWebJobs.UserChangesQueueTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "DoDeDup",
+                            "value": "true"
+                        },
+                        {
+                            "name": "DoDrainQueue",
+                            "value": "false"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~4"
+                        },
+                        {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "dotnet-isolated"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTOVERVNET",
+                            "value": "1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2023-12-01",
+            "name": "[parameters('headlessName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "vnetRouteAllEnabled": true,
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetHeadlessName'))]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[parameters('webAppInstrumentationKey')]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[parameters('webAppInsightConnectionString')]"
+                        },
+                        {
+                            "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+                            "value": "~2"
+                        },
+                        {
+                            "name": "XDT_MicrosoftApplicationInsights_Mode",
+                            "value": "default"
+                        },
+                        {
+                            "name": "SCM_COMMAND_IDLE_TIMEOUT",
+                            "value": "3600"
+                        },
+                        {
+                            "name": "AppSettingsSecretUri",
+                            "value": "[replace(parameters('keyVaultSecretUri'),'appmanager','headless')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2023-12-01",
+            "name": "[parameters('aiName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "vnetRouteAllEnabled": true,
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetAiName'))]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[parameters('aiAppInstrumentationKey')]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[parameters('aiAppInsightConnectionString')]"
+                        },
+                        {
+                            "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+                            "value": "~2"
+                        },
+                        {
+                            "name": "XDT_MicrosoftApplicationInsights_Mode",
+                            "value": "default"
+                        },
+                        {
+                            "name": "SCM_COMMAND_IDLE_TIMEOUT",
+                            "value": "3600"
+                        },
+                        {
+                            "name": "KEYVAULT_URI",
+                            "value": "[parameters('aiKeyVaultSecretUri')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2023-05-01",
+            "name": "[parameters('storageAccountName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('storageAccountSku')]"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "publicNetworkAccess": "Disabled",
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "defaultAction": "Deny"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2023-12-01",
+            "name": "[parameters('peoplesyncFuncAppName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "vnetRouteAllEnabled": true,
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetPeopleSyncName'))]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[parameters('peoplesyncFuncInstrumentationKey')]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[parameters('peoplesyncFuncInsightConnectionString')]"
+                        },
+                        {
+                            "name": "AiAssetsQueueName",
+                            "value": "ai-assets"
+                        },
+                        {
+                            "name": "AiConnectionString",
+                            "value": "[format(variables('storageConnectionString'),listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-05-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "AkuminaConnection",
+                            "value": "[parameters('keyVaultSecretUri')]"
+                        },
+                        {
+                            "name": "AIAkuminaConnection",
+                            "value": "[parameters('aiKeyVaultSecretUri')]"
+                        },
+                        {
+                            "name": "AzureConnectionString",
+                            "value": "[format(variables('storageConnectionString'),listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-05-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "AzureWebJobs.DocumentVectorQueueTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "AzureWebJobs.ForceFullSyncTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncDeltaTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncExternalAssemblyTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncMonitorTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncQueueTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskPoisonQueueTrigger_G1.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskPoisonQueueTrigger_G2.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskPoisonQueueTrigger_G3.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskPoisonQueueTrigger_G4.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskPoisonQueueTrigger_G5.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskPoisonQueueTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskQueueTrigger_G1.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskQueueTrigger_G2.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskQueueTrigger_G3.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskQueueTrigger_G4.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskQueueTrigger_G5.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleSyncTaskQueueTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleVectorQueueTrigger_G1.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleVectorQueueTrigger_G2.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleVectorQueueTrigger_G3.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleVectorQueueTrigger_G4.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleVectorQueueTrigger_G5.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobs.PeopleVectorQueueTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "AzureWebJobs.PersonaTaskPoisonQueueTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "AzureWebJobs.PersonaTaskQueueTrigger.Disabled",
+                            "value": "0"
+                        },
+                        {
+                            "name": "AzureWebJobs.ServiceConnectivityValidatorTrigger.Disabled",
+                            "value": "1"
+                        },
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[format(variables('storageConnectionString'),listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-05-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "ClientExpiryTriggerCron",
+                            "value": "0 0 5 * * *"
+                        },
+                        {
+                            "name": "ConnectivityCheckTriggerCron",
+                            "value": "0 */5 * * * *"
+                        },
+                        {
+                            "name": "CosmosDbTTLInMinutes",
+                            "value": "60"
+                        },
+                        {
+                            "name": "DefaultFetchProperties",
+                            "value": "{ \"TagExtension\": \"\", \"TypeExtension\": \"\", \"ExpandProperties\": \"\", \"UserProperties\": \"id,accountEnabled,businessPhones,city,companyName,country,deletionTimestamp,department,onPremisesSyncEnabled,displayName,facsimileTelephoneNumber,givenName,jobTitle,mail,mailNickName,mobilePhone,objectType,officelocation,physicalDeliveryOfficeName,postalCode,preferredLanguage,sipProxyAddress,state,streetAddress,surname,telephoneNumber,usageLocation,userPrincipalName,userType,otherMails,provisionedPlans,provisioningErrors,proxyAddresses,schools,skills,birthday\", \"UserExtendedProperties\": \"Manager,AssignedLicenses,AppRoleAssignments,DirectReports,OwnedDevices,RegisteredDevices,OtherProperties,UserPreferences\", \"GroupProperties\": \"id,description,displayName\", \"PersonaUserProperties\": \"mail,displayName,userPrincipalName,businessphones,aklanguageid\", \"UserGroupUserProperties\": \"displayName,userPrincipalName,businessphones,aklanguageid\", \"SkipUsers\": \"\", \"SkipGroups\": \"\", \"LargeContentProperties\": \"DirectReports\", \"DateTimeOffsetProperties\": \"CreationDate\", \"ConvertValueToLowerCase\": \"userPrincipalName,mail,userEmail\" }"
+                        },
+                        {
+                            "name": "DeltaSyncSleepTime",
+                            "value": "30"
+                        },
+                        {
+                            "name": "DeltaTriggerCron",
+                            "value": "0 */5 * * * *"
+                        },
+                        {
+                            "name": "DNSName",
+                            "value": "azurewebsites.net"
+                        },
+                        {
+                            "name": "DocumentVectorReadMetaData",
+                            "value": "1"
+                        },
+                        {
+                            "name": "DurableRetryAttempts",
+                            "value": "5"
+                        },
+                        {
+                            "name": "DurableRetryInterval",
+                            "value": "1"
+                        },
+                        {
+                            "name": "EmailSettings",
+                            "value": "{\"SmtpHost\": \"smtp.sendgrid.net\", \"SmtpPort\": \"123\", \"SmtpUser\": \"apikey\", \"SmtpPassword\": \"password\", \"NotifyTo\": \"xyz@mail.com,abc@mail.com\", \"NotifyFrom\": \"jkl@mail.com\" }"
+                        },
+                        {
+                            "name": "EndpointSuffix",
+                            "value": "[environment().suffixes.storage]"
+                        },
+                        {
+                            "name": "EnvironmentName",
+                            "value": "DEV"
+                        },
+                        {
+                            "name": "ForceFullSyncTriggerCron",
+                            "value": "0 30 10 * * *"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~4"
+                        },
+                        {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "dotnet-isolated"
+                        },
+                        {
+                            "name": "MaxDequeueCount",
+                            "value": "5"
+                        },
+                        {
+                            "name": "MaxPeopleSyncIdealTime",
+                            "value": "6"
+                        },
+                        {
+                            "name": "MaxSearchIndexCount",
+                            "value": "1"
+                        },
+                        {
+                            "name": "NotifyTo",
+                            "value": "XYZ@mail.com"
+                        },
+                        {
+                            "name": "PeopleSyncConnection",
+                            "value": "[format(variables('cosmosDbConnectionString'),listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), '2024-05-15').primaryMasterKey)]"
+                        },
+                        {
+                            "name": "PeopleSyncQueueName",
+                            "value": "peoplesync"
+                        },
+                        {
+                            "name": "PeopleSyncTaskPoisonQueueName",
+                            "value": "peoplesynctask-poison"
+                        },
+                        {
+                            "name": "PeopleSyncTaskQueueName",
+                            "value": "peoplesynctask"
+                        },
+                        {
+                            "name": "PersonaProcessCount",
+                            "value": "1"
+                        },
+                        {
+                            "name": "PersonaTaskPoisonQueueName",
+                            "value": "peoplesyncpersonatask-poison"
+                        },
+                        {
+                            "name": "PersonaTaskQueueName",
+                            "value": "peoplesyncpersonatask"
+                        },
+                        {
+                            "name": "ProcessCount",
+                            "value": "500"
+                        },
+                        {
+                            "name": "RunMonitorTriggerCron",
+                            "value": "0 */600 * * *"
+                        },
+                        {
+                            "name": "SupportPeopleSync",
+                            "value": "true"
+                        },
+                        {
+                            "name": "VectorProcessCount",
+                            "value": "1"
+                        },
+                        {
+                            "name": "VectorTaskQueueName",
+                            "value": "vectortask"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                            "value": "[format(variables('storageConnectionString'),listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-05-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTSHARE",
+                            "value": "[concat(toLower(parameters('peoplesyncFuncAppName')), 'cs')]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTOVERVNET",
+                            "value": "1"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

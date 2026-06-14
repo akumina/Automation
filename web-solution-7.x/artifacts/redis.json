@@ -1,0 +1,145 @@
+ {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "redisCacheName": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure Managed Redis instance name."
+            }
+        },
+        "redisSku": {
+            "type": "string",
+            "defaultValue": "Balanced_B5",
+            "metadata": {
+                "description": "Azure Managed Redis SKU (e.g. Balanced_B5, Balanced_B10, MemoryOptimized_M10)."
+            }
+        },
+        "vnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Virtual network name."
+            }
+        },
+        "snetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Data subnet name."
+            }
+        }
+    },
+    "variables": {
+        "privateDnsZonesName": "privatelink.redisenterprise.cache.azure.net",
+        "privateEnpointsName": "[concat('p-', parameters('redisCacheName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Cache/redisEnterprise",
+            "name": "[parameters('redisCacheName')]",
+            "apiVersion": "2025-04-01",
+            "location": "[parameters('location')]",
+            "tags": {
+                "displayName": "ManagedRedis"
+            },
+            "sku": {
+                "name": "[parameters('redisSku')]"
+            },
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Cache/redisEnterprise/databases",
+            "apiVersion": "2025-04-01",
+            "name": "[concat(parameters('redisCacheName'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cache/redisEnterprise', parameters('redisCacheName'))]"
+            ],
+            "properties": {
+                "clientProtocol": "Encrypted",
+                "evictionPolicy": "NoEviction",
+                "clusteringPolicy": "OSSCluster",
+                "persistence": {
+                    "aofEnabled": false,
+                    "rdbEnabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones",
+            "apiVersion": "2020-06-01",
+            "name": "[variables('privateDnsZonesName')]",
+            "location": "global"
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+            "apiVersion": "2020-06-01",
+            "name": "[format('{0}/{1}', variables('privateDnsZonesName'), format('{0}-link', variables('privateDnsZonesName')))]",
+            "location": "global",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+            ],
+            "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2024-05-01",
+            "name": "[variables('privateEnpointsName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cache/redisEnterprise', parameters('redisCacheName'))]"
+            ],
+            "properties": {
+                "privateLinkServiceConnections": [
+                    {
+                        "name": "[variables('privateEnpointsName')]",
+                        "id": "[concat(resourceId('Microsoft.Network/privateEndpoints', variables('privateEnpointsName')), concat('/privateLinkServiceConnections/', variables('privateEnpointsName')))]",
+                        "properties": {
+                            "privateLinkServiceId": "[resourceId('Microsoft.Cache/redisEnterprise', parameters('redisCacheName'))]",
+                            "groupIds": [
+                                "redisEnterprise"
+                            ],
+                            "privateLinkServiceConnectionState": {
+                                "status": "Approved",
+                                "description": "Auto-Approved",
+                                "actionsRequired": "None"
+                            }
+                        }
+                    }
+                ],
+                "customNetworkInterfaceName": "[concat(variables('privateEnpointsName'), '-nic')]",
+                "subnet": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetName'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+            "apiVersion": "2024-05-01",
+            "name": "[concat(variables('privateEnpointsName'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateEndpoints', variables('privateEnpointsName'))]",
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+            ],
+            "properties": {
+                "privateDnsZoneConfigs": [
+                    {
+                        "name": "privatelink-redisenterprise-cache-azure-net",
+                        "properties": {
+                            "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

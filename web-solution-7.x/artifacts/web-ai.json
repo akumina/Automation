@@ -1,0 +1,138 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "webName": {
+            "type": "string",
+            "metadata": {
+                "description": "AI web app name."
+            }
+        },
+        "webSku": {
+            "type": "string",
+            "metadata": {
+                "description": "AI web app pricing tier."
+            }
+        },
+        "webAppPackageUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "AI web app deployment package URL."
+            }
+        },
+        "webAppInstrumentationKey": {
+            "type": "string",
+            "metadata": {
+                "description": "AI web app application insight instrumentation key."
+            }
+        },
+        "webAppInsightConnectionString": {
+            "type": "string",
+            "metadata": {
+                "description": "AI web app application insight connection string."
+            }
+        }
+    },
+    "variables": {
+        "appServicePlanName": "[concat('plan-', parameters('webName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2023-12-01",
+            "name": "[variables('appServicePlanName')]",
+            "location": "[parameters('location')]",
+            "kind": "app,linux",
+            "properties": {
+                "reserved": true
+            },
+            "comments": "This app service plan is used for the AI web app.",
+            "tags": {
+                "displayName": "AppServicePlan"
+            },
+            "sku": {
+                "name": "[parameters('webSku')]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2023-12-01",
+            "name": "[parameters('webName')]",
+            "location": "[parameters('location')]",
+            "comments": "Linux-based AI web app.",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            ],
+            "kind": "app,linux",
+            "tags": {
+                "displayName": "AiWebApp"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "enabled": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+                "clientAffinityEnabled": false,
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "vnetImagePullEnabled": false,
+                "vnetContentShareEnabled": false,
+                "publicNetworkAccess": "Enabled",
+                "siteConfig": {
+                    "numberOfWorkers": 1,
+                    "netFrameworkVersion": "v4.0",
+                    "linuxFxVersion": "DOTNETCORE|10.0",
+                    "acrUseManagedIdentityCreds": false,
+                    "alwaysOn": true,
+                    "http20Enabled": true,
+                    "use32BitWorkerProcess": false,
+                    "functionAppScaleLimit": 0,
+                    "minTlsVersion": "1.2",
+                    "ftpsState": "FtpsOnly",
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[parameters('webAppInstrumentationKey')]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[parameters('webAppInsightConnectionString')]"
+                        },
+                        {
+                            "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+                            "value": "~2"
+                        },
+                        {
+                            "name": "XDT_MicrosoftApplicationInsights_Mode",
+                            "value": "default"
+                        }
+                    ]
+                },
+                "httpsOnly": true,
+                "keyVaultReferenceIdentity": "SystemAssigned"
+            },
+            "resources": [
+                {
+                    "condition": "[not(empty(parameters('webAppPackageUrl')))]",
+                    "name": "[concat(parameters('webName'), '/ZipDeploy')]",
+                    "type": "Microsoft.Web/sites/extensions",
+                    "apiVersion": "2023-12-01",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', parameters('webName'))]"
+                    ],
+                    "properties": {
+                        "packageUri": "[parameters('webAppPackageUrl')]"
+                    }
+                }
+            ]
+        }
+    ]
+}

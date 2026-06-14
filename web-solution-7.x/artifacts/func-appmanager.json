@@ -1,0 +1,169 @@
+ {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "funcAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app name."
+            }
+        },
+        "funcAppPackageUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app deployment package URL."
+            }
+        },
+        "funcAppInstrumentationKey": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app application insight instrumentation key."
+            }
+        },
+        "funcAppInsightConnectionString": {
+            "type": "string",
+            "metadata": {
+                "description": "Function app application insight connection string."
+            }
+        },
+        "cosmosDBAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "CosmosDB (SQL API) account name."
+            }
+        },
+        "storageAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure storage account name."
+            }
+        },
+        "funcAppSku": {
+            "type": "string",
+            "defaultValue": "P1V3",
+            "allowedValues": [ "P1V3", "P2V3", "P3V3" ],
+            "metadata": {
+                "description": "Function app pricing tier."
+            }
+        }
+    },
+    "variables": {
+        "serverfarmsPlan": "[concat('plan-',parameters('funcAppName'))]",
+        "cosmosDbConnectionString": "[concat('AccountEndpoint=https://',parameters('cosmosDbAccountName'),'.documents.azure.com:443/;AccountKey={0}')]",
+        "storageConnectionString": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey={0}')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2023-12-01",
+            "name": "[variables('serverfarmsPlan')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('funcAppSku')]",
+                "tier": "PremiumV3",
+                "size": "[parameters('funcAppSku')]",
+                "family": "Pv3"
+            },
+            "kind": "app",
+            "properties": {
+                "reserved": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2023-12-01",
+            "name": "[parameters('funcAppName')]",
+            "location": "[parameters('location')]",
+            "kind": "functionapp",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('serverfarmsPlan'))]"
+            ],
+            "properties": {
+                "enabled": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('serverfarmsPlan'))]",
+                "httpsOnly": true,
+                "publicNetworkAccess": "Enabled",
+                "siteConfig": {
+                    "alwaysOn": true,
+                    "http20Enabled": true,
+                    "use32BitWorkerProcess": false,
+                    "appSettings": [
+                        {
+                            "name": "ActivityStreamConnection",
+                            "value": "[format(variables('cosmosDbConnectionString'),listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), '2024-05-15').primaryMasterKey)]"
+                        },
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[parameters('funcAppInstrumentationKey')]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[parameters('funcAppInsightConnectionString')]"
+                        },
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[format(variables('storageConnectionString'),listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-05-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "HostedBlobContainer",
+                            "value": "[concat(parameters('storageAccountName'), '-container')]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                            "value": "[format(variables('storageConnectionString'),listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-05-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTSHARE",
+                            "value": "[concat(toLower(parameters('funcAppName')), 'cs')]"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~4"
+                        },
+                        {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "dotnet-isolated"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "type": "config",
+                    "apiVersion": "2023-12-01",
+                    "name": "web",
+                    "location": "[parameters('location')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', parameters('funcAppName'))]"
+                    ],
+                    "properties": {
+                        "netFrameworkVersion": "v10.0"
+                    }
+                },
+                {
+                    "condition": "[not(empty(parameters('funcAppPackageUrl')))]",
+                    "type": "extensions",
+                    "apiVersion": "2023-12-01",
+                    "name": "MSDeploy",
+                    "location": "[parameters('location')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', parameters('funcAppName'))]",
+                        "[resourceId('Microsoft.Web/sites/config', parameters('funcAppName'), 'web')]"
+                    ],
+                    "properties": {
+                        "packageUri": "[parameters('funcAppPackageUrl')]"
+                    }
+                }
+            ]
+        }
+    ]
+}

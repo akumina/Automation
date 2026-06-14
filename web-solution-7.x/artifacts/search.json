@@ -1,0 +1,149 @@
+ {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "aiSearchName": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure AI Search service name."
+            }
+        },
+        "aiSearchSku": {
+            "type": "string",
+            "metadata": {
+                "description": "Pricing tier of the Azure AI Search service."
+            }
+        },
+        "vnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Virtual network name."
+            }
+        },
+        "snetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Data subnet name."
+            }
+        },
+        "cosmosDbAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "CosmosDB (SQL API) account name to create a shared private link to."
+            }
+        }
+    },
+    "variables": {
+        "privateDnsZonesName": "privatelink.search.windows.net",
+        "privateEnpointsName": "[concat('p-', parameters('aiSearchName'))]",
+        "sharedPrivateLinkCosmosName": "[concat('spl-', parameters('cosmosDbAccountName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Search/searchServices",
+            "apiVersion": "2023-11-01",
+            "name": "[parameters('aiSearchName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('aiSearchSku')]"
+            },
+            "properties": {
+                "replicaCount": 2,
+                "partitionCount": 1,
+                "hostingMode": "Default",
+                "publicNetworkAccess": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones",
+            "apiVersion": "2020-06-01",
+            "name": "[variables('privateDnsZonesName')]",
+            "location": "global"
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+            "apiVersion": "2020-06-01",
+            "name": "[format('{0}/{1}', variables('privateDnsZonesName'), format('{0}-link', variables('privateDnsZonesName')))]",
+            "location": "global",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+            ],
+            "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2024-05-01",
+            "name": "[variables('privateEnpointsName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Search/searchServices', parameters('aiSearchName'))]"
+            ],
+            "properties": {
+                "privateLinkServiceConnections": [
+                    {
+                        "name": "[variables('privateEnpointsName')]",
+                        "id": "[concat(resourceId('Microsoft.Network/privateEndpoints', variables('privateEnpointsName')), concat('/privateLinkServiceConnections/', variables('privateEnpointsName')))]",
+                        "properties": {
+                            "privateLinkServiceId": "[resourceId('Microsoft.Search/searchServices', parameters('aiSearchName'))]",
+                            "groupIds": [
+                                "searchService"
+                            ],
+                            "privateLinkServiceConnectionState": {
+                                "status": "Approved",
+                                "description": "Auto-Approved",
+                                "actionsRequired": "None"
+                            }
+                        }
+                    }
+                ],
+                "customNetworkInterfaceName": "[concat(variables('privateEnpointsName'), '-nic')]",
+                "subnet": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetName'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+            "apiVersion": "2024-05-01",
+            "name": "[concat(variables('privateEnpointsName'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateEndpoints', variables('privateEnpointsName'))]",
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+            ],
+            "properties": {
+                "privateDnsZoneConfigs": [
+                    {
+                        "name": "privatelink-search-windows-net",
+                        "properties": {
+                            "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZonesName'))]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Search/searchServices/sharedPrivateLinkResources",
+            "apiVersion": "2023-11-01",
+            "name": "[concat(parameters('aiSearchName'), '/', variables('sharedPrivateLinkCosmosName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Search/searchServices', parameters('aiSearchName'))]"
+            ],
+            "properties": {
+                "groupId": "Sql",
+                "privateLinkResourceId": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]",
+                "requestMessage": "Shared private link from Azure AI Search to Cosmos DB."
+            }
+        }
+    ]
+}
